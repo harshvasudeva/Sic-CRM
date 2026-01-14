@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
+import ErrorBoundary from './components/ErrorBoundary'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import Sales from './pages/Sales'
@@ -11,24 +12,28 @@ import Manufacturing from './pages/Manufacturing'
 import Specialized from './pages/Specialized'
 import Settings from './pages/Settings'
 import Reports from './pages/Reports'
+import NotFound from './pages/NotFound'
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Layout />}>
-        <Route index element={<Dashboard />} />
-        <Route path="sales" element={<Sales />} />
-        <Route path="products" element={<Products />} />
-        <Route path="purchase" element={<Purchase />} />
-        <Route path="accounting" element={<Accounting />} />
-        <Route path="crm" element={<CRM />} />
-        <Route path="hr" element={<HR />} />
-        <Route path="manufacturing" element={<Manufacturing />} />
-        <Route path="specialized" element={<Specialized />} />
-        <Route path="settings" element={<Settings />} />
-        <Route path="reports" element={<Reports />} />
-      </Route>
-    </Routes>
+    <ErrorBoundary>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="sales" element={<Sales />} />
+          <Route path="products" element={<Products />} />
+          <Route path="purchase" element={<Purchase />} />
+          <Route path="accounting" element={<Accounting />} />
+          <Route path="crm" element={<CRM />} />
+          <Route path="hr" element={<HR />} />
+          <Route path="manufacturing" element={<Manufacturing />} />
+          <Route path="specialized" element={<Specialized />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+    </ErrorBoundary>
   )
 }
 
