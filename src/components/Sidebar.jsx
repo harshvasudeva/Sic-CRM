@@ -13,7 +13,8 @@ import {
   Menu,
   X,
   HelpCircle,
-  Settings
+  Settings,
+  BarChart3
 } from 'lucide-react'
 import { useState } from 'react'
 import HelpModal from './HelpModal'
@@ -28,6 +29,7 @@ const navItems = [
   { path: '/hr', icon: UserCircle, label: 'HR & Employees' },
   { path: '/manufacturing', icon: Factory, label: 'Manufacturing' },
   { path: '/specialized', icon: Sparkles, label: 'Specialized' },
+  { path: '/reports', icon: BarChart3, label: 'Reports' },
   { path: '/settings', icon: Settings, label: 'Settings' },
 ]
 

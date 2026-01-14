@@ -10,6 +10,7 @@ import HR from './pages/HR'
 import Manufacturing from './pages/Manufacturing'
 import Specialized from './pages/Specialized'
 import Settings from './pages/Settings'
+import Reports from './pages/Reports'
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path="manufacturing" element={<Manufacturing />} />
         <Route path="specialized" element={<Specialized />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="reports" element={<Reports />} />
       </Route>
     </Routes>
   )

@@ -2,209 +2,210 @@ import { useState, useRef, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-    Search,
-    Bell,
-    User,
-    ChevronRight,
-    Settings,
-    LogOut,
-    X,
-    Check,
-    AlertCircle,
-    Package,
-    DollarSign
+  Search,
+  Bell,
+  User,
+  ChevronRight,
+  Settings,
+  LogOut,
+  X,
+  Check,
+  AlertCircle,
+  Package,
+  DollarSign
 } from 'lucide-react'
 
 const breadcrumbLabels = {
-    '/': 'Dashboard',
-    '/sales': 'Sales',
-    '/products': 'Products',
-    '/purchase': 'Purchase',
-    '/accounting': 'Accounting',
-    '/crm': 'CRM',
-    '/hr': 'HR & Employees',
-    '/manufacturing': 'Manufacturing',
-    '/specialized': 'Specialized',
-    '/settings': 'Settings'
+  '/': 'Dashboard',
+  '/sales': 'Sales',
+  '/products': 'Products',
+  '/purchase': 'Purchase',
+  '/accounting': 'Accounting',
+  '/crm': 'CRM',
+  '/hr': 'HR & Employees',
+  '/manufacturing': 'Manufacturing',
+  '/specialized': 'Specialized',
+  '/reports': 'Reports',
+  '/settings': 'Settings'
 }
 
 const notifications = [
-    { id: 1, type: 'success', icon: Check, title: 'Order Completed', message: 'Order #1234 has been delivered', time: '2 min ago' },
-    { id: 2, type: 'warning', icon: AlertCircle, title: 'Low Stock Alert', message: 'Widget Pro is running low', time: '15 min ago' },
-    { id: 3, type: 'info', icon: Package, title: 'New Shipment', message: 'Incoming shipment from Vendor A', time: '1 hour ago' },
-    { id: 4, type: 'success', icon: DollarSign, title: 'Payment Received', message: '$2,500 from Acme Corp', time: '2 hours ago' },
+  { id: 1, type: 'success', icon: Check, title: 'Order Completed', message: 'Order #1234 has been delivered', time: '2 min ago' },
+  { id: 2, type: 'warning', icon: AlertCircle, title: 'Low Stock Alert', message: 'Widget Pro is running low', time: '15 min ago' },
+  { id: 3, type: 'info', icon: Package, title: 'New Shipment', message: 'Incoming shipment from Vendor A', time: '1 hour ago' },
+  { id: 4, type: 'success', icon: DollarSign, title: 'Payment Received', message: '$2,500 from Acme Corp', time: '2 hours ago' },
 ]
 
 function Header() {
-    const location = useLocation()
-    const navigate = useNavigate()
-    const [searchOpen, setSearchOpen] = useState(false)
-    const [searchQuery, setSearchQuery] = useState('')
-    const [notifOpen, setNotifOpen] = useState(false)
-    const [userMenuOpen, setUserMenuOpen] = useState(false)
-    const searchRef = useRef(null)
-    const notifRef = useRef(null)
-    const userRef = useRef(null)
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [notifOpen, setNotifOpen] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const searchRef = useRef(null)
+  const notifRef = useRef(null)
+  const userRef = useRef(null)
 
-    // Close dropdowns when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (notifRef.current && !notifRef.current.contains(e.target)) {
-                setNotifOpen(false)
-            }
-            if (userRef.current && !userRef.current.contains(e.target)) {
-                setUserMenuOpen(false)
-            }
-        }
-        document.addEventListener('mousedown', handleClickOutside)
-        return () => document.removeEventListener('mousedown', handleClickOutside)
-    }, [])
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setNotifOpen(false)
+      }
+      if (userRef.current && !userRef.current.contains(e.target)) {
+        setUserMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
-    // Focus search when opened
-    useEffect(() => {
-        if (searchOpen && searchRef.current) {
-            searchRef.current.focus()
-        }
-    }, [searchOpen])
+  // Focus search when opened
+  useEffect(() => {
+    if (searchOpen && searchRef.current) {
+      searchRef.current.focus()
+    }
+  }, [searchOpen])
 
-    const currentPage = breadcrumbLabels[location.pathname] || 'Page'
+  const currentPage = breadcrumbLabels[location.pathname] || 'Page'
 
-    return (
-        <header className="header">
-            {/* Breadcrumbs */}
-            <div className="breadcrumbs">
-                <span className="breadcrumb-item" onClick={() => navigate('/')}>
-                    Home
-                </span>
-                <ChevronRight size={14} className="breadcrumb-sep" />
-                <span className="breadcrumb-current">{currentPage}</span>
+  return (
+    <header className="header">
+      {/* Breadcrumbs */}
+      <div className="breadcrumbs">
+        <span className="breadcrumb-item" onClick={() => navigate('/')}>
+          Home
+        </span>
+        <ChevronRight size={14} className="breadcrumb-sep" />
+        <span className="breadcrumb-current">{currentPage}</span>
+      </div>
+
+      {/* Right Side */}
+      <div className="header-actions">
+        {/* Search */}
+        <div className="search-wrapper">
+          <AnimatePresence>
+            {searchOpen && (
+              <motion.div
+                className="search-input-wrapper"
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: 250, opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <input
+                  ref={searchRef}
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="search-input"
+                />
+                <button className="search-close" onClick={() => { setSearchOpen(false); setSearchQuery('') }}>
+                  <X size={16} />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          {!searchOpen && (
+            <button className="header-btn" onClick={() => setSearchOpen(true)}>
+              <Search size={20} />
+            </button>
+          )}
+        </div>
+
+        {/* Notifications */}
+        <div className="notif-wrapper" ref={notifRef}>
+          <button
+            className={`header-btn ${notifOpen ? 'active' : ''}`}
+            onClick={() => setNotifOpen(!notifOpen)}
+          >
+            <Bell size={20} />
+            <span className="notif-badge">4</span>
+          </button>
+
+          <AnimatePresence>
+            {notifOpen && (
+              <motion.div
+                className="dropdown notif-dropdown"
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+              >
+                <div className="dropdown-header">
+                  <h3>Notifications</h3>
+                  <button className="mark-read">Mark all read</button>
+                </div>
+                <div className="notif-list">
+                  {notifications.map((notif) => (
+                    <div key={notif.id} className={`notif-item ${notif.type}`}>
+                      <div className={`notif-icon ${notif.type}`}>
+                        <notif.icon size={16} />
+                      </div>
+                      <div className="notif-content">
+                        <h4>{notif.title}</h4>
+                        <p>{notif.message}</p>
+                        <span className="notif-time">{notif.time}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="dropdown-footer">
+                  <button>View All Notifications</button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* User Menu */}
+        <div className="user-wrapper" ref={userRef}>
+          <button
+            className={`user-btn ${userMenuOpen ? 'active' : ''}`}
+            onClick={() => setUserMenuOpen(!userMenuOpen)}
+          >
+            <div className="user-avatar">
+              <User size={18} />
             </div>
+            <span className="user-name">Admin</span>
+          </button>
 
-            {/* Right Side */}
-            <div className="header-actions">
-                {/* Search */}
-                <div className="search-wrapper">
-                    <AnimatePresence>
-                        {searchOpen && (
-                            <motion.div
-                                className="search-input-wrapper"
-                                initial={{ width: 0, opacity: 0 }}
-                                animate={{ width: 250, opacity: 1 }}
-                                exit={{ width: 0, opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                            >
-                                <input
-                                    ref={searchRef}
-                                    type="text"
-                                    placeholder="Search..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="search-input"
-                                />
-                                <button className="search-close" onClick={() => { setSearchOpen(false); setSearchQuery('') }}>
-                                    <X size={16} />
-                                </button>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                    {!searchOpen && (
-                        <button className="header-btn" onClick={() => setSearchOpen(true)}>
-                            <Search size={20} />
-                        </button>
-                    )}
+          <AnimatePresence>
+            {userMenuOpen && (
+              <motion.div
+                className="dropdown user-dropdown"
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+              >
+                <div className="user-dropdown-header">
+                  <div className="user-dropdown-avatar">
+                    <User size={24} />
+                  </div>
+                  <div>
+                    <h4>Admin User</h4>
+                    <p>admin@siccrm.com</p>
+                  </div>
                 </div>
+                <div className="dropdown-divider"></div>
+                <button className="dropdown-item" onClick={() => { navigate('/settings'); setUserMenuOpen(false) }}>
+                  <Settings size={18} />
+                  Settings
+                </button>
+                <button className="dropdown-item danger">
+                  <LogOut size={18} />
+                  Sign Out
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
 
-                {/* Notifications */}
-                <div className="notif-wrapper" ref={notifRef}>
-                    <button
-                        className={`header-btn ${notifOpen ? 'active' : ''}`}
-                        onClick={() => setNotifOpen(!notifOpen)}
-                    >
-                        <Bell size={20} />
-                        <span className="notif-badge">4</span>
-                    </button>
-
-                    <AnimatePresence>
-                        {notifOpen && (
-                            <motion.div
-                                className="dropdown notif-dropdown"
-                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                transition={{ duration: 0.15 }}
-                            >
-                                <div className="dropdown-header">
-                                    <h3>Notifications</h3>
-                                    <button className="mark-read">Mark all read</button>
-                                </div>
-                                <div className="notif-list">
-                                    {notifications.map((notif) => (
-                                        <div key={notif.id} className={`notif-item ${notif.type}`}>
-                                            <div className={`notif-icon ${notif.type}`}>
-                                                <notif.icon size={16} />
-                                            </div>
-                                            <div className="notif-content">
-                                                <h4>{notif.title}</h4>
-                                                <p>{notif.message}</p>
-                                                <span className="notif-time">{notif.time}</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="dropdown-footer">
-                                    <button>View All Notifications</button>
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
-
-                {/* User Menu */}
-                <div className="user-wrapper" ref={userRef}>
-                    <button
-                        className={`user-btn ${userMenuOpen ? 'active' : ''}`}
-                        onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    >
-                        <div className="user-avatar">
-                            <User size={18} />
-                        </div>
-                        <span className="user-name">Admin</span>
-                    </button>
-
-                    <AnimatePresence>
-                        {userMenuOpen && (
-                            <motion.div
-                                className="dropdown user-dropdown"
-                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                transition={{ duration: 0.15 }}
-                            >
-                                <div className="user-dropdown-header">
-                                    <div className="user-dropdown-avatar">
-                                        <User size={24} />
-                                    </div>
-                                    <div>
-                                        <h4>Admin User</h4>
-                                        <p>admin@siccrm.com</p>
-                                    </div>
-                                </div>
-                                <div className="dropdown-divider"></div>
-                                <button className="dropdown-item" onClick={() => { navigate('/settings'); setUserMenuOpen(false) }}>
-                                    <Settings size={18} />
-                                    Settings
-                                </button>
-                                <button className="dropdown-item danger">
-                                    <LogOut size={18} />
-                                    Sign Out
-                                </button>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
-            </div>
-
-            <style>{`
+      <style>{`
         .header {
           display: flex;
           align-items: center;
@@ -531,8 +532,8 @@ function Header() {
           color: var(--error);
         }
       `}</style>
-        </header>
-    )
+    </header>
+  )
 }
 
 export default Header
