@@ -7,7 +7,6 @@ import Sales from './pages/Sales'
 import ProductList from './pages/products/ProductList'
 import Purchase from './pages/Purchase'
 import Accounting from './pages/Accounting'
-import CRM from './pages/CRM'
 
 // HR Module
 import HRDashboard from './pages/hr/HRDashboard'
@@ -20,6 +19,13 @@ import Performance from './pages/hr/Performance'
 import Expenses from './pages/hr/Expenses'
 import Announcements from './pages/hr/Announcements'
 import Departments from './pages/hr/Departments'
+
+// CRM Module
+import CRMDashboard from './pages/crm/CRMDashboard'
+import Leads from './pages/crm/Leads'
+import Opportunities from './pages/crm/Opportunities'
+import Contacts from './pages/crm/Contacts'
+import Activities from './pages/crm/Activities'
 
 import Manufacturing from './pages/Manufacturing'
 import Specialized from './pages/Specialized'
@@ -38,7 +44,16 @@ function App() {
             <Route path="products" element={<ProductList />} />
             <Route path="purchase" element={<Purchase />} />
             <Route path="accounting" element={<Accounting />} />
-            <Route path="crm" element={<CRM />} />
+
+            {/* CRM Module Routes */}
+            <Route path="crm" element={<CRMDashboard />} />
+            <Route path="crm/leads" element={<Leads />} />
+            <Route path="crm/leads/new" element={<Leads />} />
+            <Route path="crm/opportunities" element={<Opportunities />} />
+            <Route path="crm/opportunities/new" element={<Opportunities />} />
+            <Route path="crm/contacts" element={<Contacts />} />
+            <Route path="crm/contacts/new" element={<Contacts />} />
+            <Route path="crm/activities" element={<Activities />} />
 
             {/* HR Module Routes */}
             <Route path="hr" element={<HRDashboard />} />
