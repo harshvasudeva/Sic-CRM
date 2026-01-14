@@ -2,209 +2,211 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-    Search,
-    LayoutDashboard,
-    ShoppingCart,
-    Package,
-    Truck,
-    Calculator,
-    Users,
-    UserCircle,
-    Factory,
-    Sparkles,
-    Settings,
-    FileText,
-    HelpCircle,
-    Plus,
-    ArrowRight,
-    Command
+  Search,
+  LayoutDashboard,
+  ShoppingCart,
+  Package,
+  Truck,
+  Calculator,
+  Users,
+  UserCircle,
+  Factory,
+  Sparkles,
+  Settings,
+  FileText,
+  HelpCircle,
+  Plus,
+  ArrowRight,
+  Command,
+  BarChart3
 } from 'lucide-react'
 
 const commands = [
-    // Navigation
-    { id: 'nav-dashboard', type: 'navigation', icon: LayoutDashboard, label: 'Go to Dashboard', path: '/' },
-    { id: 'nav-sales', type: 'navigation', icon: ShoppingCart, label: 'Go to Sales', path: '/sales' },
-    { id: 'nav-products', type: 'navigation', icon: Package, label: 'Go to Products', path: '/products' },
-    { id: 'nav-purchase', type: 'navigation', icon: Truck, label: 'Go to Purchase', path: '/purchase' },
-    { id: 'nav-accounting', type: 'navigation', icon: Calculator, label: 'Go to Accounting', path: '/accounting' },
-    { id: 'nav-crm', type: 'navigation', icon: Users, label: 'Go to CRM', path: '/crm' },
-    { id: 'nav-hr', type: 'navigation', icon: UserCircle, label: 'Go to HR', path: '/hr' },
-    { id: 'nav-manufacturing', type: 'navigation', icon: Factory, label: 'Go to Manufacturing', path: '/manufacturing' },
-    { id: 'nav-specialized', type: 'navigation', icon: Sparkles, label: 'Go to Specialized', path: '/specialized' },
-    { id: 'nav-settings', type: 'navigation', icon: Settings, label: 'Go to Settings', path: '/settings' },
+  // Navigation
+  { id: 'nav-dashboard', type: 'navigation', icon: LayoutDashboard, label: 'Go to Dashboard', path: '/' },
+  { id: 'nav-sales', type: 'navigation', icon: ShoppingCart, label: 'Go to Sales', path: '/sales' },
+  { id: 'nav-products', type: 'navigation', icon: Package, label: 'Go to Products', path: '/products' },
+  { id: 'nav-purchase', type: 'navigation', icon: Truck, label: 'Go to Purchase', path: '/purchase' },
+  { id: 'nav-accounting', type: 'navigation', icon: Calculator, label: 'Go to Accounting', path: '/accounting' },
+  { id: 'nav-crm', type: 'navigation', icon: Users, label: 'Go to CRM', path: '/crm' },
+  { id: 'nav-hr', type: 'navigation', icon: UserCircle, label: 'Go to HR', path: '/hr' },
+  { id: 'nav-manufacturing', type: 'navigation', icon: Factory, label: 'Go to Manufacturing', path: '/manufacturing' },
+  { id: 'nav-specialized', type: 'navigation', icon: Sparkles, label: 'Go to Specialized', path: '/specialized' },
+  { id: 'nav-reports', type: 'navigation', icon: BarChart3, label: 'Go to Reports', path: '/reports' },
+  { id: 'nav-settings', type: 'navigation', icon: Settings, label: 'Go to Settings', path: '/settings' },
 
-    // Actions
-    { id: 'action-quote', type: 'action', icon: FileText, label: 'Create New Quote', action: 'new-quote' },
-    { id: 'action-order', type: 'action', icon: ShoppingCart, label: 'Create New Order', action: 'new-order' },
-    { id: 'action-product', type: 'action', icon: Package, label: 'Add New Product', action: 'new-product' },
-    { id: 'action-lead', type: 'action', icon: Users, label: 'Create New Lead', action: 'new-lead' },
-    { id: 'action-employee', type: 'action', icon: UserCircle, label: 'Add New Employee', action: 'new-employee' },
+  // Actions
+  { id: 'action-quote', type: 'action', icon: FileText, label: 'Create New Quote', action: 'new-quote' },
+  { id: 'action-order', type: 'action', icon: ShoppingCart, label: 'Create New Order', action: 'new-order' },
+  { id: 'action-product', type: 'action', icon: Package, label: 'Add New Product', action: 'new-product' },
+  { id: 'action-lead', type: 'action', icon: Users, label: 'Create New Lead', action: 'new-lead' },
+  { id: 'action-employee', type: 'action', icon: UserCircle, label: 'Add New Employee', action: 'new-employee' },
 
-    // Utilities
-    { id: 'util-help', type: 'utility', icon: HelpCircle, label: 'Open Help', action: 'help' },
+  // Utilities
+  { id: 'util-help', type: 'utility', icon: HelpCircle, label: 'Open Help', action: 'help' },
 ]
 
 function CommandPalette({ isOpen, onClose, onHelp }) {
-    const navigate = useNavigate()
-    const inputRef = useRef(null)
-    const [query, setQuery] = useState('')
-    const [selectedIndex, setSelectedIndex] = useState(0)
+  const navigate = useNavigate()
+  const inputRef = useRef(null)
+  const [query, setQuery] = useState('')
+  const [selectedIndex, setSelectedIndex] = useState(0)
 
-    // Filter commands based on query
-    const filteredCommands = useMemo(() => {
-        if (!query) return commands
-        const lowerQuery = query.toLowerCase()
-        return commands.filter(cmd =>
-            cmd.label.toLowerCase().includes(lowerQuery) ||
-            cmd.type.toLowerCase().includes(lowerQuery)
-        )
-    }, [query])
+  // Filter commands based on query
+  const filteredCommands = useMemo(() => {
+    if (!query) return commands
+    const lowerQuery = query.toLowerCase()
+    return commands.filter(cmd =>
+      cmd.label.toLowerCase().includes(lowerQuery) ||
+      cmd.type.toLowerCase().includes(lowerQuery)
+    )
+  }, [query])
 
-    // Reset selection when filtered results change
-    useEffect(() => {
-        setSelectedIndex(0)
-    }, [filteredCommands])
+  // Reset selection when filtered results change
+  useEffect(() => {
+    setSelectedIndex(0)
+  }, [filteredCommands])
 
-    // Focus input when opened
-    useEffect(() => {
-        if (isOpen && inputRef.current) {
-            inputRef.current.focus()
-        }
-        if (!isOpen) {
-            setQuery('')
-            setSelectedIndex(0)
-        }
-    }, [isOpen])
+  // Focus input when opened
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus()
+    }
+    if (!isOpen) {
+      setQuery('')
+      setSelectedIndex(0)
+    }
+  }, [isOpen])
 
-    // Keyboard navigation
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (!isOpen) return
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!isOpen) return
 
-            switch (e.key) {
-                case 'ArrowDown':
-                    e.preventDefault()
-                    setSelectedIndex(i => Math.min(i + 1, filteredCommands.length - 1))
-                    break
-                case 'ArrowUp':
-                    e.preventDefault()
-                    setSelectedIndex(i => Math.max(i - 1, 0))
-                    break
-                case 'Enter':
-                    e.preventDefault()
-                    if (filteredCommands[selectedIndex]) {
-                        executeCommand(filteredCommands[selectedIndex])
-                    }
-                    break
-                case 'Escape':
-                    e.preventDefault()
-                    onClose()
-                    break
-            }
-        }
-
-        window.addEventListener('keydown', handleKeyDown)
-        return () => window.removeEventListener('keydown', handleKeyDown)
-    }, [isOpen, selectedIndex, filteredCommands, onClose])
-
-    const executeCommand = (command) => {
-        if (command.type === 'navigation') {
-            navigate(command.path)
-        } else if (command.action === 'help' && onHelp) {
-            onHelp()
-        }
-        onClose()
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault()
+          setSelectedIndex(i => Math.min(i + 1, filteredCommands.length - 1))
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          setSelectedIndex(i => Math.max(i - 1, 0))
+          break
+        case 'Enter':
+          e.preventDefault()
+          if (filteredCommands[selectedIndex]) {
+            executeCommand(filteredCommands[selectedIndex])
+          }
+          break
+        case 'Escape':
+          e.preventDefault()
+          onClose()
+          break
+      }
     }
 
-    const getTypeLabel = (type) => {
-        switch (type) {
-            case 'navigation': return 'Navigate'
-            case 'action': return 'Action'
-            case 'utility': return 'Utility'
-            default: return type
-        }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, selectedIndex, filteredCommands, onClose])
+
+  const executeCommand = (command) => {
+    if (command.type === 'navigation') {
+      navigate(command.path)
+    } else if (command.action === 'help' && onHelp) {
+      onHelp()
     }
+    onClose()
+  }
 
-    return (
-        <AnimatePresence>
-            {isOpen && (
-                <motion.div
-                    className="command-palette-overlay"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={onClose}
-                >
-                    <motion.div
-                        className="command-palette"
-                        initial={{ opacity: 0, scale: 0.95, y: -20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: -20 }}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* Search Input */}
-                        <div className="command-input-wrapper">
-                            <Search size={20} className="command-search-icon" />
-                            <input
-                                ref={inputRef}
-                                type="text"
-                                placeholder="Type a command or search..."
-                                value={query}
-                                onChange={(e) => setQuery(e.target.value)}
-                                className="command-input"
-                            />
-                            <div className="command-kbd">
-                                <kbd>Esc</kbd>
-                            </div>
-                        </div>
+  const getTypeLabel = (type) => {
+    switch (type) {
+      case 'navigation': return 'Navigate'
+      case 'action': return 'Action'
+      case 'utility': return 'Utility'
+      default: return type
+    }
+  }
 
-                        {/* Results */}
-                        <div className="command-results">
-                            {filteredCommands.length === 0 ? (
-                                <div className="command-empty">
-                                    <span>No results found for "{query}"</span>
-                                </div>
-                            ) : (
-                                filteredCommands.map((command, index) => (
-                                    <motion.button
-                                        key={command.id}
-                                        className={`command-item ${index === selectedIndex ? 'selected' : ''}`}
-                                        onClick={() => executeCommand(command)}
-                                        onMouseEnter={() => setSelectedIndex(index)}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: index * 0.02 }}
-                                    >
-                                        <div className="command-item-left">
-                                            <div className="command-item-icon">
-                                                <command.icon size={18} />
-                                            </div>
-                                            <span className="command-item-label">{command.label}</span>
-                                        </div>
-                                        <div className="command-item-right">
-                                            <span className="command-item-type">{getTypeLabel(command.type)}</span>
-                                            <ArrowRight size={16} className="command-item-arrow" />
-                                        </div>
-                                    </motion.button>
-                                ))
-                            )}
-                        </div>
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          className="command-palette-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+        >
+          <motion.div
+            className="command-palette"
+            initial={{ opacity: 0, scale: 0.95, y: -20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -20 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Search Input */}
+            <div className="command-input-wrapper">
+              <Search size={20} className="command-search-icon" />
+              <input
+                ref={inputRef}
+                type="text"
+                placeholder="Type a command or search..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="command-input"
+              />
+              <div className="command-kbd">
+                <kbd>Esc</kbd>
+              </div>
+            </div>
 
-                        {/* Footer */}
-                        <div className="command-footer">
-                            <div className="command-hint">
-                                <kbd>↑</kbd><kbd>↓</kbd> navigate
-                            </div>
-                            <div className="command-hint">
-                                <kbd>↵</kbd> select
-                            </div>
-                            <div className="command-hint">
-                                <kbd>Esc</kbd> close
-                            </div>
-                        </div>
-                    </motion.div>
+            {/* Results */}
+            <div className="command-results">
+              {filteredCommands.length === 0 ? (
+                <div className="command-empty">
+                  <span>No results found for "{query}"</span>
+                </div>
+              ) : (
+                filteredCommands.map((command, index) => (
+                  <motion.button
+                    key={command.id}
+                    className={`command-item ${index === selectedIndex ? 'selected' : ''}`}
+                    onClick={() => executeCommand(command)}
+                    onMouseEnter={() => setSelectedIndex(index)}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.02 }}
+                  >
+                    <div className="command-item-left">
+                      <div className="command-item-icon">
+                        <command.icon size={18} />
+                      </div>
+                      <span className="command-item-label">{command.label}</span>
+                    </div>
+                    <div className="command-item-right">
+                      <span className="command-item-type">{getTypeLabel(command.type)}</span>
+                      <ArrowRight size={16} className="command-item-arrow" />
+                    </div>
+                  </motion.button>
+                ))
+              )}
+            </div>
 
-                    <style>{`
+            {/* Footer */}
+            <div className="command-footer">
+              <div className="command-hint">
+                <kbd>↑</kbd><kbd>↓</kbd> navigate
+              </div>
+              <div className="command-hint">
+                <kbd>↵</kbd> select
+              </div>
+              <div className="command-hint">
+                <kbd>Esc</kbd> close
+              </div>
+            </div>
+          </motion.div>
+
+          <style>{`
             .command-palette-overlay {
               position: fixed;
               inset: 0;
@@ -380,10 +382,10 @@ function CommandPalette({ isOpen, onClose, onHelp }) {
               font-size: 0.7rem;
             }
           `}</style>
-                </motion.div>
-            )}
-        </AnimatePresence>
-    )
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
 }
 
 export default CommandPalette
