@@ -2,223 +2,223 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
-    Users,
-    UserPlus,
-    Calendar,
-    Clock,
-    DollarSign,
-    Award,
-    FileText,
-    Bell,
-    TrendingUp,
-    Briefcase,
-    Building2,
-    GraduationCap,
-    Receipt,
-    UserCheck,
-    UserX,
-    CalendarDays,
-    ChevronRight,
-    AlertCircle
+  Users,
+  UserPlus,
+  Calendar,
+  Clock,
+  DollarSign,
+  Award,
+  FileText,
+  Bell,
+  TrendingUp,
+  Briefcase,
+  Building2,
+  GraduationCap,
+  Receipt,
+  UserCheck,
+  UserX,
+  CalendarDays,
+  ChevronRight,
+  AlertCircle
 } from 'lucide-react'
 import { getHRStats, getEmployees, getLeaves, getAnnouncements } from '../../stores/hrStore'
 import MiniChart from '../../components/MiniChart'
 
 function HRDashboard() {
-    const navigate = useNavigate()
-    const [stats, setStats] = useState(null)
-    const [recentLeaves, setRecentLeaves] = useState([])
-    const [announcements, setAnnouncements] = useState([])
-    const [employees, setEmployees] = useState([])
+  const navigate = useNavigate()
+  const [stats, setStats] = useState(null)
+  const [recentLeaves, setRecentLeaves] = useState([])
+  const [announcements, setAnnouncements] = useState([])
+  const [employees, setEmployees] = useState([])
 
-    useEffect(() => {
-        setStats(getHRStats())
-        setRecentLeaves(getLeaves({ status: 'pending' }).slice(0, 5))
-        setAnnouncements(getAnnouncements().filter(a => a.pinned || new Date(a.expiresAt) > new Date()).slice(0, 3))
-        setEmployees(getEmployees())
-    }, [])
+  useEffect(() => {
+    setStats(getHRStats())
+    setRecentLeaves(getLeaves({ status: 'pending' }).slice(0, 5))
+    setAnnouncements(getAnnouncements().filter(a => a.pinned || new Date(a.expiresAt) > new Date()).slice(0, 3))
+    setEmployees(getEmployees())
+  }, [])
 
-    if (!stats) return <div>Loading...</div>
+  if (!stats) return <div>Loading...</div>
 
-    const statCards = [
-        { icon: Users, label: 'Total Employees', value: stats.totalEmployees, color: 'blue', link: '/hr/employees' },
-        { icon: UserCheck, label: 'Active', value: stats.activeEmployees, color: 'green', link: '/hr/employees' },
-        { icon: UserX, label: 'On Leave', value: stats.onLeave, color: 'orange', link: '/hr/leaves' },
-        { icon: UserPlus, label: 'New Hires', value: stats.newHires, color: 'purple', subtext: 'This month' },
-        { icon: Building2, label: 'Departments', value: stats.departments, color: 'indigo', link: '/hr/departments' },
-        { icon: CalendarDays, label: 'Pending Leaves', value: stats.pendingLeaves, color: 'red', link: '/hr/leaves' },
-        { icon: Clock, label: 'Avg Tenure', value: `${stats.averageTenure}y`, color: 'teal' },
-        { icon: Calendar, label: 'Today Present', value: stats.todayAttendance, color: 'cyan', link: '/hr/attendance' },
-    ]
+  const statCards = [
+    { icon: Users, label: 'Total Employees', value: stats.totalEmployees, color: 'blue', link: '/hr/employees' },
+    { icon: UserCheck, label: 'Active', value: stats.activeEmployees, color: 'green', link: '/hr/employees' },
+    { icon: UserX, label: 'On Leave', value: stats.onLeave, color: 'orange', link: '/hr/leaves' },
+    { icon: UserPlus, label: 'New Hires', value: stats.newHires, color: 'purple', subtext: 'This month' },
+    { icon: Building2, label: 'Departments', value: stats.departments, color: 'indigo', link: '/hr/departments' },
+    { icon: CalendarDays, label: 'Pending Leaves', value: stats.pendingLeaves, color: 'red', link: '/hr/leaves' },
+    { icon: Clock, label: 'Avg Tenure', value: `${stats.averageTenure}y`, color: 'teal' },
+    { icon: Calendar, label: 'Today Present', value: stats.todayAttendance, color: 'cyan', link: '/hr/attendance' },
+  ]
 
-    const quickActions = [
-        { icon: UserPlus, label: 'Add Employee', path: '/hr/employees/new', color: '#6366f1' },
-        { icon: Calendar, label: 'View Attendance', path: '/hr/attendance', color: '#10b981' },
-        { icon: FileText, label: 'Leave Requests', path: '/hr/leaves', color: '#f59e0b' },
-        { icon: DollarSign, label: 'Run Payroll', path: '/hr/payroll', color: '#3b82f6' },
-        { icon: GraduationCap, label: 'Trainings', path: '/hr/trainings', color: '#8b5cf6' },
-        { icon: Award, label: 'Performance', path: '/hr/performance', color: '#ec4899' },
-        { icon: Receipt, label: 'Expenses', path: '/hr/expenses', color: '#14b8a6' },
-        { icon: Bell, label: 'Announcements', path: '/hr/announcements', color: '#ef4444' },
-    ]
+  const quickActions = [
+    { icon: UserPlus, label: 'Add Employee', path: '/hr/employees/new', color: '#6366f1' },
+    { icon: Calendar, label: 'View Attendance', path: '/hr/attendance', color: '#10b981' },
+    { icon: FileText, label: 'Leave Requests', path: '/hr/leaves', color: '#f59e0b' },
+    { icon: DollarSign, label: 'Run Payroll', path: '/hr/payroll', color: '#3b82f6' },
+    { icon: GraduationCap, label: 'Trainings', path: '/hr/trainings', color: '#8b5cf6' },
+    { icon: Award, label: 'Performance', path: '/hr/performance', color: '#ec4899' },
+    { icon: Receipt, label: 'Expenses', path: '/hr/expenses', color: '#14b8a6' },
+    { icon: Bell, label: 'Announcements', path: '/hr/announcements', color: '#ef4444' },
+  ]
 
-    return (
-        <div className="page hr-dashboard">
-            <motion.div
-                className="page-header"
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-            >
-                <div>
-                    <h1 className="page-title">
-                        <span className="gradient-text">HR</span> Dashboard
-                    </h1>
-                    <p className="page-description">
-                        Manage your workforce, track attendance, and handle HR operations.
-                    </p>
-                </div>
-            </motion.div>
+  return (
+    <div className="page hr-dashboard">
+      <motion.div
+        className="page-header"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <div>
+          <h1 className="page-title">
+            <span className="gradient-text">HR</span> Dashboard
+          </h1>
+          <p className="page-description">
+            Manage your workforce, track attendance, and handle HR operations.
+          </p>
+        </div>
+      </motion.div>
 
-            {/* Stats Grid */}
-            <div className="hr-stats-grid">
-                {statCards.map((stat, index) => (
-                    <motion.div
-                        key={index}
-                        className={`hr-stat-card ${stat.link ? 'clickable' : ''}`}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        onClick={() => stat.link && navigate(stat.link)}
-                    >
-                        <div className={`hr-stat-icon ${stat.color}`}>
-                            <stat.icon size={22} />
-                        </div>
-                        <div className="hr-stat-content">
-                            <div className="hr-stat-value">{stat.value}</div>
-                            <div className="hr-stat-label">{stat.label}</div>
-                            {stat.subtext && <div className="hr-stat-subtext">{stat.subtext}</div>}
-                        </div>
-                    </motion.div>
-                ))}
+      {/* Stats Grid */}
+      <div className="hr-stats-grid">
+        {statCards.map((stat, index) => (
+          <motion.div
+            key={index}
+            className={`hr-stat-card ${stat.link ? 'clickable' : ''}`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05 }}
+            onClick={() => stat.link && navigate(stat.link)}
+          >
+            <div className={`hr-stat-icon ${stat.color}`}>
+              <stat.icon size={22} />
             </div>
-
-            {/* Quick Actions */}
-            <motion.div
-                className="section"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-            >
-                <h2 className="section-title">Quick Actions</h2>
-                <div className="quick-actions-grid">
-                    {quickActions.map((action, index) => (
-                        <motion.button
-                            key={index}
-                            className="quick-action-card"
-                            onClick={() => navigate(action.path)}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                        >
-                            <div className="qa-icon" style={{ background: action.color }}>
-                                <action.icon size={20} />
-                            </div>
-                            <span>{action.label}</span>
-                            <ChevronRight size={16} className="qa-arrow" />
-                        </motion.button>
-                    ))}
-                </div>
-            </motion.div>
-
-            <div className="hr-grid-2">
-                {/* Pending Leave Requests */}
-                <motion.div
-                    className="card"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                >
-                    <div className="card-header">
-                        <h3><FileText size={18} /> Pending Leave Requests</h3>
-                        <button className="link-btn" onClick={() => navigate('/hr/leaves')}>View All</button>
-                    </div>
-                    <div className="leave-list">
-                        {recentLeaves.length === 0 ? (
-                            <p className="empty-text">No pending requests</p>
-                        ) : (
-                            recentLeaves.map(leave => {
-                                const emp = employees.find(e => e.id === leave.employeeId)
-                                return (
-                                    <div key={leave.id} className="leave-item">
-                                        <div className="leave-employee">
-                                            <strong>{emp?.firstName} {emp?.lastName}</strong>
-                                            <span>{leave.type} leave</span>
-                                        </div>
-                                        <div className="leave-dates">
-                                            {leave.startDate} → {leave.endDate}
-                                        </div>
-                                        <div className="leave-days">{leave.days} days</div>
-                                    </div>
-                                )
-                            })
-                        )}
-                    </div>
-                </motion.div>
-
-                {/* Announcements */}
-                <motion.div
-                    className="card"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                >
-                    <div className="card-header">
-                        <h3><Bell size={18} /> Announcements</h3>
-                        <button className="link-btn" onClick={() => navigate('/hr/announcements')}>View All</button>
-                    </div>
-                    <div className="announcement-list">
-                        {announcements.map(ann => (
-                            <div key={ann.id} className={`announcement-item ${ann.priority}`}>
-                                {ann.pinned && <span className="pinned-badge">📌</span>}
-                                <h4>{ann.title}</h4>
-                                <p>{ann.content.substring(0, 100)}...</p>
-                                <span className="ann-date">{ann.createdAt}</span>
-                            </div>
-                        ))}
-                    </div>
-                </motion.div>
+            <div className="hr-stat-content">
+              <div className="hr-stat-value">{stat.value}</div>
+              <div className="hr-stat-label">{stat.label}</div>
+              {stat.subtext && <div className="hr-stat-subtext">{stat.subtext}</div>}
             </div>
+          </motion.div>
+        ))}
+      </div>
 
-            {/* Department Distribution */}
-            <motion.div
-                className="card"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
+      {/* Quick Actions */}
+      <motion.div
+        className="section"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <h2 className="section-title">Quick Actions</h2>
+        <div className="quick-actions-grid">
+          {quickActions.map((action, index) => (
+            <motion.button
+              key={index}
+              className="quick-action-card"
+              onClick={() => navigate(action.path)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-                <div className="card-header">
-                    <h3><Building2 size={18} /> Department Distribution</h3>
-                </div>
-                <div className="dept-distribution">
-                    {Object.entries(stats.departmentDistribution).map(([dept, count]) => (
-                        <div key={dept} className="dept-bar">
-                            <div className="dept-info">
-                                <span className="dept-name">{dept}</span>
-                                <span className="dept-count">{count} employees</span>
-                            </div>
-                            <div className="dept-progress">
-                                <motion.div
-                                    className="dept-fill"
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${(count / stats.totalEmployees) * 100}%` }}
-                                    transition={{ delay: 0.8, duration: 0.5 }}
-                                />
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </motion.div>
+              <div className="qa-icon" style={{ background: action.color }}>
+                <action.icon size={20} />
+              </div>
+              <span>{action.label}</span>
+              <ChevronRight size={16} className="qa-arrow" />
+            </motion.button>
+          ))}
+        </div>
+      </motion.div>
 
-            <style>{`
+      <div className="hr-grid-2">
+        {/* Pending Leave Requests */}
+        <motion.div
+          className="card"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <div className="card-header">
+            <h3><FileText size={18} /> Pending Leave Requests</h3>
+            <button className="link-btn" onClick={() => navigate('/hr/leaves')}>View All</button>
+          </div>
+          <div className="leave-list">
+            {recentLeaves.length === 0 ? (
+              <p className="empty-text">No pending requests</p>
+            ) : (
+              recentLeaves.map(leave => {
+                const emp = employees.find(e => e.id === leave.employeeId)
+                return (
+                  <div key={leave.id} className="leave-item">
+                    <div className="leave-employee">
+                      <strong>{emp?.firstName} {emp?.lastName}</strong>
+                      <span>{leave.type} leave</span>
+                    </div>
+                    <div className="leave-dates">
+                      {leave.startDate} → {leave.endDate}
+                    </div>
+                    <div className="leave-days">{leave.days} days</div>
+                  </div>
+                )
+              })
+            )}
+          </div>
+        </motion.div>
+
+        {/* Announcements */}
+        <motion.div
+          className="card"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <div className="card-header">
+            <h3><Bell size={18} /> Announcements</h3>
+            <button className="link-btn" onClick={() => navigate('/hr/announcements')}>View All</button>
+          </div>
+          <div className="announcement-list">
+            {announcements.map(ann => (
+              <div key={ann.id} className={`announcement-item ${ann.priority}`}>
+                {ann.pinned && <span className="pinned-badge">📌</span>}
+                <h4>{ann.title}</h4>
+                <p>{ann.content.substring(0, 100)}...</p>
+                <span className="ann-date">{ann.createdAt}</span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Department Distribution */}
+      <motion.div
+        className="card"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+      >
+        <div className="card-header">
+          <h3><Building2 size={18} /> Department Distribution</h3>
+        </div>
+        <div className="dept-distribution">
+          {Object.entries(stats.departmentDistribution).map(([dept, count]) => (
+            <div key={dept} className="dept-bar">
+              <div className="dept-info">
+                <span className="dept-name">{dept}</span>
+                <span className="dept-count">{count} employees</span>
+              </div>
+              <div className="dept-progress">
+                <motion.div
+                  className="dept-fill"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(count / stats.totalEmployees) * 100}%` }}
+                  transition={{ delay: 0.8, duration: 0.5 }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+
+      <style>{`
         .hr-stats-grid {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
@@ -330,6 +330,7 @@ function HRDashboard() {
           flex: 1;
           font-size: 0.9rem;
           font-weight: 500;
+          color: var(--text-primary);
         }
 
         .qa-arrow {
@@ -483,8 +484,8 @@ function HRDashboard() {
           border-radius: 4px;
         }
       `}</style>
-        </div>
-    )
+    </div>
+  )
 }
 
 export default HRDashboard
