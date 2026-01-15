@@ -8,6 +8,43 @@ import ProductList from './pages/products/ProductList'
 import Purchase from './pages/Purchase'
 import Accounting from './pages/Accounting'
 
+// Sales Module
+import Quotations from './pages/sales/Quotations'
+import SalesOrders from './pages/sales/SalesOrders'
+import Invoices from './pages/sales/Invoices'
+import CreditNotes from './pages/sales/CreditNotes'
+import PricingRules from './pages/sales/PricingRules'
+import SalesTargets from './pages/sales/SalesTargets'
+import QuotationTemplates from './pages/sales/QuotationTemplates'
+import InvoiceTemplates from './pages/sales/InvoiceTemplates'
+
+// Purchase Module
+import Vendors from './pages/purchase/Vendors'
+import PurchaseOrders from './pages/purchase/PurchaseOrders'
+import PurchaseRequisitions from './pages/purchase/PurchaseRequisitions'
+import RFQs from './pages/purchase/RFQs'
+import GRNs from './pages/purchase/GRNs'
+import SupplierInvoices from './pages/purchase/SupplierInvoices'
+import VendorReturns from './pages/purchase/VendorReturns'
+import VendorEvaluations from './pages/purchase/VendorEvaluations'
+
+// Accounting Module
+import JournalEntries from './pages/accounting/JournalEntries'
+import GeneralLedger from './pages/accounting/GeneralLedger'
+import BankAccounts from './pages/accounting/BankAccounts'
+import AccountingExpenses from './pages/accounting/Expenses'
+import Budgets from './pages/accounting/Budgets'
+import AccountsReceivable from './pages/accounting/AccountsReceivable'
+import AccountsPayable from './pages/accounting/AccountsPayable'
+import ChartOfAccounts from './pages/accounting/ChartOfAccounts'
+
+// Inventory Module
+import Inventory from './pages/inventory/Inventory'
+import StockMovements from './pages/inventory/StockMovements'
+import StockTransfers from './pages/inventory/StockTransfers'
+import Warehouses from './pages/inventory/Warehouses'
+import SerialNumbers from './pages/inventory/SerialNumbers'
+
 // HR Module
 import HRDashboard from './pages/hr/HRDashboard'
 import EmployeeList from './pages/hr/EmployeeList'
@@ -41,9 +78,46 @@ function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="sales" element={<Sales />} />
+            
+            {/* Sales Module Routes */}
+            <Route path="sales/quotations" element={<Quotations />} />
+            <Route path="sales/quotations/templates" element={<QuotationTemplates />} />
+            <Route path="sales/orders" element={<SalesOrders />} />
+            <Route path="sales/invoices" element={<Invoices />} />
+            <Route path="sales/invoices/templates" element={<InvoiceTemplates />} />
+            <Route path="sales/credit-notes" element={<CreditNotes />} />
+            <Route path="sales/pricing" element={<PricingRules />} />
+            <Route path="sales/targets" element={<SalesTargets />} />
+            
+            {/* Purchase Module Routes */}
+            <Route path="purchase/vendors" element={<Vendors />} />
+            <Route path="purchase/orders" element={<PurchaseOrders />} />
+            <Route path="purchase/requisitions" element={<PurchaseRequisitions />} />
+            <Route path="purchase/rfqs" element={<RFQs />} />
+            <Route path="purchase/grns" element={<GRNs />} />
+            <Route path="purchase/supplier-invoices" element={<SupplierInvoices />} />
+            <Route path="purchase/returns" element={<VendorReturns />} />
+            <Route path="purchase/evaluations" element={<VendorEvaluations />} />
+            
+            {/* Accounting Module Routes */}
+            <Route path="accounting/journal-entries" element={<JournalEntries />} />
+            <Route path="accounting/general-ledger" element={<GeneralLedger />} />
+            <Route path="accounting/bank-accounts" element={<BankAccounts />} />
+            <Route path="accounting/expenses" element={<AccountingExpenses />} />
+            <Route path="accounting/budgets" element={<Budgets />} />
+            <Route path="accounting/receivables" element={<AccountsReceivable />} />
+            <Route path="accounting/payables" element={<AccountsPayable />} />
+            <Route path="accounting/chart-of-accounts" element={<ChartOfAccounts />} />
+            
+            {/* Inventory Module Routes */}
+            <Route path="inventory" element={<Inventory />} />
+            <Route path="inventory/movements" element={<StockMovements />} />
+            <Route path="inventory/transfers" element={<StockTransfers />} />
+            <Route path="inventory/warehouses" element={<Warehouses />} />
+            <Route path="inventory/serial-numbers" element={<SerialNumbers />} />
+            
             <Route path="products" element={<ProductList />} />
             <Route path="purchase" element={<Purchase />} />
-            <Route path="accounting" element={<Accounting />} />
 
             {/* CRM Module Routes */}
             <Route path="crm" element={<CRMDashboard />} />
