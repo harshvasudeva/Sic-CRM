@@ -66,6 +66,17 @@ import Activities from './pages/crm/Activities'
 
 import Manufacturing from './pages/Manufacturing'
 import Specialized from './pages/Specialized'
+
+// Manufacturing Module
+import BillOfMaterials from './pages/manufacturing/BillOfMaterials'
+import WorkCenters from './pages/manufacturing/WorkCenters'
+import ProductionOrders from './pages/manufacturing/ProductionOrders'
+
+// Specialized Module
+import PointOfSale from './pages/specialized/PointOfSale'
+import Discuss from './pages/specialized/Discuss'
+import Rentals from './pages/specialized/Rentals'
+import WebsiteBuilder from './pages/specialized/WebsiteBuilder'
 import Settings from './pages/Settings'
 import Reports from './pages/Reports'
 import NotFound from './pages/NotFound'
@@ -143,7 +154,15 @@ function App() {
             <Route path="hr/departments" element={<Departments />} />
 
             <Route path="manufacturing" element={<Manufacturing />} />
+            <Route path="manufacturing/bom" element={<BillOfMaterials />} />
+            <Route path="manufacturing/work-centers" element={<WorkCenters />} />
+            <Route path="manufacturing/production-orders" element={<ProductionOrders />} />
+
             <Route path="specialized" element={<Specialized />} />
+            <Route path="specialized/pos" element={<PointOfSale />} />
+            <Route path="specialized/discuss" element={<Discuss />} />
+            <Route path="specialized/rentals" element={<Rentals />} />
+            <Route path="specialized/website-builder" element={<WebsiteBuilder />} />
             <Route path="settings" element={<Settings />} />
             <Route path="reports" element={<Reports />} />
             <Route path="*" element={<NotFound />} />
