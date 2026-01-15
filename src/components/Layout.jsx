@@ -4,6 +4,7 @@ import Sidebar from './Sidebar'
 import Header from './Header'
 import QuickActions from './QuickActions'
 import CommandPalette from './CommandPalette'
+import ShortcutHelp from './ShortcutHelp'
 import OnboardingTour from './OnboardingTour'
 
 function Layout() {
@@ -55,6 +56,8 @@ function Layout() {
                 onClose={() => setCommandPaletteOpen(false)}
                 onHelp={() => setHelpOpen(true)}
             />
+
+            <ShortcutHelp isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
 
             <OnboardingTour
                 isOpen={onboardingOpen}

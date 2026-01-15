@@ -78,13 +78,13 @@ function Accounting() {
             color: 'linear-gradient(135deg, #06b6d4, #22d3ee)'
         },
         {
-            id: 'assets',
-            title: 'Fixed Assets',
-            icon: Building,
-            description: 'Track depreciable assets and calculations',
-            link: '/accounting/assets',
-            color: 'linear-gradient(135deg, #8b5cf6, #a855f7)'
-        }
+            id: 'cost-centers',
+            title: 'Cost Centers',
+            icon: Users,
+            description: 'Track expenses by department/project',
+            link: '/accounting/cost-centers',
+            color: 'linear-gradient(135deg, #8b5cf6, #a78bfa)'
+        },
         {
             id: 'budgets',
             title: 'Budgets',

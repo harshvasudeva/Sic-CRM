@@ -68,19 +68,9 @@ import Activities from './pages/crm/Activities'
 
 import Manufacturing from './pages/Manufacturing'
 import Specialized from './pages/Specialized'
-
-// Manufacturing Module
-import BillOfMaterials from './pages/manufacturing/BillOfMaterials'
-import WorkCenters from './pages/manufacturing/WorkCenters'
-import ProductionOrders from './pages/manufacturing/ProductionOrders'
-
-// Specialized Module
-import PointOfSale from './pages/specialized/PointOfSale'
-import Discuss from './pages/specialized/Discuss'
-import Rentals from './pages/specialized/Rentals'
-import WebsiteBuilder from './pages/specialized/WebsiteBuilder'
 import Settings from './pages/Settings'
 import Reports from './pages/Reports'
+import TallyHelp from './pages/TallyHelp'
 import NotFound from './pages/NotFound'
 
 function App() {
@@ -129,6 +119,7 @@ function App() {
             <Route path="accounting/chart-of-accounts" element={<ChartOfAccounts />} />
             <Route path="accounting/reports" element={<FinancialReports />} />
             <Route path="accounting/assets" element={<FixedAssets />} />
+            <Route path="accounting/cost-centers" element={<CostCenters />} />
             
             {/* Inventory Module Routes */}
             <Route path="inventory" element={<Inventory />} />
@@ -136,8 +127,11 @@ function App() {
             <Route path="inventory/transfers" element={<StockTransfers />} />
             <Route path="inventory/warehouses" element={<Warehouses />} />
             <Route path="inventory/serial-numbers" element={<SerialNumbers />} />
+            <Route path="inventory/stock-groups" element={<StockGroups />} />
+            <Route path="inventory/units" element={<Units />} />
             
             <Route path="products" element={<ProductList />} />
+            <Route path="products/price-lists" element={<PriceLists />} />
             <Route path="purchase" element={<Purchase />} />
 
             {/* CRM Module Routes */}
@@ -175,6 +169,7 @@ function App() {
             <Route path="specialized/website-builder" element={<WebsiteBuilder />} />
             <Route path="settings" element={<Settings />} />
             <Route path="reports" element={<Reports />} />
+            <Route path="tally-help" element={<TallyHelp />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
