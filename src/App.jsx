@@ -37,6 +37,8 @@ import Budgets from './pages/accounting/Budgets'
 import AccountsReceivable from './pages/accounting/AccountsReceivable'
 import AccountsPayable from './pages/accounting/AccountsPayable'
 import ChartOfAccounts from './pages/accounting/ChartOfAccounts'
+import FinancialReports from './pages/accounting/FinancialReports'
+import FixedAssets from './pages/accounting/FixedAssets'
 
 // Inventory Module
 import Inventory from './pages/inventory/Inventory'
@@ -111,14 +113,22 @@ function App() {
             <Route path="purchase/evaluations" element={<VendorEvaluations />} />
             
             {/* Accounting Module Routes */}
+            <Route path="accounting/journal" element={<JournalEntries />} />
             <Route path="accounting/journal-entries" element={<JournalEntries />} />
             <Route path="accounting/general-ledger" element={<GeneralLedger />} />
+            <Route path="accounting/ledger" element={<GeneralLedger />} />
+            <Route path="accounting/bank" element={<BankAccounts />} />
             <Route path="accounting/bank-accounts" element={<BankAccounts />} />
             <Route path="accounting/expenses" element={<AccountingExpenses />} />
             <Route path="accounting/budgets" element={<Budgets />} />
+            <Route path="accounting/receivable" element={<AccountsReceivable />} />
             <Route path="accounting/receivables" element={<AccountsReceivable />} />
+            <Route path="accounting/payable" element={<AccountsPayable />} />
             <Route path="accounting/payables" element={<AccountsPayable />} />
+            <Route path="accounting/chart" element={<ChartOfAccounts />} />
             <Route path="accounting/chart-of-accounts" element={<ChartOfAccounts />} />
+            <Route path="accounting/reports" element={<FinancialReports />} />
+            <Route path="accounting/assets" element={<FixedAssets />} />
             
             {/* Inventory Module Routes */}
             <Route path="inventory" element={<Inventory />} />

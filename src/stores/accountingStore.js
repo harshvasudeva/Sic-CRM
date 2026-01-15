@@ -552,6 +552,38 @@ export function getBalanceSheet(asOf) {
     }
 }
 
+// ==================== FIXED ASSETS CRUD ====================
+export function getFixedAssets() {
+    return getStore('fixedAssets', [])
+}
+
+export function createFixedAsset(data) {
+    const assets = getStore('fixedAssets', [])
+    const newAsset = {
+        ...data,
+        id: Date.now(),
+        createdAt: new Date().toISOString()
+    }
+    assets.push(newAsset)
+    localStorage.setItem('fixedAssets', JSON.stringify(assets))
+    return newAsset
+}
+
+export function updateFixedAsset(id, data) {
+    const assets = getStore('fixedAssets', [])
+    const index = assets.findIndex(a => a.id === id)
+    if (index === -1) return null
+    assets[index] = { ...assets[index], ...data, updatedAt: new Date().toISOString() }
+    localStorage.setItem('fixedAssets', JSON.stringify(assets))
+    return assets[index]
+}
+
+export function deleteFixedAsset(id) {
+    const assets = getStore('fixedAssets', []).filter(a => a.id !== id)
+    localStorage.setItem('fixedAssets', JSON.stringify(assets))
+    return true
+}
+
 // ==================== ACCOUNTING STATS ====================
 export function getAccountingStats() {
     const journalEntries = getJournalEntries()
@@ -560,6 +592,7 @@ export function getAccountingStats() {
     const ar = getAccountsReceivable()
     const bankAccounts = getBankAccounts()
     const budgets = getBudgets()
+    const fixedAssets = getFixedAssets()
     
     const totalExpenses = expenses.reduce((sum, e) => sum + e.totalAmount, 0)
     const pendingExpenses = expenses.filter(e => e.status === 'pending').reduce((sum, e) => sum + e.totalAmount, 0)
@@ -572,6 +605,9 @@ export function getAccountingStats() {
     
     const totalBudgeted = budgets.reduce((sum, b) => sum + b.totalBudgeted, 0)
     const totalActual = budgets.reduce((sum, b) => sum + b.totalActual, 0)
+
+    const totalAssetValue = fixedAssets.reduce((sum, a) => sum + a.currentValue, 0)
+    const totalDepreciation = fixedAssets.reduce((sum, a) => sum + a.accumulatedDepreciation, 0)
     
     return {
         totalJournalEntries: journalEntries.length,
@@ -585,6 +621,8 @@ export function getAccountingStats() {
         overdueReceivable: overdueAR,
         totalBudgeted: totalBudgeted,
         totalActual: totalActual,
-        budgetVariance: totalActual - totalBudgeted
+        budgetVariance: totalActual - totalBudgeted,
+        totalAssetValue,
+        totalDepreciation
     }
 }

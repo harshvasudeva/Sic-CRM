@@ -78,6 +78,14 @@ function Accounting() {
             color: 'linear-gradient(135deg, #06b6d4, #22d3ee)'
         },
         {
+            id: 'assets',
+            title: 'Fixed Assets',
+            icon: Building,
+            description: 'Track depreciable assets and calculations',
+            link: '/accounting/assets',
+            color: 'linear-gradient(135deg, #8b5cf6, #a855f7)'
+        }
+        {
             id: 'budgets',
             title: 'Budgets',
             icon: Calculator,
