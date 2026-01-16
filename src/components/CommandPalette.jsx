@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Search, FileText, DollarSign, ShoppingCart, Truck, ArrowLeft, ArrowRight, Package, Users, Calendar, CreditCard, Receipt, Calculator, FileSpreadsheet, Printer, Download, Upload, Help, Settings, Number, Refresh } from 'lucide-react'
+import { Search, FileText, DollarSign, ShoppingCart, Truck, ArrowLeft, ArrowRight, Package, Users, Calendar, CreditCard, Receipt, Calculator, FileSpreadsheet, Printer, Download, Upload, HelpCircle, Settings, Hash, RefreshCw, Filter, X } from 'lucide-react'
 
-const VOCHER_TYPES = [
+const VOUCHER_TYPES = [
     { id: 'payment', name: 'Payment', icon: DollarSign, shortcut: 'F5', color: 'bg-green-600', route: '/accounting/payment' },
     { id: 'receipt', name: 'Receipt', icon: Receipt, shortcut: 'F6', color: 'bg-blue-600', route: '/accounting/receipt' },
     { id: 'contra', name: 'Contra', icon: ArrowLeft, shortcut: 'F4', color: 'bg-purple-600', route: '/accounting/contra' },
@@ -13,9 +13,9 @@ const VOCHER_TYPES = [
     { id: 'debit-note', name: 'Debit Note', icon: FileText, shortcut: 'Ctrl+F9', color: 'bg-yellow-600', route: '/purchase/returns' },
     { id: 'delivery', name: 'Delivery', icon: Truck, shortcut: 'Alt+F8', color: 'bg-cyan-600', route: '/sales/delivery' },
     { id: 'receipt-note', name: 'Receipt Note', icon: Receipt, shortcut: 'Alt+F6', color: 'bg-teal-600', route: '/purchase/receipt-notes' },
-    { id: 'reversal', name: 'Reversal', icon: Refresh, shortcut: 'Alt+F7', color: 'bg-rose-600', route: '/accounting/reversal' },
-    { id: 'stock-journal', name: 'Stock Journal', shortcut: 'Alt+F10', color: 'bg-amber-600', route: '/inventory/stock-journal' },
-    { id: 'physical-stock', name: 'Physical Stock', shortcut: 'Alt+P', color: 'bg-lime-600', route: '/inventory/physical-stock' },
+    { id: 'reversal', name: 'Reversal', icon: RefreshCw, shortcut: 'Alt+F7', color: 'bg-rose-600', route: '/accounting/reversal' },
+    { id: 'stock-journal', name: 'Stock Journal', icon: FileText, shortcut: 'Alt+F10', color: 'bg-amber-600', route: '/inventory/stock-journal' },
+    { id: 'physical-stock', name: 'Physical Stock', icon: Package, shortcut: 'Alt+P', color: 'bg-lime-600', route: '/inventory/physical-stock' },
 ]
 
 const INVENTORY_ACTIONS = [
@@ -74,7 +74,7 @@ function CommandPalette({ isOpen, onClose, onSelect }) {
         { id: 'inventory', name: 'Inventory', icon: Package },
         { id: 'accounting', name: 'Accounting', icon: Calculator },
         { id: 'payroll', name: 'Payroll', icon: Users },
-        { id: 'reports', name: 'Reports', icon: Number },
+        { id: 'reports', name: 'Reports', icon: Hash },
         { id: 'system', name: 'System', icon: Settings },
     ]
 
@@ -129,7 +129,7 @@ function CommandPalette({ isOpen, onClose, onSelect }) {
         } else if (e.key === 'Tab') {
             e.preventDefault()
             const currentIndex = tabs.findIndex(t => t.id === activeTab)
-            const nextIndex = e.shiftKey 
+            const nextIndex = e.shiftKey
                 ? Math.max(currentIndex - 1, 0)
                 : Math.min(currentIndex + 1, tabs.length - 1)
             setActiveTab(tabs[nextIndex].id)
@@ -154,9 +154,11 @@ function CommandPalette({ isOpen, onClose, onSelect }) {
         )
     }
 
+    if (!isOpen) return null
+
     return (
-        <div className={`fixed inset-0 z-50 flex items-center justify-center bg-black/80 ${isOpen ? 'block' : 'hidden'}`}>
-            <div 
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80" onClick={onClose}>
+            <div
                 className="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-[800px] max-h-[600px] flex flex-col"
                 onClick={(e) => e.stopPropagation()}
             >
@@ -171,7 +173,7 @@ function CommandPalette({ isOpen, onClose, onSelect }) {
                             autoFocus
                             className="w-full bg-gray-800 border border-gray-600 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-blue-500 text-lg"
                         />
-                        <button 
+                        <button
                             onClick={onClose}
                             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
                         >
@@ -186,11 +188,10 @@ function CommandPalette({ isOpen, onClose, onSelect }) {
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`flex-1 flex items-center gap-2 px-3 py-2 rounded text-sm capitalize transition-all ${
-                                        activeTab === tab.id 
-                                            ? 'bg-blue-600 text-white' 
-                                            : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700'
-                                    }`}
+                                    className={`flex-1 flex items-center gap-2 px-3 py-2 rounded text-sm capitalize transition-all ${activeTab === tab.id
+                                        ? 'bg-blue-600 text-white'
+                                        : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700'
+                                        }`}
                                 >
                                     <TabIcon size={16} />
                                     {tab.name}
@@ -213,11 +214,10 @@ function CommandPalette({ isOpen, onClose, onSelect }) {
                                 <button
                                     key={action.id}
                                     onClick={() => handleSelect(action)}
-                                    className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
-                                        index === selectedIndex 
-                                            ? 'bg-blue-600' 
-                                            : 'bg-gray-800 hover:bg-gray-750'
-                                    }`}
+                                    className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${index === selectedIndex
+                                        ? 'bg-blue-600'
+                                        : 'bg-gray-800 hover:bg-gray-750'
+                                        }`}
                                 >
                                     {renderActionIcon(action)}
                                     <div className="flex-1 text-left">
@@ -256,7 +256,7 @@ function CommandPalette({ isOpen, onClose, onSelect }) {
                             </span>
                         </div>
                         <button onClick={() => onSelect('help')} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
-                            <Help size={16} />
+                            <HelpCircle size={16} />
                             <span>View All Shortcuts</span>
                         </button>
                     </div>

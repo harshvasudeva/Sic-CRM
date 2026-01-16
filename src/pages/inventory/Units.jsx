@@ -29,7 +29,7 @@ function Units() {
     const [deleteConfirm, setDeleteConfirm] = useState(null)
 
     const [formData, setFormData] = useState({
-        code: '', name: '', symbol: '', baseUnitId: '', 
+        code: '', name: '', symbol: '', baseUnitId: '',
         conversionFactor: 1, description: ''
     })
 
@@ -80,7 +80,7 @@ function Units() {
 
     const resetFormData = () => {
         setFormData({
-            code: '', name: '', symbol: '', baseUnitId: '', 
+            code: '', name: '', symbol: '', baseUnitId: '',
             conversionFactor: 1, description: ''
         })
     }
@@ -102,12 +102,12 @@ function Units() {
         {
             key: 'baseUnitId',
             label: 'Base Unit',
-            render: (u) => units.find(b => b.id === u.baseUnitId)?.name || '-'
+            render: (value, row) => units.find(b => b.id === value)?.name || '-'
         },
         {
             key: 'conversionFactor',
             label: 'Conversion',
-            render: (v) => `1 : ${v || 1}`
+            render: (value) => `1 : ${value || 1}`
         }
     ]
 

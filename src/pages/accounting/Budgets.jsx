@@ -6,6 +6,13 @@ import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormSelect } from '../../components/FormInput'
 import { useToast } from '../../components/Toast'
 import { getBudgets, createBudget, updateBudget, getChartOfAccounts } from '../../stores/accountingStore'
+import { formatCurrency } from '../../stores/settingsStore'
+
+// Helper function to calculate variance percentage
+const getVariancePercent = (budgeted, actual) => {
+    if (budgeted === 0) return 0
+    return Math.round(((budgeted - actual) / budgeted) * 100)
+}
 
 function Budgets() {
     const toast = useToast()
@@ -59,24 +66,32 @@ function Budgets() {
     const columns = [
         { key: 'fiscalYear', label: 'Fiscal Year', render: (v) => <span className="fiscal-year">{v}</span> },
         { key: 'period', label: 'Period', render: (v) => <span className="period-badge">{v}</span> },
-        { key: 'accountId', label: 'Account', render: (v) => {
-            const account = getChartOfAccounts().find(a => a.id === v)
-            return account ? `${account.code} - ${account.name}` : '-'
-        }},
-        { key: 'budgetedAmount', label: 'Budgeted', render: (v) => <span className="amount budgeted">${v.toLocaleString()}</span> },
-        { key: 'actualAmount', label: 'Actual', render: (v) => <span className="amount actual">${v.toLocaleString()}</span> },
-        { key: 'variance', label: 'Variance', render: (_, row) => {
-            const variance = getVariancePercent(row.budgetedAmount, row.actualAmount)
-            return <span className={`variance ${variance >= 0 ? 'positive' : 'negative'}`}>{variance}%</span>
-        }},
-        { key: 'status', label: 'Status', render: (v) => (
-            <span className={`status-badge ${v}`}>{v}</span>
-        )},
-        { key: 'actions', label: 'Actions', render: (_, row) => (
-            <div className="action-buttons">
-                <button className="btn-edit" onClick={() => handleEdit(row)}>Edit</button>
-            </div>
-        )}
+        {
+            key: 'accountId', label: 'Account', render: (v) => {
+                const account = getChartOfAccounts().find(a => a.id === v)
+                return account ? `${account.code} - ${account.name}` : '-'
+            }
+        },
+        { key: 'budgetedAmount', label: 'Budgeted', render: (v) => <span className="amount budgeted">{formatCurrency(v || 0)}</span> },
+        { key: 'actualAmount', label: 'Actual', render: (v) => <span className="amount actual">{formatCurrency(v || 0)}</span> },
+        {
+            key: 'variance', label: 'Variance', render: (_, row) => {
+                const variance = getVariancePercent(row.budgetedAmount, row.actualAmount)
+                return <span className={`variance ${variance >= 0 ? 'positive' : 'negative'}`}>{variance}%</span>
+            }
+        },
+        {
+            key: 'status', label: 'Status', render: (v) => (
+                <span className={`status-badge ${v}`}>{v}</span>
+            )
+        },
+        {
+            key: 'actions', label: 'Actions', render: (_, row) => (
+                <div className="action-buttons">
+                    <button className="btn-edit" onClick={() => handleEdit(row)}>Edit</button>
+                </div>
+            )
+        }
     ]
 
     return (

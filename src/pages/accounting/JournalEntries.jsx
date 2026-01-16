@@ -6,11 +6,20 @@ import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
 import { useToast } from '../../components/Toast'
 import { getJournalEntries, createJournalEntry, getChartOfAccounts } from '../../stores/accountingStore'
+import { formatCurrency } from '../../stores/settingsStore'
+import { useTallyShortcuts } from '../../hooks/useTallyShortcuts'
 
 function JournalEntries() {
     const toast = useToast()
     const [entries, setEntries] = useState([])
     const [isModalOpen, setIsModalOpen] = useState(false)
+
+    // Shortcuts: Alt+C to create, Esc to close modal
+    useTallyShortcuts({
+        create: () => setIsModalOpen(true),
+        back: () => setIsModalOpen(false)
+    })
+
     const [formData, setFormData] = useState({
         entryDate: '', reference: '', description: '', debitAccountId: '', creditAccountId: '', amount: 0, status: 'posted'
     })
@@ -44,28 +53,19 @@ function JournalEntries() {
     }
 
     const columns = [
-        { key: 'entryNumber', label: 'Entry #', render: (v) => <span className="entry-number">{v}</span> },
-        { key: 'entryDate', label: 'Date', render: (v) => <span>{new Date(v).toLocaleDateString()}</span> },
-        { key: 'reference', label: 'Reference', render: (v) => <span className="reference">{v}</span> },
-        { key: 'debitAccountId', label: 'Debit Account', render: (v) => {
-            const account = getChartOfAccounts().find(a => a.id === v)
-            return account ? `${account.code} - ${account.name}` : '-'
-        }},
-        { key: 'creditAccountId', label: 'Credit Account', render: (v) => {
-            const account = getChartOfAccounts().find(a => a.id === v)
-            return account ? `${account.code} - ${account.name}` : '-'
-        }},
-        { key: 'amount', label: 'Amount', render: (v) => <span className="amount">${v.toLocaleString()}</span> },
-        { key: 'status', label: 'Status', render: (v) => (
-            <span className={`status-badge ${v}`}>
-                {v.charAt(0).toUpperCase() + v.slice(1)}
-            </span>
-        )},
-        { key: 'status', label: 'Status', render: (v) => (
-            <span className={`status-badge ${v}`}>
-                {v.charAt(0).toUpperCase() + v.slice(1)}
-            </span>
-        )}
+        { key: 'journalNumber', label: 'Entry #', render: (v) => <span className="entry-number">{v || '-'}</span> },
+        { key: 'entryDate', label: 'Date', render: (v) => <span>{v ? new Date(v).toLocaleDateString() : '-'}</span> },
+        { key: 'reference', label: 'Reference', render: (v) => <span className="reference">{v || '-'}</span> },
+        { key: 'description', label: 'Description', render: (v) => v || '-' },
+        { key: 'totalDebit', label: 'Debit', render: (v) => <span className="amount">{formatCurrency(v || 0)}</span> },
+        { key: 'totalCredit', label: 'Credit', render: (v) => <span className="amount">{formatCurrency(v || 0)}</span> },
+        {
+            key: 'status', label: 'Status', render: (v) => (
+                <span className={`status-badge ${v || 'draft'}`}>
+                    {v ? v.charAt(0).toUpperCase() + v.slice(1) : 'Draft'}
+                </span>
+            )
+        }
     ]
 
     return (

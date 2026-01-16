@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { CommandPalette, SHORTCUTS, VOUCHER_SHORTCUTS, TALLY_FEATURES } from './ShortcutHelp'
+import { SHORTCUTS, VOUCHER_SHORTCUTS, TALLY_FEATURES } from '../components/ShortcutHelp'
 
 function TallyHelp() {
     const categories = ['general', 'vouchers', 'inventory', 'accounting', 'payroll', 'reports']
@@ -67,7 +67,7 @@ function TallyHelp() {
                 <section id="features" className="section">
                     <h2 className="section-title">✨ Tally Features Available</h2>
                     <p className="text-gray-400 mb-4">All the features you know and love from Tally</p>
-                    
+
                     {Object.entries(TALLY_FEATURES).map(([category, features]) => (
                         <div key={category} className="mb-8">
                             <h3 className="text-lg font-semibold mb-4 text-blue-400 capitalize">

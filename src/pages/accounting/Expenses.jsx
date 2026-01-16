@@ -6,6 +6,7 @@ import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
 import { useToast } from '../../components/Toast'
 import { getExpenses, createExpense, getChartOfAccounts, getBankAccounts } from '../../stores/accountingStore'
+import { formatCurrency } from '../../stores/settingsStore'
 
 function Expenses() {
     const toast = useToast()
@@ -51,14 +52,18 @@ function Expenses() {
         { key: 'expenseDate', label: 'Date', render: (v) => <span>{new Date(v).toLocaleDateString()}</span> },
         { key: 'category', label: 'Category', render: (v) => <span className="category-badge">{v}</span> },
         { key: 'description', label: 'Description' },
-        { key: 'amount', label: 'Amount', render: (v) => <span className="amount">${v.toLocaleString()}</span> },
+        { key: 'amount', label: 'Amount', render: (v) => <span className="amount">{formatCurrency(v || 0)}</span> },
         { key: 'paymentMethod', label: 'Payment Method', render: (v) => <span>{v}</span> },
-        { key: 'status', label: 'Status', render: (v) => (
-            <span className={`status-badge ${v}`}>{v}</span>
-        )},
-        { key: 'status', label: 'Status', render: (v) => (
-            <span className={`status-badge ${v}`}>{v}</span>
-        )}
+        {
+            key: 'status', label: 'Status', render: (v) => (
+                <span className={`status-badge ${v}`}>{v}</span>
+            )
+        },
+        {
+            key: 'status', label: 'Status', render: (v) => (
+                <span className={`status-badge ${v}`}>{v}</span>
+            )
+        }
     ]
 
     return (

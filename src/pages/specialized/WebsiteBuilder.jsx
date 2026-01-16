@@ -1,10 +1,8 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Layout, Image, Type, Box, Palette, Save, Eye, Code, Smartphone } from 'lucide-react'
+import { Plus, Layout, Image, Type, Box, Palette, Save, Eye, Code, Smartphone, Trash2 } from 'lucide-react'
 import Modal from '../../components/Modal'
-import FormInput from '../../components/FormInput'
-import FormTextarea from '../../components/FormTextarea'
-import FormSelect from '../../components/FormInput'
+import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
 import { useToast } from '../../components/Toast'
 
 const templates = [
@@ -32,10 +30,12 @@ function WebsiteBuilder() {
     const [siteName, setSiteName] = useState('')
 
     const [pages, setPages] = useState([
-        { id: 'home', name: 'Home', sections: [
-            { id: 1, type: 'hero', content: { title: 'Welcome to Our Business', subtitle: 'Building the future together' } },
-            { id: 2, type: 'text', content: { text: 'We provide exceptional services to help your business grow.' } },
-        ]},
+        {
+            id: 'home', name: 'Home', sections: [
+                { id: 1, type: 'hero', content: { title: 'Welcome to Our Business', subtitle: 'Building the future together' } },
+                { id: 2, type: 'text', content: { text: 'We provide exceptional services to help your business grow.' } },
+            ]
+        },
     ])
     const [activePage, setActivePage] = useState('home')
 
@@ -217,9 +217,8 @@ function WebsiteBuilder() {
                             <button
                                 key={page.id}
                                 onClick={() => setActivePage(page.id)}
-                                className={`w-full text-left px-3 py-2 rounded-lg transition-all ${
-                                    activePage === page.id ? 'bg-blue-600/20 text-blue-400' : 'text-gray-300 hover:bg-gray-700'
-                                }`}
+                                className={`w-full text-left px-3 py-2 rounded-lg transition-all ${activePage === page.id ? 'bg-blue-600/20 text-blue-400' : 'text-gray-300 hover:bg-gray-700'
+                                    }`}
                             >
                                 {page.name}
                             </button>
@@ -263,9 +262,8 @@ function WebsiteBuilder() {
                     <div className="flex gap-2">
                         <button
                             onClick={() => setPreviewMode(!previewMode)}
-                            className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
-                                previewMode ? 'bg-green-600' : 'bg-gray-700 hover:bg-gray-600'
-                            }`}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-lg ${previewMode ? 'bg-green-600' : 'bg-gray-700 hover:bg-gray-600'
+                                }`}
                         >
                             <Eye size={16} />
                             {previewMode ? 'Edit' : 'Preview'}

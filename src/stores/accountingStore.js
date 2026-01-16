@@ -3,6 +3,7 @@
 const STORAGE_KEYS = {
     chartOfAccounts: 'sic-accounting-coa',
     journalEntries: 'sic-accounting-journal-entries',
+    auditLog: 'sic-accounting-audit-log', // Phase 1: Audit Trail
     ledgerAccounts: 'sic-accounting-ledger',
     bankAccounts: 'sic-accounting-bank-accounts',
     taxes: 'sic-accounting-taxes',
@@ -12,18 +13,30 @@ const STORAGE_KEYS = {
     accountsReceivable: 'sic-accounting-accounts-receivable'
 }
 
-// ==================== CHART OF ACCOUNTS ====================
+// ==================== CHART OF ACCOUNTS (Updated for Phase 1 Hierarchy) ====================
+// Hierarchy: Primary Group -> Sub Group -> Ledger
 const initialChartOfAccounts = [
-    { id: 'coa-001', code: '1000', name: 'Cash', type: 'asset', category: 'current_assets', parent: null },
-    { id: 'coa-002', code: '1100', name: 'Bank Accounts', type: 'asset', category: 'current_assets', parent: null },
-    { id: 'coa-003', code: '1200', name: 'Accounts Receivable', type: 'asset', category: 'current_assets', parent: null },
-    { id: 'coa-004', code: '1500', name: 'Inventory', type: 'asset', category: 'current_assets', parent: null },
-    { id: 'coa-005', code: '2000', name: 'Fixed Assets', type: 'asset', category: 'non_current_assets', parent: null },
-    { id: 'coa-006', code: '2000', name: 'Accounts Payable', type: 'liability', category: 'current_liabilities', parent: null },
-    { id: 'coa-007', code: '2200', name: 'Accrued Expenses', type: 'liability', category: 'current_liabilities', parent: null },
-    { id: 'coa-008', code: '3000', name: 'Revenue', type: 'equity', category: 'revenue', parent: null },
-    { id: 'coa-009', code: '4000', name: 'Cost of Goods Sold', type: 'expense', category: 'cogs', parent: null },
-    { id: 'coa-010', code: '5000', name: 'Operating Expenses', type: 'expense', category: 'operating', parent: null }
+    // ASSETS
+    { id: 'grp-001', code: '1000', name: 'Current Assets', type: 'asset', category: 'group', parent: null, isGroup: true },
+    { id: 'grp-002', code: '1100', name: 'Cash and Bank', type: 'asset', category: 'group', parent: 'grp-001', isGroup: true },
+    { id: 'coa-001', code: '1110', name: 'Cash in Hand', type: 'asset', category: 'current_assets', parent: 'grp-002', isGroup: false },
+    { id: 'coa-002', code: '1120', name: 'HDFC Bank', type: 'asset', category: 'current_assets', parent: 'grp-002', isGroup: false },
+
+    { id: 'grp-003', code: '1200', name: 'Sundry Debtors', type: 'asset', category: 'group', parent: 'grp-001', isGroup: true },
+    { id: 'coa-003', code: '1210', name: 'Accounts Receivable', type: 'asset', category: 'current_assets', parent: 'grp-003', isGroup: false },
+
+    // LIABILITIES
+    { id: 'grp-004', code: '2000', name: 'Current Liabilities', type: 'liability', category: 'group', parent: null, isGroup: true },
+    { id: 'grp-005', code: '2100', name: 'Sundry Creditors', type: 'liability', category: 'group', parent: 'grp-004', isGroup: true },
+    { id: 'coa-006', code: '2110', name: 'Accounts Payable', type: 'liability', category: 'current_liabilities', parent: 'grp-005', isGroup: false },
+
+    // EXPENSES
+    { id: 'grp-006', code: '5000', name: 'Indirect Expenses', type: 'expense', category: 'group', parent: null, isGroup: true },
+    { id: 'coa-010', code: '5100', name: 'Office Rent', type: 'expense', category: 'operating', parent: 'grp-006', isGroup: false },
+
+    // REVENUE
+    { id: 'grp-007', code: '3000', name: 'Direct Income', type: 'equity', category: 'group', parent: null, isGroup: true },
+    { id: 'coa-008', code: '3100', name: 'Sales Account', type: 'equity', category: 'revenue', parent: 'grp-007', isGroup: false }
 ]
 
 // ==================== JOURNAL ENTRIES ====================
@@ -220,32 +233,61 @@ export function getJournalEntries(filters = {}) {
     return entries
 }
 
+import { getSettings, isDateLocked } from './settingsStore'
+
+// Phase 1: Audit Logger
+function logAudit(action, entity, entityId, details, user = 'system') {
+    const logs = getStore(STORAGE_KEYS.auditLog, [])
+    logs.push({
+        id: `audit-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        action, entity, entityId, details, user
+    })
+    setStore(STORAGE_KEYS.auditLog, logs)
+}
+
 export function createJournalEntry(data) {
     const entries = getStore(STORAGE_KEYS.journalEntries, initialJournalEntries)
-    const existingCount = entries.length
-    const journalNumber = generateNumber('JE', new Date().getFullYear(), existingCount + 1)
-    
-    const totalDebit = data.lines.reduce((sum, line) => sum + line.debit, 0)
-    const totalCredit = data.lines.reduce((sum, line) => sum + line.credit, 0)
-    
-    if (totalDebit !== totalCredit) {
-        throw new Error('Debits and credits must balance')
+
+    // Phase 1: Date Lock Check (Fiscal Year)
+    if (isDateLocked(data.entryDate)) {
+        throw new Error('Transaction date is in a locked fiscal period.')
     }
-    
+
+    const startCount = entries.length
+    // Phase 1: Voucher Numbering (e.g., JE-2026-001)
+    const journalNumber = data.journalNumber || generateNumber('JE', new Date().getFullYear(), startCount + 1)
+
+    // Phase 1: Strict Double Entry Validation
+    const totalDebit = data.lines.reduce((sum, line) => sum + (Number(line.debit) || 0), 0)
+    const totalCredit = data.lines.reduce((sum, line) => sum + (Number(line.credit) || 0), 0)
+
+    // Allow small rounding difference (floating point)
+    if (Math.abs(totalDebit - totalCredit) > 0.01) {
+        throw new Error(`Double Entry Violation: Debits (${totalDebit}) must equal Credits (${totalCredit})`)
+    }
+
     const newEntry = {
         ...data,
         id: `je-${Date.now()}`,
-        journalNumber: data.journalNumber || journalNumber,
+        journalNumber,
         entryDate: data.entryDate || new Date().toISOString().split('T')[0],
         totalDebit,
         totalCredit,
-        status: 'draft',
-        createdAt: new Date().toISOString().split('T')[0]
+        status: 'posted', // Auto-post for Phase 1
+        voucherType: data.voucherType || 'Journal',
+        createdAt: new Date().toISOString()
     }
+
     entries.push(newEntry)
     setStore(STORAGE_KEYS.journalEntries, entries)
+
+    // Log Audit
+    logAudit('CREATE', 'JournalEntry', newEntry.id, `Created voucher ${journalNumber} for ${totalDebit}`)
+
     return newEntry
 }
+
 
 export function postJournalEntry(id) {
     const entries = getStore(STORAGE_KEYS.journalEntries, initialJournalEntries)
@@ -304,9 +346,9 @@ export function getBudgets(filters = {}) {
 
 export function createBudget(data) {
     const budgets = getStore(STORAGE_KEYS.budgets, initialBudgets)
-    
+
     const totalBudgeted = data.items.reduce((sum, item) => sum + item.budgeted, 0)
-    
+
     const newBudget = {
         ...data,
         id: `budget-${Date.now()}`,
@@ -341,7 +383,7 @@ export function createExpense(data) {
     const expenses = getStore(STORAGE_KEYS.expenses, initialExpenses)
     const existingCount = expenses.length
     const expenseNumber = generateNumber('EXP', new Date().getFullYear(), existingCount + 1)
-    
+
     const newExpense = {
         ...data,
         id: `exp-${Date.now()}`,
@@ -387,7 +429,7 @@ export function getAccountsPayable(filters = {}) {
 
 export function createAccountsPayable(data) {
     const ap = getStore(STORAGE_KEYS.accountsPayable, initialAccountsPayable)
-    
+
     const newAP = {
         ...data,
         id: `ap-${Date.now()}`,
@@ -407,9 +449,9 @@ export function payAccountsPayable(id, amount) {
     const ap = getStore(STORAGE_KEYS.accountsPayable, initialAccountsPayable)
     const index = ap.findIndex(a => a.id === id)
     if (index === -1) return null
-    
-    ap[index] = { 
-        ...ap[index], 
+
+    ap[index] = {
+        ...ap[index],
         paidAmount: ap[index].paidAmount + amount,
         balance: ap[index].balance - amount,
         status: ap[index].balance <= amount ? 'paid' : 'partial'
@@ -431,7 +473,7 @@ export function getAccountsReceivable(filters = {}) {
 
 export function createAccountsReceivable(data) {
     const ar = getStore(STORAGE_KEYS.accountsReceivable, initialAccountsReceivable)
-    
+
     const newAR = {
         ...data,
         id: `ar-${Date.now()}`,
@@ -452,9 +494,9 @@ export function receiveAccountsReceivable(id, amount) {
     const ar = getStore(STORAGE_KEYS.accountsReceivable, initialAccountsReceivable)
     const index = ar.findIndex(a => a.id === id)
     if (index === -1) return null
-    
-    ar[index] = { 
-        ...ar[index], 
+
+    ar[index] = {
+        ...ar[index],
         paidAmount: ar[index].paidAmount + amount,
         balance: ar[index].balance - amount,
         status: ar[index].balance <= amount ? 'paid' : 'partial'
@@ -467,7 +509,7 @@ export function receiveAccountsReceivable(id, amount) {
 export function getTrialBalance(asOf) {
     const asOfDate = asOf || new Date().toISOString().split('T')[0]
     const journalEntries = getJournalEntries({ status: 'posted', endDate: asOfDate })
-    
+
     const balances = {}
     journalEntries.forEach(entry => {
         entry.lines.forEach(line => {
@@ -478,7 +520,7 @@ export function getTrialBalance(asOf) {
             balances[line.accountId].credit += line.credit
         })
     })
-    
+
     return Object.entries(balances).map(([accountId, amounts]) => {
         const account = getAccount(accountId)
         return {
@@ -494,16 +536,16 @@ export function getTrialBalance(asOf) {
 
 export function getProfitAndLoss(startDate, endDate) {
     const journalEntries = getJournalEntries({ status: 'posted', startDate, endDate })
-    
+
     let revenue = 0
     let expenses = 0
     let cogs = 0
-    
+
     journalEntries.forEach(entry => {
         entry.lines.forEach(line => {
             const account = getAccount(line.accountId)
             if (!account) return
-            
+
             if (account.type === 'equity' && account.category === 'revenue') {
                 revenue += line.credit - line.debit
             } else if (account.type === 'expense') {
@@ -515,7 +557,7 @@ export function getProfitAndLoss(startDate, endDate) {
             }
         })
     })
-    
+
     return {
         revenue,
         cogs,
@@ -529,11 +571,11 @@ export function getProfitAndLoss(startDate, endDate) {
 
 export function getBalanceSheet(asOf) {
     const trialBalance = getTrialBalance(asOf)
-    
+
     let totalAssets = 0
     let totalLiabilities = 0
     let totalEquity = 0
-    
+
     trialBalance.forEach(item => {
         if (item.accountType === 'asset') {
             totalAssets += item.balance
@@ -543,7 +585,7 @@ export function getBalanceSheet(asOf) {
             totalEquity += item.balance
         }
     })
-    
+
     return {
         totalAssets,
         totalLiabilities,
@@ -593,22 +635,22 @@ export function getAccountingStats() {
     const bankAccounts = getBankAccounts()
     const budgets = getBudgets()
     const fixedAssets = getFixedAssets()
-    
+
     const totalExpenses = expenses.reduce((sum, e) => sum + e.totalAmount, 0)
     const pendingExpenses = expenses.filter(e => e.status === 'pending').reduce((sum, e) => sum + e.totalAmount, 0)
     const paidExpenses = expenses.filter(e => e.status === 'paid').reduce((sum, e) => sum + e.totalAmount, 0)
-    
+
     const totalBankBalance = bankAccounts.reduce((sum, a) => sum + a.balance, 0)
     const totalAP = ap.reduce((sum, a) => sum + a.balance, 0)
     const totalAR = ar.reduce((sum, a) => sum + a.balance, 0)
     const overdueAR = ar.filter(a => a.status === 'pending').reduce((sum, a) => sum + a.balance, 0)
-    
+
     const totalBudgeted = budgets.reduce((sum, b) => sum + b.totalBudgeted, 0)
     const totalActual = budgets.reduce((sum, b) => sum + b.totalActual, 0)
 
     const totalAssetValue = fixedAssets.reduce((sum, a) => sum + a.currentValue, 0)
     const totalDepreciation = fixedAssets.reduce((sum, a) => sum + a.accumulatedDepreciation, 0)
-    
+
     return {
         totalJournalEntries: journalEntries.length,
         postedEntries: journalEntries.filter(e => e.status === 'posted').length,

@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Send, Users, Search, MoreVertical, Trash2, Phone, Mail, Video } from 'lucide-react'
 import Modal from '../../components/Modal'
-import FormInput from '../../components/FormInput'
-import FormTextarea from '../../components/FormTextarea'
+import FormInput, { FormTextarea } from '../../components/FormInput'
 import { useToast } from '../../components/Toast'
 
 const channels = [
@@ -132,17 +131,15 @@ function Discuss() {
                 <div className="flex border-b border-gray-700">
                     <button
                         onClick={() => setActiveType('channels')}
-                        className={`flex-1 py-3 text-sm font-medium ${
-                            activeType === 'channels' ? 'bg-gray-700 text-blue-400 border-b-2 border-blue-400' : 'text-gray-400'
-                        }`}
+                        className={`flex-1 py-3 text-sm font-medium ${activeType === 'channels' ? 'bg-gray-700 text-blue-400 border-b-2 border-blue-400' : 'text-gray-400'
+                            }`}
                     >
                         Channels
                     </button>
                     <button
                         onClick={() => setActiveType('dms')}
-                        className={`flex-1 py-3 text-sm font-medium ${
-                            activeType === 'dms' ? 'bg-gray-700 text-blue-400 border-b-2 border-blue-400' : 'text-gray-400'
-                        }`}
+                        className={`flex-1 py-3 text-sm font-medium ${activeType === 'dms' ? 'bg-gray-700 text-blue-400 border-b-2 border-blue-400' : 'text-gray-400'
+                            }`}
                     >
                         Direct Messages
                     </button>
@@ -156,9 +153,8 @@ function Discuss() {
                                 <button
                                     key={channel.id}
                                     onClick={() => setActiveChannel(channel.id)}
-                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
-                                        activeChannel === channel.id ? 'bg-blue-600/20 text-blue-400' : 'text-gray-300 hover:bg-gray-700'
-                                    }`}
+                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${activeChannel === channel.id ? 'bg-blue-600/20 text-blue-400' : 'text-gray-300 hover:bg-gray-700'
+                                        }`}
                                 >
                                     <Users size={18} />
                                     <span className="flex-1 text-left">{channel.name}</span>
@@ -175,9 +171,8 @@ function Discuss() {
                                 <button
                                     key={dm.id}
                                     onClick={() => setActiveChannel(dm.id)}
-                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
-                                        activeChannel === dm.id ? 'bg-blue-600/20 text-blue-400' : 'text-gray-300 hover:bg-gray-700'
-                                    }`}
+                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${activeChannel === dm.id ? 'bg-blue-600/20 text-blue-400' : 'text-gray-300 hover:bg-gray-700'
+                                        }`}
                                 >
                                     <div className="relative">
                                         <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center font-medium">
@@ -203,8 +198,8 @@ function Discuss() {
                         <Users size={20} className="text-blue-400" />
                         <div>
                             <h2 className="font-semibold">
-                                {channels.find(c => c.id === activeChannel)?.name || 
-                                 directMessages.find(d => d.id === activeChannel)?.name}
+                                {channels.find(c => c.id === activeChannel)?.name ||
+                                    directMessages.find(d => d.id === activeChannel)?.name}
                             </h2>
                             {directMessages.find(d => d.id === activeChannel) && (
                                 <span className="text-xs text-gray-400">
@@ -234,9 +229,8 @@ function Discuss() {
                             animate={{ opacity: 1, y: 0 }}
                             className={`flex gap-3 ${msg.user === 'You' ? 'flex-row-reverse' : ''}`}
                         >
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium shrink-0 ${
-                                msg.user === 'You' ? 'bg-blue-600' : 'bg-gray-600'
-                            }`}>
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium shrink-0 ${msg.user === 'You' ? 'bg-blue-600' : 'bg-gray-600'
+                                }`}>
                                 {msg.avatar}
                             </div>
                             <div className={`max-w-md ${msg.user === 'You' ? 'items-end' : 'items-start'} flex flex-col`}>
@@ -246,9 +240,8 @@ function Discuss() {
                                     </span>
                                     <span className="text-xs text-gray-500">{msg.time}</span>
                                 </div>
-                                <div className={`px-4 py-2 rounded-lg ${
-                                    msg.user === 'You' ? 'bg-blue-600' : 'bg-gray-800'
-                                }`}>
+                                <div className={`px-4 py-2 rounded-lg ${msg.user === 'You' ? 'bg-blue-600' : 'bg-gray-800'
+                                    }`}>
                                     <p className="text-sm">{msg.text}</p>
                                 </div>
                             </div>

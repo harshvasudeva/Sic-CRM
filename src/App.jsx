@@ -5,6 +5,7 @@ import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import Sales from './pages/Sales'
 import ProductList from './pages/products/ProductList'
+import PriceLists from './pages/products/PriceLists'
 import Purchase from './pages/Purchase'
 import Accounting from './pages/Accounting'
 
@@ -39,6 +40,7 @@ import AccountsPayable from './pages/accounting/AccountsPayable'
 import ChartOfAccounts from './pages/accounting/ChartOfAccounts'
 import FinancialReports from './pages/accounting/FinancialReports'
 import FixedAssets from './pages/accounting/FixedAssets'
+import CostCenters from './pages/accounting/CostCenters'
 
 // Inventory Module
 import Inventory from './pages/inventory/Inventory'
@@ -46,6 +48,8 @@ import StockMovements from './pages/inventory/StockMovements'
 import StockTransfers from './pages/inventory/StockTransfers'
 import Warehouses from './pages/inventory/Warehouses'
 import SerialNumbers from './pages/inventory/SerialNumbers'
+import StockGroups from './pages/inventory/StockGroups'
+import Units from './pages/inventory/Units'
 
 // HR Module
 import HRDashboard from './pages/hr/HRDashboard'
@@ -67,7 +71,14 @@ import Contacts from './pages/crm/Contacts'
 import Activities from './pages/crm/Activities'
 
 import Manufacturing from './pages/Manufacturing'
+import BillOfMaterials from './pages/manufacturing/BillOfMaterials'
+import WorkCenters from './pages/manufacturing/WorkCenters'
+import ProductionOrders from './pages/manufacturing/ProductionOrders'
 import Specialized from './pages/Specialized'
+import PointOfSale from './pages/specialized/PointOfSale'
+import Discuss from './pages/specialized/Discuss'
+import Rentals from './pages/specialized/Rentals'
+import WebsiteBuilder from './pages/specialized/WebsiteBuilder'
 import Settings from './pages/Settings'
 import Reports from './pages/Reports'
 import TallyHelp from './pages/TallyHelp'
@@ -81,7 +92,8 @@ function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="sales" element={<Sales />} />
-            
+            <Route path="accounting" element={<Accounting />} />
+
             {/* Sales Module Routes */}
             <Route path="sales/quotations" element={<Quotations />} />
             <Route path="sales/quotations/templates" element={<QuotationTemplates />} />
@@ -91,7 +103,7 @@ function App() {
             <Route path="sales/credit-notes" element={<CreditNotes />} />
             <Route path="sales/pricing" element={<PricingRules />} />
             <Route path="sales/targets" element={<SalesTargets />} />
-            
+
             {/* Purchase Module Routes */}
             <Route path="purchase/vendors" element={<Vendors />} />
             <Route path="purchase/orders" element={<PurchaseOrders />} />
@@ -101,7 +113,7 @@ function App() {
             <Route path="purchase/supplier-invoices" element={<SupplierInvoices />} />
             <Route path="purchase/returns" element={<VendorReturns />} />
             <Route path="purchase/evaluations" element={<VendorEvaluations />} />
-            
+
             {/* Accounting Module Routes */}
             <Route path="accounting/journal" element={<JournalEntries />} />
             <Route path="accounting/journal-entries" element={<JournalEntries />} />
@@ -120,7 +132,7 @@ function App() {
             <Route path="accounting/reports" element={<FinancialReports />} />
             <Route path="accounting/assets" element={<FixedAssets />} />
             <Route path="accounting/cost-centers" element={<CostCenters />} />
-            
+
             {/* Inventory Module Routes */}
             <Route path="inventory" element={<Inventory />} />
             <Route path="inventory/movements" element={<StockMovements />} />
@@ -129,7 +141,7 @@ function App() {
             <Route path="inventory/serial-numbers" element={<SerialNumbers />} />
             <Route path="inventory/stock-groups" element={<StockGroups />} />
             <Route path="inventory/units" element={<Units />} />
-            
+
             <Route path="products" element={<ProductList />} />
             <Route path="products/price-lists" element={<PriceLists />} />
             <Route path="purchase" element={<Purchase />} />

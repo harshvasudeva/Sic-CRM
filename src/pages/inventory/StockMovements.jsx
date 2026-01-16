@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import DataTable from '../../components/DataTable'
-import FormSelect from '../../components/FormInput'
+import { FormSelect } from '../../components/FormInput'
 import { getStockMovements, getInventoryProducts } from '../../stores/inventoryStore'
 
 function StockMovements() {
@@ -37,13 +37,17 @@ function StockMovements() {
     const columns = [
         { key: 'movementNumber', label: 'Movement #', render: (v) => <span className="movement-number">{v}</span> },
         { key: 'movementDate', label: 'Date', render: (v) => <span>{new Date(v).toLocaleDateString()}</span> },
-        { key: 'type', label: 'Type', render: (v) => (
-            <span className={`type-badge ${v}`}>{v}</span>
-        )},
-        { key: 'productId', label: 'Product', render: (v) => {
-            const product = getInventoryProducts().find(p => p.id === v)
-            return product ? `${product.sku} - ${product.name}` : '-'
-        }},
+        {
+            key: 'type', label: 'Type', render: (v) => (
+                <span className={`type-badge ${v}`}>{v}</span>
+            )
+        },
+        {
+            key: 'productId', label: 'Product', render: (v) => {
+                const product = getInventoryProducts().find(p => p.id === v)
+                return product ? `${product.sku} - ${product.name}` : '-'
+            }
+        },
         { key: 'warehouseId', label: 'Warehouse', render: (v) => <span>{v || '-'}</span> },
         { key: 'quantity', label: 'Quantity', render: (v) => <span className={`quantity ${v > 0 ? 'positive' : 'negative'}`}>{v > 0 ? '+' : ''}{v}</span> },
         { key: 'reference', label: 'Reference', render: (v) => <span className="reference">{v || '-'}</span> },
@@ -63,8 +67,8 @@ function StockMovements() {
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
                 <div className="filter-bar">
-                    <FormSelect 
-                        label="Filter by Type" 
+                    <FormSelect
+                        label="Filter by Type"
                         options={[
                             { value: '', label: 'All Types' },
                             { value: 'receipt', label: 'Receipt' },
@@ -72,17 +76,17 @@ function StockMovements() {
                             { value: 'transfer', label: 'Transfer' },
                             { value: 'adjustment', label: 'Adjustment' },
                             { value: 'return', label: 'Return' }
-                        ]} 
-                        value={filterType} 
+                        ]}
+                        value={filterType}
                         onChange={(e) => setFilterType(e.target.value)}
                     />
-                    <FormSelect 
-                        label="Filter by Product" 
+                    <FormSelect
+                        label="Filter by Product"
                         options={[
                             { value: '', label: 'All Products' },
                             ...getInventoryProducts().map(p => ({ value: p.id, label: `${p.sku} - ${p.name}` }))
-                        ]} 
-                        value={filterProduct} 
+                        ]}
+                        value={filterProduct}
                         onChange={(e) => setFilterProduct(e.target.value)}
                     />
                 </div>

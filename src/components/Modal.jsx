@@ -141,11 +141,54 @@ function Modal({
     )
 }
 
-// Modal Footer component
-export function ModalFooter({ children }) {
+// Modal Footer component - supports both children and props-based buttons
+export function ModalFooter({
+    children,
+    onCancel,
+    onConfirm,
+    cancelText = 'Cancel',
+    confirmText = 'Confirm',
+    confirmClass = ''
+}) {
     return (
         <div className="modal-footer">
-            {children}
+            {children ? children : (
+                <>
+                    {onCancel && (
+                        <button
+                            className="btn-secondary"
+                            onClick={onCancel}
+                            style={{
+                                padding: '12px 20px',
+                                background: 'var(--bg-tertiary)',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: 'var(--radius-md)',
+                                color: 'var(--text-secondary)',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            {cancelText}
+                        </button>
+                    )}
+                    {onConfirm && (
+                        <button
+                            className={`btn-primary ${confirmClass}`}
+                            onClick={onConfirm}
+                            style={{
+                                padding: '12px 20px',
+                                background: confirmClass.includes('red') ? 'var(--error)' : 'var(--accent-gradient)',
+                                border: 'none',
+                                borderRadius: 'var(--radius-md)',
+                                color: 'white',
+                                cursor: 'pointer',
+                                fontWeight: 600
+                            }}
+                        >
+                            {confirmText}
+                        </button>
+                    )}
+                </>
+            )}
             <style>{`
         .modal-footer {
           display: flex;

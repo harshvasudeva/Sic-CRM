@@ -1,0 +1,172 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Auth & Users
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  expenses      Expense[]
+  journalEntries JournalEntry[]
+}
+
+// Accounting: Chart of Accounts
+model Account {
+  id            String   @id @default(uuid())
+  code          String   @unique
+  name          String
+  type          String   // asset, liability, equity, revenue, expense
+  subType       String?
+  normalBalance String   // debit, credit
+  isActive      Boolean  @default(true)
+  balance       Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  journalDebits  JournalLine[] @relation("DebitAccount")
+  journalCredits JournalLine[] @relation("CreditAccount")
+  expenses       Expense[]
+}
+
+// Accounting: Journal Entries
+model JournalEntry {
+  id            String   @id @default(uuid())
+  journalNumber String   @unique
+  entryDate     DateTime
+  reference     String?
+  description   String?
+  totalDebit    Float
+  totalCredit   Float
+  status        String   @default("draft") // draft, posted
+  createdBy     String
+  user          User     @relation(fields: [createdBy], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  lines         JournalLine[]
+}
+
+model JournalLine {
+  id             String       @id @default(uuid())
+  journalEntryId String
+  journalEntry   JournalEntry @relation(fields: [journalEntryId], references: [id])
+  debitAccountId String?
+  debitAccount   Account?     @relation("DebitAccount", fields: [debitAccountId], references: [id])
+  creditAccountId String?
+  creditAccount  Account?     @relation("CreditAccount", fields: [creditAccountId], references: [id])
+  amount         Float
+  description    String?
+}
+
+// Accounting: Expenses
+model Expense {
+  id            String   @id @default(uuid())
+  expenseNumber String   @unique
+  expenseDate   DateTime
+  category      String
+  description   String
+  amount        Float
+  paymentMethod String
+  status        String   @default("pending") // pending, approved, rejected
+  accountId     String?
+  account       Account? @relation(fields: [accountId], references: [id])
+  approvedBy    String?
+  user          User?    @relation(fields: [approvedBy], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// Accounting: Fixed Assets
+model FixedAsset {
+  id                      String   @id @default(uuid())
+  assetNumber             String   @unique
+  name                    String
+  category                String
+  purchaseDate            DateTime
+  purchasePrice           Float
+  salvageValue            Float
+  usefulLife              Int      // in months
+  depreciationMethod      String   // straight_line, etc.
+  accumulatedDepreciation Float    @default(0)
+  currentValue            Float
+  status                  String   @default("active")
+  location                String?
+  serialNumber            String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+}
+
+// Accounting: Budgets
+model Budget {
+  id             String   @id @default(uuid())
+  fiscalYear     String
+  department     String
+  category       String
+  budgetedAmount Float
+  actualAmount   Float    @default(0)
+  startDate      DateTime
+  endDate        DateTime
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// Accounting: Bank Accounts
+model BankAccount {
+  id             String   @id @default(uuid())
+  accountName    String
+  accountNumber  String
+  bankName       String
+  accountType    String   // checking, savings
+  currency       String   @default("USD")
+  openingBalance Float
+  currentBalance Float
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// CRM: Contacts
+model Contact {
+  id          String   @id @default(uuid())
+  firstName   String
+  lastName    String
+  email       String?
+  phone       String?
+  company     String?
+  status      String   @default("lead")
+  source      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  deals       Deal[]
+}
+
+// CRM: Deals
+model Deal {
+  id          String   @id @default(uuid())
+  name        String
+  value       Float
+  stage       String
+  contactId   String?
+  contact     Contact? @relation(fields: [contactId], references: [id])
+  expectedCloseDate DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

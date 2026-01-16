@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import DataTable from '../../components/DataTable'
-import FormSelect from '../../components/FormInput'
+import { FormSelect } from '../../components/FormInput'
 import { getJournalEntries, getChartOfAccounts } from '../../stores/accountingStore'
+import { formatCurrency } from '../../stores/settingsStore'
 
 function GeneralLedger() {
     const [entries, setEntries] = useState([])
@@ -44,25 +45,31 @@ function GeneralLedger() {
         { key: 'entryDate', label: 'Date', render: (v) => <span>{new Date(v).toLocaleDateString()}</span> },
         { key: 'reference', label: 'Reference', render: (v) => <span className="reference">{v}</span> },
         { key: 'description', label: 'Description' },
-        { key: 'debitAccountId', label: 'Debit Account', render: (v) => {
-            const account = getChartOfAccounts().find(a => a.id === v)
-            return account ? `${account.code}` : '-'
-        }},
-        { key: 'debit', label: 'Debit', render: (_, row) => row.debitAccountId === selectedAccount ? <span className="debit">${row.amount.toLocaleString()}</span> : '-' },
-        { key: 'creditAccountId', label: 'Credit Account', render: (v) => {
-            const account = getChartOfAccounts().find(a => a.id === v)
-            return account ? `${account.code}` : '-'
-        }},
-        { key: 'credit', label: 'Credit', render: (_, row) => row.creditAccountId === selectedAccount ? <span className="credit">${row.amount.toLocaleString()}</span> : '-' },
-        { key: 'balance', label: 'Balance', render: (_, row, index) => {
-            let runningBalance = 0
-            for (let i = 0; i <= index; i++) {
-                const entry = filteredEntries[i]
-                if (entry.debitAccountId === selectedAccount) runningBalance += entry.amount
-                if (entry.creditAccountId === selectedAccount) runningBalance -= entry.amount
+        {
+            key: 'debitAccountId', label: 'Debit Account', render: (v) => {
+                const account = getChartOfAccounts().find(a => a.id === v)
+                return account ? `${account.code}` : '-'
             }
-            return <span className={`balance ${runningBalance >= 0 ? 'positive' : 'negative'}`}>${runningBalance.toLocaleString()}</span>
-        }}
+        },
+        { key: 'debit', label: 'Debit', render: (_, row) => row.debitAccountId === selectedAccount ? <span className="debit">{formatCurrency(row.amount)}</span> : '-' },
+        {
+            key: 'creditAccountId', label: 'Credit Account', render: (v) => {
+                const account = getChartOfAccounts().find(a => a.id === v)
+                return account ? `${account.code}` : '-'
+            }
+        },
+        { key: 'credit', label: 'Credit', render: (_, row) => row.creditAccountId === selectedAccount ? <span className="credit">{formatCurrency(row.amount)}</span> : '-' },
+        {
+            key: 'balance', label: 'Balance', render: (_, row, index) => {
+                let runningBalance = 0
+                for (let i = 0; i <= index; i++) {
+                    const entry = filteredEntries[i]
+                    if (entry.debitAccountId === selectedAccount) runningBalance += entry.amount
+                    if (entry.creditAccountId === selectedAccount) runningBalance -= entry.amount
+                }
+                return <span className={`balance ${runningBalance >= 0 ? 'positive' : 'negative'}`}>{formatCurrency(runningBalance)}</span>
+            }
+        }
     ]
 
     return (
@@ -78,28 +85,28 @@ function GeneralLedger() {
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
                 <div className="filter-bar">
-                    <FormSelect 
-                        label="Select Account" 
+                    <FormSelect
+                        label="Select Account"
                         options={[
                             { value: '', label: 'All Accounts' },
                             ...getChartOfAccounts().map(a => ({ value: a.id, label: `${a.code} - ${a.name}` }))
-                        ]} 
-                        value={selectedAccount} 
+                        ]}
+                        value={selectedAccount}
                         onChange={(e) => setSelectedAccount(e.target.value)}
                     />
                     {selectedAccount && (
                         <div className="account-summary">
                             <div className="summary-item">
                                 <span>Total Debits:</span>
-                                <span className="debit">${balance.debit.toLocaleString()}</span>
+                                <span className="debit">{formatCurrency(balance.debit)}</span>
                             </div>
                             <div className="summary-item">
                                 <span>Total Credits:</span>
-                                <span className="credit">${balance.credit.toLocaleString()}</span>
+                                <span className="credit">{formatCurrency(balance.credit)}</span>
                             </div>
                             <div className="summary-item total">
                                 <span>Balance:</span>
-                                <span className={`balance ${balance.balance >= 0 ? 'positive' : 'negative'}`}>${balance.balance.toLocaleString()}</span>
+                                <span className={`balance ${balance.balance >= 0 ? 'positive' : 'negative'}`}>{formatCurrency(balance.balance)}</span>
                             </div>
                         </div>
                     )}

@@ -4,7 +4,7 @@ import Sidebar from './Sidebar'
 import Header from './Header'
 import QuickActions from './QuickActions'
 import CommandPalette from './CommandPalette'
-import ShortcutHelp from './ShortcutHelp'
+import { ShortcutHelp } from './ShortcutHelp'
 import OnboardingTour from './OnboardingTour'
 
 function Layout() {

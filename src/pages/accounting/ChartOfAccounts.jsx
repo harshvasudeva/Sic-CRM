@@ -6,11 +6,19 @@ import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormSelect } from '../../components/FormInput'
 import { useToast } from '../../components/Toast'
 import { getChartOfAccounts, createAccount, deleteAccount } from '../../stores/accountingStore'
+import { formatCurrency } from '../../stores/settingsStore'
+import { useTallyShortcuts } from '../../hooks/useTallyShortcuts'
 
 function ChartOfAccounts() {
     const toast = useToast()
     const [accounts, setAccounts] = useState([])
     const [isModalOpen, setIsModalOpen] = useState(false)
+
+    useTallyShortcuts({
+        create: () => setIsModalOpen(true),
+        back: () => setIsModalOpen(false)
+    })
+
     const [formData, setFormData] = useState({
         code: '', name: '', type: 'asset', subType: '', normalBalance: 'debit', isActive: true
     })
@@ -64,20 +72,28 @@ function ChartOfAccounts() {
     const columns = [
         { key: 'code', label: 'Code', render: (v) => <span className="account-code">{v}</span> },
         { key: 'name', label: 'Account Name', render: (v) => <span className="account-name">{v}</span> },
-        { key: 'type', label: 'Type', render: (v) => (
-            <span className={`type-badge ${getTypeColor(v)}`}>{v}</span>
-        )},
+        {
+            key: 'type', label: 'Type', render: (v) => (
+                <span className={`type-badge ${getTypeColor(v)}`}>{v}</span>
+            )
+        },
         { key: 'subType', label: 'Sub Type', render: (v) => <span>{v || '-'}</span> },
-        { key: 'normalBalance', label: 'Normal Balance', render: (v) => (
-            <span className={`balance-badge ${v}`}>{v}</span>
-        )},
-        { key: 'balance', label: 'Current Balance', render: (v) => <span className="amount">${v.toLocaleString()}</span> },
-        { key: 'isActive', label: 'Status', render: (v) => (
-            <span className={`status-badge ${v ? 'active' : 'inactive'}`}>{v ? 'Active' : 'Inactive'}</span>
-        )},
-        { key: 'actions', label: 'Actions', render: (_, row) => (
-            <button className="btn-delete" onClick={() => handleDelete(row.id)}>Delete</button>
-        )}
+        {
+            key: 'normalBalance', label: 'Normal Balance', render: (v) => (
+                <span className={`balance-badge ${v}`}>{v}</span>
+            )
+        },
+        { key: 'balance', label: 'Current Balance', render: (v) => <span className="amount">{formatCurrency(v || 0)}</span> },
+        {
+            key: 'isActive', label: 'Status', render: (v) => (
+                <span className={`status-badge ${v ? 'active' : 'inactive'}`}>{v ? 'Active' : 'Inactive'}</span>
+            )
+        },
+        {
+            key: 'actions', label: 'Actions', render: (_, row) => (
+                <button className="btn-delete" onClick={() => handleDelete(row.id)}>Delete</button>
+            )
+        }
     ]
 
     const getAccountCounts = () => {

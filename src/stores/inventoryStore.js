@@ -259,7 +259,7 @@ export function createProduct(data) {
     const products = getStore(STORAGE_KEYS.products, initialProducts)
     const existingCount = products.length
     const sku = data.sku || `SKU-${String(existingCount + 1).padStart(4, '0')}`
-    
+
     const newProduct = {
         ...data,
         id: `prod-${Date.now()}`,
@@ -298,17 +298,17 @@ export function updateStockLevel(productId, warehouseId, quantityChange) {
     const levels = getStore(STORAGE_KEYS.stockLevels, initialStockLevels)
     const index = levels.findIndex(l => l.productId === productId && l.warehouseId === warehouseId)
     if (index === -1) return null
-    
+
     levels[index].quantity += quantityChange
     levels[index].available = levels[index].quantity - levels[index].reserved
-    
+
     const product = getProduct(productId)
     if (product && product.minStock > 0 && levels[index].available < product.minStock) {
         levels[index].status = 'low_stock'
     } else if (levels[index].available >= product.minStock) {
         levels[index].status = 'good'
     }
-    
+
     setStore(STORAGE_KEYS.stockLevels, levels)
     return levels[index]
 }
@@ -339,7 +339,7 @@ export function getStockMovements(filters = {}) {
 export function createStockMovement(data) {
     const movements = getStore(STORAGE_KEYS.stockMovements, initialStockMovements)
     const movementNumber = generateNumber('MOV', new Date().getFullYear(), movements.length + 1)
-    
+
     const newMovement = {
         ...data,
         id: `movement-${Date.now()}`,
@@ -364,7 +364,7 @@ export function getTransfers(filters = {}) {
 export function createTransfer(data) {
     const transfers = getStore(STORAGE_KEYS.transfers, initialTransfers)
     const transferNumber = generateNumber('TR', new Date().getFullYear(), transfers.length + 1)
-    
+
     const newTransfer = {
         ...data,
         id: `transfer-${Date.now()}`,
@@ -392,13 +392,13 @@ export function approveTransfer(id, approvedBy) {
 export function completeTransfer(id, receivedBy) {
     const transfer = getTransfers().find(t => t.id === id)
     if (!transfer) return null
-    
+
     const items = transfer.items
-    
+
     items.forEach(item => {
         updateStockLevel(item.productId, transfer.toWarehouseId, item.quantity)
     })
-    
+
     return updateTransfer(id, { status: 'completed', receivedBy })
 }
 
@@ -409,7 +409,7 @@ export function getWarehouses() {
 
 export function createWarehouse(data) {
     const warehouses = getStore(STORAGE_KEYS.warehouses, initialWarehouses)
-    
+
     const newWarehouse = {
         ...data,
         id: `wh-${Date.now()}`,
@@ -443,20 +443,20 @@ export function getInventoryStats() {
     const movements = getStockMovements()
     const warehouses = getWarehouses()
     const transfers = getTransfers()
-    
+
     const totalProducts = products.length
     const totalStockValue = products.reduce((sum, p) => sum + (p.stock * p.price), 0)
     const totalCostValue = products.reduce((sum, p) => sum + (p.stock * p.cost), 0)
     const lowStockItems = getLowStockItems().length
-    
+
     const totalWarehouses = warehouses.length
     const activeWarehouses = warehouses.filter(w => w.status === 'active').length
-    
+
     const totalMovements = movements.length
-    totalStockOut = movements.filter(m => m.movementType === 'issue').reduce((sum, m) => {
+    const totalStockOut = movements.filter(m => m.movementType === 'issue').reduce((sum, m) => {
         return sum + m.items.reduce((s, i) => s + i.quantity, 0)
     }, 0)
-    
+
     return {
         totalProducts,
         totalStockValue,

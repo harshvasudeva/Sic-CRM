@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import DataTable from '../../components/DataTable'
 import { getAccountsPayable } from '../../stores/accountingStore'
+import { formatCurrency } from '../../stores/settingsStore'
 
 function AccountsPayable() {
     const [apData, setApData] = useState([])
@@ -33,16 +34,20 @@ function AccountsPayable() {
         { key: 'vendorName', label: 'Vendor', render: (v) => <span className="vendor-name">{v}</span> },
         { key: 'invoiceDate', label: 'Invoice Date', render: (v) => <span>{new Date(v).toLocaleDateString()}</span> },
         { key: 'dueDate', label: 'Due Date', render: (v) => <span>{new Date(v).toLocaleDateString()}</span> },
-        { key: 'amount', label: 'Amount', render: (v) => <span className="amount">${v.toLocaleString()}</span> },
-        { key: 'balance', label: 'Balance Due', render: (v) => <span className="balance">${v.toLocaleString()}</span> },
-        { key: 'dueDate', label: 'Aging', render: (_, row) => {
-            const days = getDaysOverdue(row.dueDate)
-            const category = getAgingCategory(days)
-            return <span className={`aging-badge ${category.color}`}>{category.label}</span>
-        }},
-        { key: 'status', label: 'Status', render: (v) => (
-            <span className={`status-badge ${v}`}>{v}</span>
-        )}
+        { key: 'amount', label: 'Amount', render: (v) => <span className="amount">{formatCurrency(v || 0)}</span> },
+        { key: 'balance', label: 'Balance Due', render: (v) => <span className="balance">{formatCurrency(v || 0)}</span> },
+        {
+            key: 'dueDate', label: 'Aging', render: (_, row) => {
+                const days = getDaysOverdue(row.dueDate)
+                const category = getAgingCategory(days)
+                return <span className={`aging-badge ${category.color}`}>{category.label}</span>
+            }
+        },
+        {
+            key: 'status', label: 'Status', render: (v) => (
+                <span className={`status-badge ${v}`}>{v}</span>
+            )
+        }
     ]
 
     const totalAP = apData.reduce((sum, item) => sum + item.balance, 0)
@@ -66,11 +71,11 @@ function AccountsPayable() {
                 <div className="stats-row">
                     <div className="stat-card">
                         <div className="stat-label">Total Payable</div>
-                        <div className="stat-value">${totalAP.toLocaleString()}</div>
+                        <div className="stat-value">{formatCurrency(totalAP)}</div>
                     </div>
                     <div className="stat-card">
                         <div className="stat-label">Overdue Amount</div>
-                        <div className="stat-value warning">${overdueAmount.toLocaleString()}</div>
+                        <div className="stat-value warning">{formatCurrency(overdueAmount)}</div>
                     </div>
                     <div className="stat-card">
                         <div className="stat-label">Open Invoices</div>

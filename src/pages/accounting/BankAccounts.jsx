@@ -6,6 +6,7 @@ import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput from '../../components/FormInput'
 import { useToast } from '../../components/Toast'
 import { getBankAccounts, createBankAccount } from '../../stores/accountingStore'
+import { formatCurrency } from '../../stores/settingsStore'
 
 function BankAccounts() {
     const toast = useToast()
@@ -48,12 +49,14 @@ function BankAccounts() {
         { key: 'accountNumber', label: 'Account Number', render: (v) => <span className="account-number">{v}</span> },
         { key: 'bankName', label: 'Bank', render: (v) => <span>{v}</span> },
         { key: 'accountType', label: 'Type', render: (v) => <span className="type-badge">{v}</span> },
-        { key: 'openingBalance', label: 'Opening Balance', render: (v) => <span className="amount">${v.toLocaleString()}</span> },
-        { key: 'currentBalance', label: 'Current Balance', render: (v) => <span className="amount">${v.toLocaleString()}</span> },
+        { key: 'openingBalance', label: 'Opening Balance', render: (v) => <span className="amount">{formatCurrency(v || 0)}</span> },
+        { key: 'currentBalance', label: 'Current Balance', render: (v) => <span className="amount">{formatCurrency(v || 0)}</span> },
         { key: 'currency', label: 'Currency', render: (v) => <span className="currency">{v}</span> },
-        { key: 'status', label: 'Status', render: (v) => (
-            <span className={`status-badge ${v}`}>{v}</span>
-        )}
+        {
+            key: 'status', label: 'Status', render: (v) => (
+                <span className={`status-badge ${v}`}>{v}</span>
+            )
+        }
     ]
 
     return (

@@ -3,6 +3,8 @@ import { motion } from 'framer-motion'
 import { Plus, Edit, Trash2, Building, TrendingDown, History } from 'lucide-react'
 import DataTable from '../../components/DataTable'
 import Modal, { ModalFooter } from '../../components/Modal'
+import { getFixedAssets, createFixedAsset, updateFixedAsset, deleteFixedAsset } from '../../stores/accountingStore'
+import { formatCurrency } from '../../stores/settingsStore'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
 import { useToast } from '../../components/Toast'
 
@@ -142,89 +144,108 @@ function FixedAssets() {
         {
             key: 'purchasePrice',
             label: 'Purchase Price',
-            render: (v) => `$${v.toLocaleString()}`
+            render: (v) => formatCurrency(v || 0)
         },
         {
             key: 'currentValue',
             label: 'Current Value',
-            render: (v) => `$${v.toLocaleString()}`
+            render: (v) => formatCurrency(v || 0)
         },
         {
             key: 'accumulatedDepreciation',
             label: 'Depreciation',
-            render: (v) => `$${v.toLocaleString()}`
+            render: (v) => formatCurrency(v || 0)
         },
         {
             key: 'status',
             label: 'Status',
             render: (v) => (
-                <span className={`px-2 py-1 rounded text-xs ${
-                    v === 'active' ? 'bg-green-600' :
+                <span className={`px-2 py-1 rounded text-xs ${v === 'active' ? 'bg-green-600' :
                     v === 'depreciated' ? 'bg-yellow-600' : 'bg-red-600'
-                }`}>
-                    {v.toUpperCase()}
+                    }`}>
+                    {(v || 'unknown').toUpperCase()}
                 </span>
             )
         }
     ]
 
     return (
-        <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
+        <div className="page">
+            <motion.div
+                className="page-header"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+            >
                 <div>
-                    <h1 className="text-2xl font-bold">Fixed Assets</h1>
-                    <p className="text-gray-400 mt-1">Manage company assets and depreciation</p>
+                    <h1 className="page-title">
+                        <span className="gradient-text">Fixed</span> Assets
+                    </h1>
+                    <p className="page-description">
+                        Manage company assets and depreciation
+                    </p>
                 </div>
                 <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => openModal()}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                    className="btn-primary"
                 >
                     <Plus size={18} />
                     Add Asset
                 </motion.button>
+            </motion.div>
+
+            <div className="stats-grid">
+                <motion.div
+                    className="stat-card"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                >
+                    <div className="stat-icon bg-blue">
+                        <Building size={28} />
+                    </div>
+                    <div className="stat-content">
+                        <h3>${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
+                        <p>Total Asset Value</p>
+                    </div>
+                </motion.div>
+                <motion.div
+                    className="stat-card"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                >
+                    <div className="stat-icon bg-red">
+                        <TrendingDown size={28} />
+                    </div>
+                    <div className="stat-content">
+                        <h3>${totalDepreciation.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
+                        <p>Total Depreciation</p>
+                    </div>
+                </motion.div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-3 bg-blue-600/20 rounded-lg">
-                            <Building size={20} className="text-blue-400" />
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+            >
+                <DataTable
+                    columns={columns}
+                    data={assets}
+                    actions={(asset) => (
+                        <div className="action-buttons">
+                            <button onClick={() => openModal(asset)} className="btn-icon">
+                                <Edit size={16} />
+                            </button>
+                            <button onClick={() => setDeleteConfirm(asset)} className="btn-icon btn-icon-danger">
+                                <Trash2 size={16} />
+                            </button>
                         </div>
-                        <span className="text-gray-400 text-sm">Total Asset Value</span>
-                    </div>
-                    <p className="text-2xl font-bold text-green-400">
-                        ${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </p>
-                </div>
-                <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-3 bg-red-600/20 rounded-lg">
-                            <TrendingDown size={20} className="text-red-400" />
-                        </div>
-                        <span className="text-gray-400 text-sm">Total Depreciation</span>
-                    </div>
-                    <p className="text-2xl font-bold text-red-400">
-                        ${totalDepreciation.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </p>
-                </div>
-            </div>
-
-            <DataTable
-                columns={columns}
-                data={assets}
-                actions={(asset) => (
-                    <div className="flex gap-2">
-                        <button onClick={() => openModal(asset)} className="p-2 hover:bg-gray-700 rounded">
-                            <Edit size={16} />
-                        </button>
-                        <button onClick={() => setDeleteConfirm(asset)} className="p-2 hover:bg-red-600 rounded">
-                            <Trash2 size={16} />
-                        </button>
-                    </div>
-                )}
-            />
+                    )}
+                />
+            </motion.div>
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingAsset ? 'Edit Asset' : 'New Asset'}>
                 <div className="space-y-4">

@@ -20,9 +20,14 @@ import {
     CheckCircle
 } from 'lucide-react'
 import { getAccountingStats } from '../stores/accountingStore'
+import { formatCurrency } from '../stores/settingsStore'
+import { useTallyShortcuts } from '../hooks/useTallyShortcuts'
 
 function Accounting() {
     const [stats, setStats] = useState({})
+
+    // Enable F-key navigation globally on this page
+    useTallyShortcuts()
 
     useEffect(() => {
         setStats(getAccountingStats())
@@ -78,65 +83,65 @@ function Accounting() {
             color: 'linear-gradient(135deg, #06b6d4, #22d3ee)'
         },
         {
-            id: 'cost-centers',
-            title: 'Cost Centers',
-            icon: Users,
-            description: 'Track expenses by department/project',
-            link: '/accounting/cost-centers',
-            color: 'linear-gradient(135deg, #8b5cf6, #a78bfa)'
-        },
-        {
-            id: 'budgets',
-            title: 'Budgets',
-            icon: Calculator,
-            description: 'Create and monitor departmental budgets',
-            link: '/accounting/budgets',
-            color: 'linear-gradient(135deg, #10b981, #34d399)'
-        },
-        {
-            id: 'chart',
+            id: 'coa',
             title: 'Chart of Accounts',
             icon: FileSpreadsheet,
-            description: 'Manage general ledger account structure',
+            description: 'Configure account structure and categories',
             link: '/accounting/chart',
-            color: 'linear-gradient(135deg, #f59e0b, #fbbf24)'
+            color: 'linear-gradient(135deg, #8b5cf6, #ec4899)'
         },
         {
             id: 'assets',
             title: 'Fixed Assets',
             icon: Building,
-            description: 'Track depreciable assets and calculations',
+            description: 'Track depreciation and asset lifecycle',
             link: '/accounting/assets',
-            color: 'linear-gradient(135deg, #06b6d4, #22d3ee)'
+            color: 'linear-gradient(135deg, #64748b, #94a3b8)'
+        },
+        {
+            id: 'budgets',
+            title: 'Budgets',
+            icon: Calculator,
+            description: 'Budget planning with variance tracking',
+            link: '/accounting/budgets',
+            color: 'linear-gradient(135deg, #f59e0b, #fb923c)'
+        },
+        {
+            id: 'cost-centers',
+            title: 'Cost Centers',
+            icon: Users,
+            description: 'Track spending by department or project',
+            link: '/accounting/cost-centers',
+            color: 'linear-gradient(135deg, #3b82f6, #60a5fa)'
         }
     ]
 
     const summaryCards = [
         {
             title: 'Total Expenses',
-            value: `$${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(stats.totalExpenses || 0)}`,
+            value: formatCurrency(stats.totalExpenses || 0),
             icon: Receipt,
             color: 'linear-gradient(135deg, #ef4444, #f87171)',
-            change: `${stats.paidExpenses > 0 ? '+' : ''}$${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(stats.paidExpenses)}`,
+            change: `+${formatCurrency(stats.paidExpenses || 0)}`,
             changePositive: true
         },
         {
             title: 'Bank Balance',
-            value: `$${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(stats.totalBankBalance || 0)}`,
+            value: formatCurrency(stats.totalBankBalance || 0),
             icon: PiggyBank,
             color: 'linear-gradient(135deg, #10b981, #34d399)'
         },
         {
             title: 'Accounts Receivable',
-            value: `$${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(stats.totalAccountsReceivable || 0)}`,
+            value: formatCurrency(stats.totalAccountsReceivable || 0),
             icon: Wallet,
             color: 'linear-gradient(135deg, #f59e0b, #fb923c)',
-            change: `$${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(stats.overdueReceivable || 0)}`,
+            change: formatCurrency(stats.overdueReceivable || 0),
             changePositive: false
         },
         {
             title: 'Accounts Payable',
-            value: `$${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(stats.totalAccountsPayable || 0)}`,
+            value: formatCurrency(stats.totalAccountsPayable || 0),
             icon: CreditCard,
             color: 'linear-gradient(135deg, #ef4444, #f87171)'
         }
