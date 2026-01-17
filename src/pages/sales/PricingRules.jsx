@@ -6,6 +6,7 @@ import DataTable from '../../components/DataTable'
 import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
 import { useToast } from '../../components/Toast'
+import { formatCurrency } from '../../stores/settingsStore'
 
 const ruleTypes = [
     { value: 'volume', label: 'Volume Discount' },
@@ -150,7 +151,7 @@ function PricingRules() {
             key: 'discountValue', label: 'Discount',
             render: (v, row) => (
                 <span className="discount-value">
-                    {row.discountType === 'percentage' ? `${v}%` : `$${v}`}
+                    {row.discountType === 'percentage' ? `${v}%` : formatCurrency(v)}
                 </span>
             )
         },
@@ -261,15 +262,15 @@ function PricingRules() {
                     <div className="test-result">
                         <div className="result-row">
                             <span>Original Amount</span>
-                            <span>${testResult.originalAmount}</span>
+                            <span>{formatCurrency(testResult.originalAmount)}</span>
                         </div>
                         <div className="result-row discount">
                             <span>Discount Applied</span>
-                            <span>-${testResult.discount}</span>
+                            <span>-{formatCurrency(testResult.discount)}</span>
                         </div>
                         <div className="result-row total">
                             <span>Final Amount</span>
-                            <span>${testResult.finalAmount}</span>
+                            <span>{formatCurrency(testResult.finalAmount)}</span>
                         </div>
                     </div>
                 )}

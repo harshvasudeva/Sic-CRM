@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Plus, ArrowUpCircle, CheckCircle, Clock, Eye, Package, Send } from 'lucide-react'
+import { formatCurrency } from '../../stores/settingsStore'
+import { useTallyShortcuts } from '../../hooks/useTallyShortcuts'
 import DataTable from '../../components/DataTable'
 import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
@@ -30,6 +32,11 @@ function RejectionsOut() {
 
     const [formData, setFormData] = useState({
         vendorId: '', billNumber: '', returnDate: new Date().toISOString().split('T')[0], reason: '', notes: '', items: []
+    })
+
+    useTallyShortcuts({
+        create: () => setIsModalOpen(true),
+        save: () => { if (isModalOpen) handleSubmit() }
     })
 
     const handleSubmit = () => {
@@ -92,7 +99,7 @@ function RejectionsOut() {
         { key: 'returnDate', label: 'Return Date' },
         { key: 'reason', label: 'Reason' },
         { key: 'items', label: 'Items' },
-        { key: 'creditAmount', label: 'Credit', render: (v) => <span className="amount">${v}</span> },
+        { key: 'creditAmount', label: 'Credit', render: (v) => <span className="amount">{formatCurrency(v)}</span> },
         { key: 'status', label: 'Status', render: (v) => <span className={`status-badge ${v}`}>{v}</span> },
         {
             key: 'actions', label: '', sortable: false, render: (_, row) => (
@@ -139,7 +146,7 @@ function RejectionsOut() {
                     <span className="stat-label">Acknowledged</span>
                 </div>
                 <div className="stat-card total-value">
-                    <span className="stat-value">${stats.totalValue}</span>
+                    <span className="stat-value">{formatCurrency(stats.totalValue)}</span>
                     <span className="stat-label">Total Credit Value</span>
                 </div>
             </motion.div>
@@ -172,7 +179,7 @@ function RejectionsOut() {
                         <div className="detail-row"><span>Return Date:</span><strong>{viewModal.returnDate}</strong></div>
                         <div className="detail-row"><span>Reason:</span><strong>{viewModal.reason}</strong></div>
                         <div className="detail-row"><span>Items:</span><strong>{viewModal.items} ({viewModal.totalQty} qty)</strong></div>
-                        <div className="detail-row"><span>Credit Amount:</span><strong className="amount">${viewModal.creditAmount}</strong></div>
+                        <div className="detail-row"><span>Credit Amount:</span><strong className="amount">{formatCurrency(viewModal.creditAmount)}</strong></div>
                         <div className="detail-row"><span>Status:</span><span className={`status-badge ${viewModal.status}`}>{viewModal.status}</span></div>
                     </div>
                 )}

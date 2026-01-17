@@ -101,11 +101,11 @@ function App() {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
-            <Route path="sales" element={<Sales />} />
-            <Route path="accounting" element={<Accounting />} />
+
 
             {/* Sales Module Routes */}
             <Route element={<ModuleErrorBoundary moduleName="Sales"><Outlet /></ModuleErrorBoundary>}>
+              <Route path="sales" element={<Sales />} />
               <Route path="sales/quotations" element={<Quotations />} />
               <Route path="sales/quotations/templates" element={<QuotationTemplates />} />
               <Route path="sales/orders" element={<SalesOrders />} />
@@ -119,6 +119,7 @@ function App() {
 
             {/* Purchase Module Routes */}
             <Route element={<ModuleErrorBoundary moduleName="Purchase"><Outlet /></ModuleErrorBoundary>}>
+              <Route path="purchase" element={<Purchase />} />
               <Route path="purchase/vendors" element={<Vendors />} />
               <Route path="purchase/orders" element={<PurchaseOrders />} />
               <Route path="purchase/requisitions" element={<PurchaseRequisitions />} />
@@ -131,6 +132,7 @@ function App() {
 
             {/* Accounting Module Routes */}
             <Route element={<ModuleErrorBoundary moduleName="Accounting"><Outlet /></ModuleErrorBoundary>}>
+              <Route path="accounting" element={<Accounting />} />
               <Route path="accounting/journal" element={<JournalEntries />} />
               <Route path="accounting/journal-entries" element={<JournalEntries />} />
               <Route path="accounting/general-ledger" element={<GeneralLedger />} />
@@ -169,10 +171,10 @@ function App() {
               <Route path="inventory/rejections-out" element={<RejectionsOut />} />
             </Route>
 
-            <Route path="products" element={<ProductList />} />
-            <Route path="products/price-lists" element={<PriceLists />} />
-            <Route path="purchase" element={<Purchase />} />
-
+            <Route element={<ModuleErrorBoundary moduleName="Products"><Outlet /></ModuleErrorBoundary>}>
+              <Route path="products" element={<ProductList />} />
+              <Route path="products/price-lists" element={<PriceLists />} />
+            </Route>
             {/* CRM Module Routes */}
             <Route element={<ModuleErrorBoundary moduleName="CRM"><Outlet /></ModuleErrorBoundary>}>
               <Route path="crm" element={<CRMDashboard />} />
@@ -200,19 +202,24 @@ function App() {
               <Route path="hr/departments" element={<Departments />} />
             </Route>
 
-            <Route path="manufacturing" element={<Manufacturing />} />
-            <Route path="manufacturing/bom" element={<BillOfMaterials />} />
-            <Route path="manufacturing/work-centers" element={<WorkCenters />} />
-            <Route path="manufacturing/production-orders" element={<ProductionOrders />} />
+            <Route element={<ModuleErrorBoundary moduleName="Manufacturing"><Outlet /></ModuleErrorBoundary>}>
+              <Route path="manufacturing" element={<Manufacturing />} />
+              <Route path="manufacturing/bom" element={<BillOfMaterials />} />
+              <Route path="manufacturing/work-centers" element={<WorkCenters />} />
+              <Route path="manufacturing/production-orders" element={<ProductionOrders />} />
+            </Route>
 
-            <Route path="specialized" element={<Specialized />} />
-            <Route path="specialized/pos" element={<PointOfSale />} />
-            <Route path="specialized/discuss" element={<Discuss />} />
-            <Route path="specialized/rentals" element={<Rentals />} />
-            <Route path="specialized/website-builder" element={<WebsiteBuilder />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="reports" element={<Reports />} />
-            <Route path="tally-help" element={<TallyHelp />} />
+            <Route element={<ModuleErrorBoundary moduleName="Specialized"><Outlet /></ModuleErrorBoundary>}>
+              <Route path="specialized" element={<Specialized />} />
+              <Route path="specialized/pos" element={<PointOfSale />} />
+              <Route path="specialized/discuss" element={<Discuss />} />
+              <Route path="specialized/rentals" element={<Rentals />} />
+              <Route path="specialized/website-builder" element={<WebsiteBuilder />} />
+            </Route>
+
+            <Route path="settings" element={<ModuleErrorBoundary moduleName="Settings"><Settings /></ModuleErrorBoundary>} />
+            <Route path="reports" element={<ModuleErrorBoundary moduleName="Reports"><Reports /></ModuleErrorBoundary>} />
+            <Route path="tally-help" element={<ModuleErrorBoundary moduleName="Help"><TallyHelp /></ModuleErrorBoundary>} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>

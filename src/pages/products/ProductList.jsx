@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { getProducts, deleteProduct, getCategories } from '../../stores/productStore'
 import DataTable from '../../components/DataTable'
+import { formatCurrency } from '../../stores/settingsStore'
 import Modal, { ModalFooter } from '../../components/Modal'
 import ProductForm from './ProductForm'
 import { useToast } from '../../components/Toast'
@@ -99,7 +100,8 @@ function ProductList() {
         {
             key: 'price',
             label: 'Price',
-            render: (value) => `$${value.toFixed(2)}`
+            label: 'Price',
+            render: (value) => formatCurrency(value)
         },
         {
             key: 'stock',

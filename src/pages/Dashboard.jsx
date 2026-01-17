@@ -9,11 +9,12 @@ import {
     Factory,
     Sparkles,
     TrendingUp,
-    DollarSign,
+    Banknote,
     BarChart3,
     Globe
 } from 'lucide-react'
 import ModuleCard from '../components/ModuleCard'
+import { formatCurrency } from '../stores/settingsStore'
 
 const modules = [
     {
@@ -82,14 +83,16 @@ const modules = [
     }
 ]
 
-const stats = [
-    { icon: TrendingUp, label: 'Active Leads', value: '2,847', color: 'purple' },
-    { icon: DollarSign, label: 'Revenue MTD', value: '$485K', color: 'green' },
-    { icon: BarChart3, label: 'Orders Today', value: '156', color: 'blue' },
-    { icon: Globe, label: 'Countries', value: '45+', color: 'orange' }
-]
+
 
 function Dashboard() {
+    const stats = [
+        { icon: TrendingUp, label: 'Active Leads', value: '2,847', color: 'purple' },
+        { icon: Banknote, label: 'Revenue MTD', value: formatCurrency(485000), color: 'green' },
+        { icon: BarChart3, label: 'Orders Today', value: '156', color: 'blue' },
+        { icon: Globe, label: 'Countries', value: '45+', color: 'orange' }
+    ]
+
     return (
         <div className="page">
             <motion.div

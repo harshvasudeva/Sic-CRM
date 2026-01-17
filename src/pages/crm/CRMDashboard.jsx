@@ -6,6 +6,7 @@ import {
     TrendingUp, ChevronRight, Building2, Activity, CheckCircle
 } from 'lucide-react'
 import { getCRMStats, getLeads, getOpportunities, getActivities } from '../../stores/crmStore'
+import { formatCurrency } from '../../stores/settingsStore'
 
 function CRMDashboard() {
     const navigate = useNavigate()
@@ -44,11 +45,11 @@ function CRMDashboard() {
         { icon: Users, label: 'Total Leads', value: stats.totalLeads, color: 'blue', link: '/crm/leads' },
         { icon: UserPlus, label: 'New Leads', value: stats.newLeads, color: 'green', link: '/crm/leads' },
         { icon: Target, label: 'Opportunities', value: stats.totalOpportunities, color: 'purple', link: '/crm/opportunities' },
-        { icon: DollarSign, label: 'Pipeline Value', value: `$${(stats.pipelineValue / 1000).toFixed(0)}K`, color: 'orange', link: '/crm/opportunities' },
-        { icon: TrendingUp, label: 'Weighted Value', value: `$${(stats.weightedValue / 1000).toFixed(0)}K`, color: 'teal' },
+        { icon: DollarSign, label: 'Pipeline Value', value: formatCurrency(stats.pipelineValue), color: 'orange', link: '/crm/opportunities' },
+        { icon: TrendingUp, label: 'Weighted Value', value: formatCurrency(stats.weightedValue), color: 'teal' },
         { icon: Building2, label: 'Contacts', value: stats.totalContacts, color: 'indigo', link: '/crm/contacts' },
         { icon: Activity, label: 'Pending Tasks', value: stats.pendingActivities, color: 'red', link: '/crm/activities' },
-        { icon: CheckCircle, label: 'Avg Deal Size', value: `$${(stats.avgDealSize / 1000).toFixed(0)}K`, color: 'cyan' },
+        { icon: CheckCircle, label: 'Avg Deal Size', value: formatCurrency(stats.avgDealSize), color: 'cyan' },
     ]
 
     const quickActions = [
@@ -117,7 +118,7 @@ function CRMDashboard() {
                                     <strong>{opp.name}</strong>
                                     <span>{opp.company}</span>
                                 </div>
-                                <div className="opp-value">${(opp.value / 1000).toFixed(0)}K</div>
+                                <div className="opp-value">{formatCurrency(opp.value)}</div>
                                 <span className={`stage-badge ${opp.stage.toLowerCase().replace(' ', '-')}`}>{opp.stage}</span>
                             </div>
                         ))}

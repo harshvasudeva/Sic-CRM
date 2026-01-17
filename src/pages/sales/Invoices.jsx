@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Plus, Filter, Edit, Trash2, FileText, Send, CheckCircle, AlertCircle, Download, CreditCard } from 'lucide-react'
 import { getInvoices, deleteInvoice, createInvoice, updateInvoice, sendInvoice, markInvoiceViewed, createInvoiceFromOrder, getSalesOrders } from '../../stores/salesStore'
 import { getContacts } from '../../stores/crmStore'
+import { formatCurrency } from '../../stores/settingsStore'
 import DataTable from '../../components/DataTable'
 import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
@@ -143,7 +144,7 @@ function Invoices() {
         updateInvoice(payModal.id, {
             paid: payModal.paid + paymentData.amount
         })
-        toast.success(`Payment of $${paymentData.amount} recorded`)
+        toast.success(`Payment of ${formatCurrency(paymentData.amount)} recorded`)
         setPayModal(null)
         loadData()
     }
@@ -229,9 +230,9 @@ function Invoices() {
                 return customer ? `${customer.firstName} ${customer.lastName}` : '-'
             }
         },
-        { key: 'total', label: 'Total', render: (v) => <span className="amount">${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)}</span> },
-        { key: 'paid', label: 'Paid', render: (v) => <span className="paid-amount">${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)}</span> },
-        { key: 'balance', label: 'Balance', render: (v) => <span className={v > 0 ? 'balance-due' : 'balance-paid'}>${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)}</span> },
+        { key: 'total', label: 'Total', render: (v) => <span className="amount">{formatCurrency(v)}</span> },
+        { key: 'paid', label: 'Paid', render: (v) => <span className="paid-amount">{formatCurrency(v)}</span> },
+        { key: 'balance', label: 'Balance', render: (v) => <span className={v > 0 ? 'balance-due' : 'balance-paid'}>{formatCurrency(v)}</span> },
         {
             key: 'status', label: 'Status',
             render: (v) => (
@@ -299,7 +300,7 @@ function Invoices() {
             <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditingInvoice(null); resetFormData() }} title={editingInvoice ? 'Edit Invoice' : 'New Invoice'} size="large">
                 <div className="form-grid">
                     <FormSelect label="Customer *" options={contacts.map(c => ({ value: c.id, label: `${c.firstName} ${c.lastName}` }))} value={formData.customerId} onChange={(e) => setFormData({ ...formData, customerId: e.target.value })} />
-                    <FormSelect label="From Order" options={[{ value: '', label: 'None' }, ...orders.map(o => ({ value: o.id, label: `${o.orderNumber} - $${o.total}` }))]} value={formData.orderId} onChange={(e) => {
+                    <FormSelect label="From Order" options={[{ value: '', label: 'None' }, ...orders.map(o => ({ value: o.id, label: `${o.orderNumber} - ${formatCurrency(o.total)}` }))]} value={formData.orderId} onChange={(e) => {
                         const order = orders.find(o => o.id === e.target.value)
                         if (order) {
                             setFormData({ ...formData, orderId: e.target.value, items: order.items, customerId: order.customerId })
@@ -322,9 +323,9 @@ function Invoices() {
                             <div key={index} className="item-row">
                                 <div className="item-info">
                                     <div className="item-name">{item.name}</div>
-                                    <div className="item-details">{item.quantity} x ${item.price}</div>
+                                    <div className="item-details">{item.quantity} x {formatCurrency(item.price)}</div>
                                 </div>
-                                <div className="item-total">${item.total}</div>
+                                <div className="item-total">{formatCurrency(item.total)}</div>
                                 <button className="item-remove" onClick={() => removeItem(index)}><Trash2 size={14} /></button>
                             </div>
                         ))}
@@ -351,52 +352,53 @@ function Invoices() {
                     <div className="invoice-summary">
                         <div className="summary-row">
                             <span>Subtotal</span>
-                            <span>${formData.items.reduce((sum, item) => sum + (item.quantity * item.price), 0)}</span>
+                            <span>{formatCurrency(formData.items.reduce((sum, item) => sum + (item.quantity * item.price), 0))}</span>
                         </div>
                         <div className="summary-row">
                             <span>Discount</span>
-                            <span>-${formData.items.reduce((sum, item) => sum + item.discount, 0)}</span>
+                            <span>-{formatCurrency(formData.items.reduce((sum, item) => sum + item.discount, 0))}</span>
                         </div>
                         <div className="summary-row">
                             <span>Tax</span>
-                            <span>$0</span>
+                            <span>{formatCurrency(0)}</span>
                         </div>
                         <div className="summary-row total">
                             <span>Total</span>
-                            <span>${formData.items.reduce((sum, item) => sum + (item.quantity * item.price - item.discount), 0)}</span>
+                            <span>{formatCurrency(formData.items.reduce((sum, item) => sum + (item.quantity * item.price - item.discount), 0))}</span>
                         </div>
                     </div>
-                )}
+                )
+                }
 
                 <ModalFooter>
                     <button className="btn-secondary" onClick={() => { setIsModalOpen(false); setEditingInvoice(null); resetFormData() }}>Cancel</button>
                     <button className="btn-primary" onClick={handleSubmit}>{editingInvoice ? 'Update' : 'Create'}</button>
                 </ModalFooter>
-            </Modal>
+            </Modal >
 
             {/* Send Invoice Modal */}
-            <Modal isOpen={!!sendModal} onClose={() => setSendModal(null)} title="Send Invoice" size="small">
+            < Modal isOpen={!!sendModal} onClose={() => setSendModal(null)} title="Send Invoice" size="small" >
                 <p style={{ marginBottom: 24, color: 'var(--text-secondary)' }}>Send <strong>{sendModal?.invoiceNumber}</strong> to customer?</p>
                 <ModalFooter>
                     <button className="btn-secondary" onClick={() => setSendModal(null)}>Cancel</button>
                     <button className="btn-primary" onClick={confirmSend}>Send</button>
                 </ModalFooter>
-            </Modal>
+            </Modal >
 
             {/* Payment Modal */}
-            <Modal isOpen={!!payModal} onClose={() => setPayModal(null)} title="Record Payment" size="medium">
+            < Modal isOpen={!!payModal} onClose={() => setPayModal(null)} title="Record Payment" size="medium" >
                 <div className="payment-summary">
                     <div className="summary-item">
                         <span>Invoice Total</span>
-                        <span>${payModal?.total}</span>
+                        <span>{formatCurrency(payModal?.total)}</span>
                     </div>
                     <div className="summary-item">
                         <span>Already Paid</span>
-                        <span>${payModal?.paid}</span>
+                        <span>{formatCurrency(payModal?.paid)}</span>
                     </div>
                     <div className="summary-item total">
                         <span>Balance Due</span>
-                        <span>${payModal?.balance}</span>
+                        <span>{formatCurrency(payModal?.balance)}</span>
                     </div>
                 </div>
                 <div className="form-grid">
@@ -414,16 +416,16 @@ function Invoices() {
                     <button className="btn-secondary" onClick={() => setPayModal(null)}>Cancel</button>
                     <button className="btn-primary" onClick={confirmPayment}>Record Payment</button>
                 </ModalFooter>
-            </Modal>
+            </Modal >
 
             {/* Delete Confirm Modal */}
-            <Modal isOpen={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Delete Invoice" size="small">
+            < Modal isOpen={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Delete Invoice" size="small" >
                 <p style={{ marginBottom: 24, color: 'var(--text-secondary)' }}>Delete <strong>{deleteConfirm?.invoiceNumber}</strong>?</p>
                 <ModalFooter>
                     <button className="btn-secondary" onClick={() => setDeleteConfirm(null)}>Cancel</button>
                     <button className="btn-danger" onClick={confirmDelete}>Delete</button>
                 </ModalFooter>
-            </Modal>
+            </Modal >
 
             <style>{`
                 .page-header { display: flex; justify-content: space-between; }
@@ -474,7 +476,7 @@ function Invoices() {
                 .summary-item { display: flex; justify-content: space-between; padding: 8px 0; color: var(--text-secondary); }
                 .summary-item.total { border-top: 1px solid var(--border-color); margin-top: 8px; padding-top: 12px; font-weight: 600; color: var(--text-primary); font-size: 1.1rem; }
             `}</style>
-        </div>
+        </div >
     )
 }
 

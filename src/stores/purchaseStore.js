@@ -235,7 +235,7 @@ export function createVendor(data) {
     const vendors = getStore(STORAGE_KEYS.vendors, initialVendors)
     const existingCount = vendors.length
     const vendorCode = data.vendorCode || `VENDOR-${String(existingCount + 1).padStart(3, '0')}`
-    
+
     const newVendor = {
         ...data,
         id: `vendor-${Date.now()}`,
@@ -277,9 +277,9 @@ export function createPurchaseRequisition(data) {
     const reqs = getStore(STORAGE_KEYS.purchaseRequisitions, initialPurchaseRequisitions)
     const existingCount = reqs.length
     const requisitionNumber = generateNumber('PR', new Date().getFullYear(), existingCount + 1)
-    
+
     const totalEstimated = data.items.reduce((sum, item) => sum + (item.estimatedPrice * item.quantity), 0)
-    
+
     const newReq = {
         ...data,
         id: `pr-${Date.now()}`,
@@ -300,9 +300,9 @@ export function approvePurchaseRequisition(id, approvedBy) {
     const reqs = getStore(STORAGE_KEYS.purchaseRequisitions, initialPurchaseRequisitions)
     const index = reqs.findIndex(r => r.id === id)
     if (index === -1) return null
-    reqs[index] = { 
-        ...reqs[index], 
-        status: 'approved', 
+    reqs[index] = {
+        ...reqs[index],
+        status: 'approved',
         approvedBy: approvedBy,
         approvedDate: new Date().toISOString().split('T')[0]
     }
@@ -341,11 +341,11 @@ export function createPurchaseOrder(data) {
     const orders = getStore(STORAGE_KEYS.purchaseOrders, initialPurchaseOrders)
     const existingCount = orders.length
     const orderNumber = generateNumber('PO', new Date().getFullYear(), existingCount + 1)
-    
+
     const subtotal = data.items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0)
     const discount = data.items.reduce((sum, item) => sum + item.discount, 0)
     const tax = data.items.reduce((sum, item) => sum + item.tax, 0)
-    
+
     const newOrder = {
         ...data,
         id: `po-${Date.now()}`,
@@ -386,6 +386,10 @@ export function issuePurchaseOrder(id) {
     return updatePurchaseOrder(id, { status: 'issued' })
 }
 
+export function receivePurchaseOrder(id) {
+    return updatePurchaseOrder(id, { status: 'received' })
+}
+
 // ==================== RFQS CRUD ====================
 export function getRFQs(filters = {}) {
     let rfqs = getStore(STORAGE_KEYS.rfqs, initialRFQs)
@@ -397,7 +401,7 @@ export function createRFQ(data) {
     const rfqs = getStore(STORAGE_KEYS.rfqs, initialRFQs)
     const existingCount = rfqs.length
     const rfqNumber = generateNumber('RFQ', new Date().getFullYear(), existingCount + 1)
-    
+
     const newRFQ = {
         ...data,
         id: `rfq-${Date.now()}`,
@@ -442,7 +446,7 @@ export function createGRN(data) {
     const grns = getStore(STORAGE_KEYS.grns, initialGRNs)
     const existingCount = grns.length
     const grnNumber = generateNumber('GRN', new Date().getFullYear(), existingCount + 1)
-    
+
     const newGRN = {
         ...data,
         id: `grn-${Date.now()}`,
@@ -483,11 +487,11 @@ export function createSupplierInvoice(data) {
     const invoices = getStore(STORAGE_KEYS.supplierInvoices, initialSupplierInvoices)
     const existingCount = invoices.length
     const invoiceNumber = generateNumber('INV', new Date().getFullYear(), existingCount + 1)
-    
+
     const subtotal = data.items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0)
     const discount = data.discount || 0
     const tax = data.items.reduce((sum, item) => sum + item.tax, 0)
-    
+
     const newInvoice = {
         ...data,
         id: `si-${Date.now()}`,
@@ -521,12 +525,12 @@ export function updateSupplierInvoice(id, data) {
 export function performThreeWayMatch(invoiceId) {
     const invoice = getSupplierInvoices().find(i => i.id === invoiceId)
     if (!invoice) return null
-    
+
     const po = getPurchaseOrders().find(o => o.id === invoice.purchaseOrderId)
     const grn = getGRNs().find(g => g.purchaseOrderId === invoice.purchaseOrderId)
-    
+
     const matched = po && grn && po.status === 'received' && grn.status === 'completed'
-    
+
     return updateSupplierInvoice(invoiceId, { threeWayMatched: matched })
 }
 
@@ -539,9 +543,9 @@ export function getVendorEvaluations(filters = {}) {
 
 export function createVendorEvaluation(data) {
     const evaluations = getStore(STORAGE_KEYS.vendorEvaluations, initialVendorEvaluations)
-    
+
     const overallScore = Object.values(data.scores || {}).reduce((sum, score) => sum + score, 0) / 5
-    
+
     const newEvaluation = {
         ...data,
         id: `ve-${Date.now()}`,
@@ -572,11 +576,11 @@ export function getPurchaseStats() {
     const rfqs = getRFQs()
     const grns = getGRNs()
     const supplierInvoices = getSupplierInvoices()
-    
+
     const totalOrdersValue = orders.reduce((sum, o) => sum + o.total, 0)
     const pendingOrders = orders.filter(o => o.status === 'issued').length
     const receivedOrders = orders.filter(o => o.status === 'received').length
-    
+
     return {
         totalVendors: vendors.length,
         activeVendors: vendors.filter(v => v.status === 'active').length,

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Plus, Filter, Edit, Trash2, ShoppingCart, CheckCircle, Truck, Clock, XCircle } from 'lucide-react'
 import { getSalesOrders, deleteSalesOrder, createSalesOrder, updateSalesOrder, confirmSalesOrder, deliverSalesOrder } from '../../stores/salesStore'
 import { getContacts } from '../../stores/crmStore'
+import { formatCurrency } from '../../stores/settingsStore'
 import DataTable from '../../components/DataTable'
 import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
@@ -194,7 +195,7 @@ function SalesOrders() {
                 return customer ? `${customer.firstName} ${customer.lastName}` : '-'
             }
         },
-        { key: 'total', label: 'Total', render: (v) => <span className="amount">${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)}</span> },
+        { key: 'total', label: 'Total', render: (v) => <span className="amount">{formatCurrency(v)}</span> },
         {
             key: 'status', label: 'Status',
             render: (v) => (
@@ -273,9 +274,9 @@ function SalesOrders() {
                             <div key={index} className="item-row">
                                 <div className="item-info">
                                     <div className="item-name">{item.name}</div>
-                                    <div className="item-details">{item.quantity} x ${item.price}</div>
+                                    <div className="item-details">{item.quantity} x {formatCurrency(item.price)}</div>
                                 </div>
-                                <div className="item-total">${item.total}</div>
+                                <div className="item-total">{formatCurrency(item.total)}</div>
                                 <button className="item-remove" onClick={() => removeItem(index)}><Trash2 size={14} /></button>
                             </div>
                         ))}
@@ -301,15 +302,15 @@ function SalesOrders() {
                     <div className="order-summary">
                         <div className="summary-row">
                             <span>Subtotal</span>
-                            <span>${formData.items.reduce((sum, item) => sum + (item.quantity * item.price), 0)}</span>
+                            <span>{formatCurrency(formData.items.reduce((sum, item) => sum + (item.quantity * item.price), 0))}</span>
                         </div>
                         <div className="summary-row">
                             <span>Discount</span>
-                            <span>-${formData.items.reduce((sum, item) => sum + item.discount, 0)}</span>
+                            <span>-{formatCurrency(formData.items.reduce((sum, item) => sum + item.discount, 0))}</span>
                         </div>
                         <div className="summary-row total">
                             <span>Total</span>
-                            <span>${formData.items.reduce((sum, item) => sum + (item.quantity * item.price - item.discount), 0)}</span>
+                            <span>{formatCurrency(formData.items.reduce((sum, item) => sum + (item.quantity * item.price - item.discount), 0))}</span>
                         </div>
                     </div>
                 )}

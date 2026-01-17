@@ -5,6 +5,7 @@ import DataTable from '../../components/DataTable'
 import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
 import { useToast } from '../../components/Toast'
+import { formatCurrency } from '../../stores/settingsStore'
 
 const priceListTypes = [
     { value: 'wholesale', label: 'Wholesale' },
@@ -163,13 +164,13 @@ function PriceLists() {
         {
             key: 'price',
             label: 'Price',
-            render: (v) => `$${v?.toFixed(2) || '0.00'}`
+            render: (v) => formatCurrency(v || 0)
         },
         { key: 'minQty', label: 'Min. Qty' },
         { key: 'effectiveFrom', label: 'Effective From' },
     ]
 
-    const filteredItems = itemFormData.listId 
+    const filteredItems = itemFormData.listId
         ? items.filter(i => i.listId === itemFormData.listId)
         : items
 

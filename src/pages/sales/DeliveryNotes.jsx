@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Plus, Truck, Package, CheckCircle, Clock, Send, Edit, Trash2, Eye } from 'lucide-react'
 import { getInvoices, getSalesOrders } from '../../stores/salesStore'
 import { getContacts } from '../../stores/crmStore'
+import { useTallyShortcuts } from '../../hooks/useTallyShortcuts'
 import DataTable from '../../components/DataTable'
 import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
@@ -34,6 +35,11 @@ function DeliveryNotes() {
 
     const [formData, setFormData] = useState({
         orderId: '', customerId: '', dispatchDate: '', driver: '', vehicle: '', notes: '', items: []
+    })
+
+    useTallyShortcuts({
+        create: () => setIsModalOpen(true),
+        save: () => { if (isModalOpen) handleSubmit() }
     })
 
     useEffect(() => {

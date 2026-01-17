@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Filter, Edit, Trash2, ShoppingBag, Check, FileText, AlertCircle } from 'lucide-react'
-import { getPurchaseOrders, deletePurchaseOrder, createPurchaseOrder, updatePurchaseOrder, issuePurchaseOrder, getVendors } from '../../stores/purchaseStore'
+import { Plus, Filter, Edit, Trash2, ShoppingBag, Check, FileText, AlertCircle, PackageCheck } from 'lucide-react'
+import { getPurchaseOrders, deletePurchaseOrder, createPurchaseOrder, updatePurchaseOrder, issuePurchaseOrder, receivePurchaseOrder, getVendors } from '../../stores/purchaseStore'
+import { receiveStockFromPO, getInventoryProducts } from '../../stores/inventoryStore'
+import { formatCurrency } from '../../stores/settingsStore'
 import DataTable from '../../components/DataTable'
 import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
@@ -20,6 +22,7 @@ function PurchaseOrders() {
     const toast = useToast()
     const [orders, setOrders] = useState([])
     const [vendors, setVendors] = useState([])
+    const [products, setProducts] = useState([])
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [editingOrder, setEditingOrder] = useState(null)
     const [deleteConfirm, setDeleteConfirm] = useState(null)
@@ -33,7 +36,7 @@ function PurchaseOrders() {
     })
 
     const [itemData, setItemData] = useState({
-        name: '', description: '', quantity: 1, unitPrice: 0, discount: 0, tax: 0
+        productId: '', name: '', description: '', quantity: 1, unitPrice: 0, discount: 0, tax: 0
     })
 
     const loadData = () => {
@@ -42,6 +45,7 @@ function PurchaseOrders() {
         if (filterVendor) filters.vendorId = filterVendor
         setOrders(getPurchaseOrders(filters))
         setVendors(getVendors())
+        setProducts(getInventoryProducts())
     }
 
     useEffect(() => { loadData() }, [filterStatus, filterVendor])
@@ -112,7 +116,7 @@ function PurchaseOrders() {
             total: (itemData.quantity * itemData.unitPrice) - itemData.discount + itemData.tax
         }
         setFormData({ ...formData, items: [...formData.items, newItem] })
-        setItemData({ name: '', description: '', quantity: 1, unitPrice: 0, discount: 0, tax: 0 })
+        setItemData({ productId: '', name: '', description: '', quantity: 1, unitPrice: 0, discount: 0, tax: 0 })
     }
 
     const removeItem = (index) => {
@@ -126,13 +130,24 @@ function PurchaseOrders() {
         })
     }
 
+    const handleReceive = (order) => {
+        if (confirm(`Receive all items for ${order.orderNumber}?`)) {
+            receivePurchaseOrder(order.id)
+            receiveStockFromPO(order)
+            toast.success('Items received and inventory updated')
+            loadData()
+        }
+    }
+
     const columns = [
         { key: 'orderNumber', label: 'PO #', render: (v) => <span className="po-number">{v}</span> },
-        { key: 'vendorName', label: 'Vendor', render: (_, row) => {
-            const vendor = getVendors().find(v => v.id === row.vendorId)
-            return vendor ? vendor.name : '-'
-        }},
-        { key: 'total', label: 'Total', render: (v) => <span className="amount">${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)}</span> },
+        {
+            key: 'vendorName', label: 'Vendor', render: (_, row) => {
+                const vendor = getVendors().find(v => v.id === row.vendorId)
+                return vendor ? vendor.name : '-'
+            }
+        },
+        { key: 'total', label: 'Total', render: (v) => <span className="amount">{formatCurrency(v)}</span> },
         { key: 'expectedDelivery', label: 'Expected' },
         { key: 'status', label: 'Status', render: (v) => <span className={`status-badge ${v}`}>{v}</span> },
         { key: 'createdAt', label: 'Created' },
@@ -142,6 +157,9 @@ function PurchaseOrders() {
                 <div className="action-buttons">
                     {row.status === 'draft' && (
                         <button className="action-btn issue" onClick={() => handleIssue(row)} title="Issue PO"><FileText size={16} /></button>
+                    )}
+                    {row.status === 'issued' && (
+                        <button className="action-btn receive" onClick={() => handleReceive(row)} title="Receive Items"><PackageCheck size={16} /></button>
                     )}
                     {!['received', 'cancelled'].includes(row.status) && (
                         <button className="action-btn edit" onClick={() => handleEdit(row)}><Edit size={16} /></button>
@@ -195,19 +213,40 @@ function PurchaseOrders() {
                             <div key={index} className="item-row">
                                 <div className="item-info">
                                     <div className="item-name">{item.name}</div>
-                                    <div className="item-details">{item.quantity} x ${item.unitPrice}</div>
+                                    <div className="item-details">{item.quantity} x {formatCurrency(item.unitPrice)}</div>
                                 </div>
-                                <div className="item-total">${item.total}</div>
+                                <div className="item-total">{formatCurrency(item.total)}</div>
                                 <button className="item-remove" onClick={() => removeItem(index)}><Trash2 size={14} /></button>
                             </div>
                         ))}
                     </div>
                     <div className="add-item-form">
                         <div className="form-grid">
+                            <FormSelect
+                                label="Product"
+                                options={[{ value: '', label: 'Select Product' }, ...products.map(p => ({ value: p.id, label: `${p.sku} - ${p.name}` }))]}
+                                value={itemData.productId}
+                                onChange={(e) => {
+                                    const prod = products.find(p => p.id === e.target.value)
+                                    if (prod) {
+                                        setItemData({
+                                            ...itemData,
+                                            productId: prod.id,
+                                            name: prod.name,
+                                            description: prod.description,
+                                            unitPrice: prod.cost
+                                        })
+                                    } else {
+                                        setItemData({ ...itemData, productId: '', name: '', description: '', unitPrice: 0 })
+                                    }
+                                }}
+                            />
                             <FormInput label="Item Name" value={itemData.name} onChange={(e) => setItemData({ ...itemData, name: e.target.value })} />
                             <FormInput label="Description" value={itemData.description} onChange={(e) => setItemData({ ...itemData, description: e.target.value })} />
                             <FormInput label="Quantity" type="number" value={itemData.quantity} onChange={(e) => setItemData({ ...itemData, quantity: parseInt(e.target.value) || 1 })} />
                             <FormInput label="Unit Price" type="number" value={itemData.unitPrice} onChange={(e) => setItemData({ ...itemData, unitPrice: parseFloat(e.target.value) || 0 })} />
+                            <FormInput label="Discount" type="number" value={itemData.discount} onChange={(e) => setItemData({ ...itemData, discount: parseFloat(e.target.value) || 0 })} />
+                            <FormInput label="Tax Amount" type="number" value={itemData.tax} onChange={(e) => setItemData({ ...itemData, tax: parseFloat(e.target.value) || 0 })} />
                         </div>
                         <button className="btn-secondary add-item-btn" onClick={addItem}>+ Add Item</button>
                     </div>
@@ -224,7 +263,7 @@ function PurchaseOrders() {
                     <div className="order-summary">
                         <div className="summary-row">
                             <span>Subtotal</span>
-                            <span>${formData.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0)}</span>
+                            <span>{formatCurrency(formData.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0))}</span>
                         </div>
                         <div className="summary-row">
                             <span>Discount</span>
@@ -232,11 +271,11 @@ function PurchaseOrders() {
                         </div>
                         <div className="summary-row">
                             <span>Tax</span>
-                            <span>${formData.items.reduce((sum, item) => sum + item.tax, 0)}</span>
+                            <span>{formatCurrency(formData.items.reduce((sum, item) => sum + item.tax, 0))}</span>
                         </div>
                         <div className="summary-row total">
                             <span>Total</span>
-                            <span>${formData.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice - item.discount + item.tax), 0) + (formData.shippingCost || 0)}</span>
+                            <span>{formatCurrency(formData.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice - item.discount + item.tax), 0) + (formData.shippingCost || 0))}</span>
                         </div>
                     </div>
                 )}
@@ -301,6 +340,7 @@ function PurchaseOrders() {
                 .action-buttons { display: flex; gap: 8px; }
                 .action-btn { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
                 .action-btn.issue { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+                .action-btn.receive { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
                 .action-btn.edit { background: rgba(59, 130, 246, 0.1); color: var(--info); }
                 .action-btn.delete { background: rgba(239, 68, 68, 0.1); color: var(--error); }
             `}</style>

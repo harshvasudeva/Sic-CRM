@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Plus, Filter, Edit, Trash2, Target, TrendingUp, Calendar, Users, DollarSign } from 'lucide-react'
 import { getSalesTargets, deleteSalesTarget, createSalesTarget, updateSalesTarget, updateTargetProgress, getSalesOrders } from '../../stores/salesStore'
+import { formatCurrency } from '../../stores/settingsStore'
 import DataTable from '../../components/DataTable'
 import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
@@ -128,7 +129,7 @@ function SalesTargets() {
         { key: 'period', label: 'Period', render: (v) => <span className="period-badge">{v}</span> },
         {
             key: 'targetAmount', label: 'Target',
-            render: (v) => <span className="amount">${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)}</span>
+            render: (v) => <span className="amount">{formatCurrency(v)}</span>
         },
         {
             key: 'achievedAmount', label: 'Achieved',
@@ -138,7 +139,7 @@ function SalesTargets() {
                         <div className="progress-fill" style={{ width: `${calculateProgress(row)}%` }}></div>
                     </div>
                     <div className="progress-text">
-                        <span className="achieved">${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)}</span>
+                        <span className="achieved">{formatCurrency(v)}</span>
                         <span className="percent">{calculateProgress(row).toFixed(1)}%</span>
                     </div>
                 </div>
@@ -226,11 +227,11 @@ function SalesTargets() {
                 <div style={{ marginBottom: 16 }}>
                     <div className="current-progress">
                         <span>Current: </span>
-                        <span className="amount">${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(updateModal?.achievedAmount || 0)}</span>
+                        <span className="amount">{formatCurrency(updateModal?.achievedAmount || 0)}</span>
                     </div>
                     <div className="current-progress">
                         <span>Target: </span>
-                        <span className="target">${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(updateModal?.targetAmount || 0)}</span>
+                        <span className="target">{formatCurrency(updateModal?.targetAmount || 0)}</span>
                     </div>
                     <div className="current-progress total">
                         <span>Progress: </span>

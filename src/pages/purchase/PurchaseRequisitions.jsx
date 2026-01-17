@@ -6,6 +6,7 @@ import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
 import { useToast } from '../../components/Toast'
 import { getPurchaseRequisitions, createPurchaseRequisition, approvePurchaseRequisition, updatePurchaseRequisition, deletePurchaseRequisition, getVendors } from '../../stores/purchaseStore'
+import { formatCurrency } from '../../stores/settingsStore'
 
 function PurchaseRequisitions() {
     const toast = useToast()
@@ -76,36 +77,44 @@ function PurchaseRequisitions() {
         { key: 'number', label: 'Number', render: (v) => <span className="req-number">{v}</span> },
         { key: 'requestDate', label: 'Request Date', render: (v) => <span>{new Date(v).toLocaleDateString()}</span> },
         { key: 'requiredBy', label: 'Required By', render: (v) => <span>{new Date(v).toLocaleDateString()}</span> },
-        { key: 'totalAmount', label: 'Amount', render: (v) => <span className="amount">${v.toLocaleString()}</span> },
-        { key: 'priority', label: 'Priority', render: (v) => (
-            <span className={`priority-badge ${v}`}>
-                {v.charAt(0).toUpperCase() + v.slice(1)}
-            </span>
-        )},
-        { key: 'status', label: 'Status', render: (v) => (
-            <span className={`status-badge ${v}`}>
-                {v.charAt(0).toUpperCase() + v.slice(1)}
-            </span>
-        )},
-        { key: 'vendorId', label: 'Vendor', render: (v) => {
-            const vendor = getVendors().find(v => v.id === v)
-            return vendor ? vendor.name : '-'
-        }},
-        { key: 'actions', label: 'Actions', render: (_, row) => (
-            <div className="action-buttons">
-                {row.status === 'pending' && (
-                    <button className="btn-approve" onClick={() => handleApprove(row.id)}>
-                        <CheckCircle size={16} />
+        { key: 'totalAmount', label: 'Amount', render: (v) => <span className="amount">{formatCurrency(v)}</span> },
+        {
+            key: 'priority', label: 'Priority', render: (v) => (
+                <span className={`priority-badge ${v}`}>
+                    {v.charAt(0).toUpperCase() + v.slice(1)}
+                </span>
+            )
+        },
+        {
+            key: 'status', label: 'Status', render: (v) => (
+                <span className={`status-badge ${v}`}>
+                    {v.charAt(0).toUpperCase() + v.slice(1)}
+                </span>
+            )
+        },
+        {
+            key: 'vendorId', label: 'Vendor', render: (v) => {
+                const vendor = getVendors().find(v => v.id === v)
+                return vendor ? vendor.name : '-'
+            }
+        },
+        {
+            key: 'actions', label: 'Actions', render: (_, row) => (
+                <div className="action-buttons">
+                    {row.status === 'pending' && (
+                        <button className="btn-approve" onClick={() => handleApprove(row.id)}>
+                            <CheckCircle size={16} />
+                        </button>
+                    )}
+                    <button className="btn-edit" onClick={() => handleEdit(row)}>
+                        Edit
                     </button>
-                )}
-                <button className="btn-edit" onClick={() => handleEdit(row)}>
-                    Edit
-                </button>
-                <button className="btn-delete" onClick={() => handleDelete(row.id)}>
-                    Delete
-                </button>
-            </div>
-        )}
+                    <button className="btn-delete" onClick={() => handleDelete(row.id)}>
+                        Delete
+                    </button>
+                </div>
+            )
+        }
     ]
 
     return (

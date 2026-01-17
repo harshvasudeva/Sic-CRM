@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { DollarSign, Download, Check, Clock, Users, Calendar } from 'lucide-react'
+import { Banknote, Download, Check, Clock, Users, Calendar } from 'lucide-react'
 import { getPayroll, getEmployees, generatePayroll } from '../../stores/hrStore'
+import { formatCurrency } from '../../stores/settingsStore'
 import DataTable from '../../components/DataTable'
 import { useToast } from '../../components/Toast'
 
@@ -33,15 +34,15 @@ function Payroll() {
             render: (value) => getEmployeeName(value)
         },
         { key: 'period', label: 'Period' },
-        { key: 'basicSalary', label: 'Basic', render: (v) => `$${v.toFixed(2)}` },
-        { key: 'overtime', label: 'Overtime', render: (v) => v > 0 ? `+$${v.toFixed(2)}` : '—' },
-        { key: 'bonus', label: 'Bonus', render: (v) => v > 0 ? `+$${v.toFixed(2)}` : '—' },
+        { key: 'basicSalary', label: 'Basic', render: (v) => formatCurrency(v) },
+        { key: 'overtime', label: 'Overtime', render: (v) => v > 0 ? `+${formatCurrency(v)}` : '—' },
+        { key: 'bonus', label: 'Bonus', render: (v) => v > 0 ? `+${formatCurrency(v)}` : '—' },
         {
             key: 'deductions',
             label: 'Deductions',
-            render: (v) => `-$${(v.tax + v.insurance + v.retirement).toFixed(2)}`
+            render: (v) => `-${formatCurrency(v.tax + v.insurance + v.retirement)}`
         },
-        { key: 'netSalary', label: 'Net Pay', render: (v) => <strong>${v.toFixed(2)}</strong> },
+        { key: 'netSalary', label: 'Net Pay', render: (v) => <strong>{formatCurrency(v)}</strong> },
         {
             key: 'status',
             label: 'Status',
@@ -65,16 +66,16 @@ function Payroll() {
 
             <div className="payroll-stats">
                 <div className="pay-stat green">
-                    <DollarSign size={24} />
+                    <Banknote size={24} />
                     <div>
-                        <span className="pay-value">${totalPaid.toFixed(2)}</span>
+                        <span className="pay-value">{formatCurrency(totalPaid)}</span>
                         <span className="pay-label">Total Paid</span>
                     </div>
                 </div>
                 <div className="pay-stat orange">
                     <Clock size={24} />
                     <div>
-                        <span className="pay-value">${totalPending.toFixed(2)}</span>
+                        <span className="pay-value">{formatCurrency(totalPending)}</span>
                         <span className="pay-label">Pending</span>
                     </div>
                 </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Package, DollarSign, Layers, Tag, FileText, Archive } from 'lucide-react'
+import { Package, Banknote, Layers, Tag, FileText, Archive } from 'lucide-react'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
 import { ModalFooter } from '../../components/Modal'
 import { createProduct, updateProduct } from '../../stores/productStore'
@@ -152,7 +152,7 @@ function ProductForm({ product, onClose }) {
 
                 <FormInput
                     label="Selling Price"
-                    icon={DollarSign}
+                    icon={Banknote}
                     type="number"
                     step="0.01"
                     value={formData.price}
@@ -163,7 +163,7 @@ function ProductForm({ product, onClose }) {
 
                 <FormInput
                     label="Cost Price"
-                    icon={DollarSign}
+                    icon={Banknote}
                     type="number"
                     step="0.01"
                     value={formData.cost}

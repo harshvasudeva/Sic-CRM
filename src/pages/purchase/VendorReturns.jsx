@@ -6,6 +6,7 @@ import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
 import { useToast } from '../../components/Toast'
 import { getVendors } from '../../stores/purchaseStore'
+import { formatCurrency } from '../../stores/settingsStore'
 
 function VendorReturns() {
     const toast = useToast()
@@ -85,29 +86,35 @@ function VendorReturns() {
     const columns = [
         { key: 'returnNumber', label: 'Return #', render: (v) => <span className="return-number">{v}</span> },
         { key: 'returnDate', label: 'Return Date', render: (v) => <span>{new Date(v).toLocaleDateString()}</span> },
-        { key: 'vendorId', label: 'Vendor', render: (v) => {
-            const vendor = getVendors().find(v => v.id === v)
-            return vendor ? vendor.name : '-'
-        }},
+        {
+            key: 'vendorId', label: 'Vendor', render: (v) => {
+                const vendor = getVendors().find(v => v.id === v)
+                return vendor ? vendor.name : '-'
+            }
+        },
         { key: 'grnNumber', label: 'GRN #', render: (v) => <span className="grn-number">{v}</span> },
         { key: 'reason', label: 'Reason', render: (v) => <span className="reason">{v}</span> },
         { key: 'returnQty', label: 'Qty Returned', render: (v) => <span className="qty">{v} units</span> },
-        { key: 'refundAmount', label: 'Refund Amount', render: (v) => <span className="amount">${v.toLocaleString()}</span> },
-        { key: 'status', label: 'Status', render: (v) => (
-            <span className={`status-badge ${v}`}>
-                {v.charAt(0).toUpperCase() + v.slice(1)}
-            </span>
-        )},
-        { key: 'actions', label: 'Actions', render: (_, row) => (
-            <div className="action-buttons">
-                <button className="btn-edit" onClick={() => handleEdit(row)}>
-                    Edit
-                </button>
-                <button className="btn-delete" onClick={() => handleDelete(row.id)}>
-                    Delete
-                </button>
-            </div>
-        )}
+        { key: 'refundAmount', label: 'Refund Amount', render: (v) => <span className="amount">{formatCurrency(v)}</span> },
+        {
+            key: 'status', label: 'Status', render: (v) => (
+                <span className={`status-badge ${v}`}>
+                    {v.charAt(0).toUpperCase() + v.slice(1)}
+                </span>
+            )
+        },
+        {
+            key: 'actions', label: 'Actions', render: (_, row) => (
+                <div className="action-buttons">
+                    <button className="btn-edit" onClick={() => handleEdit(row)}>
+                        Edit
+                    </button>
+                    <button className="btn-delete" onClick={() => handleDelete(row.id)}>
+                        Delete
+                    </button>
+                </div>
+            )
+        }
     ]
 
     return (

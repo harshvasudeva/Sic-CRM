@@ -16,6 +16,7 @@ import {
     Plus
 } from 'lucide-react'
 import { getInventoryStats, getInventoryProducts, getWarehouses, getStockLevels, createProduct } from '../../stores/inventoryStore'
+import { formatCurrency } from '../../stores/settingsStore'
 import DataTable from '../../components/DataTable'
 import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
@@ -83,7 +84,7 @@ function Inventory() {
         { key: 'category', label: 'Category', render: (v) => <span className="category-badge">{v}</span> },
         { key: 'type', label: 'Type', render: (v) => <span className="type-badge">{v}</span> },
         { key: 'unit', label: 'Unit' },
-        { key: 'price', label: 'Price', render: (v) => <span className="amount">${v}</span> },
+        { key: 'price', label: 'Price', render: (v) => <span className="amount">{formatCurrency(v)}</span> },
         {
             key: 'stock', label: 'Stock', render: (v) => (
                 <div className="stock-level">
@@ -92,7 +93,7 @@ function Inventory() {
                 </div>
             )
         },
-        { key: 'value', label: 'Value', render: (_, row) => <span className="amount">${(row.stock * row.price).toLocaleString()}</span> },
+        { key: 'value', label: 'Value', render: (_, row) => <span className="amount">{formatCurrency(row.stock * row.price)}</span> },
         {
             key: 'warehouse', label: 'Warehouse', render: (_, row) => {
                 const wh = getWarehouses().find(w => w.id === row.warehouseId)
@@ -142,7 +143,7 @@ function Inventory() {
                                 </div>
                                 <div className="stat-content">
                                     <div className="stat-label">Total Stock Value</div>
-                                    <div className="stat-value">${stats.totalStockValue}</div>
+                                    <div className="stat-value">{formatCurrency(stats.totalStockValue)}</div>
                                 </div>
                             </div>
 

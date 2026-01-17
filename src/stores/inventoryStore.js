@@ -436,6 +436,54 @@ export function deleteWarehouse(id) {
     return true
 }
 
+// ==================== INTEGRATION HELPER ====================
+export function receiveStockFromPO(po) {
+    // 1. Create Stock Movement
+    const movement = createStockMovement({
+        reference: po.orderNumber,
+        referenceType: 'purchase_order',
+        movementType: 'receipt',
+        date: new Date().toISOString().split('T')[0],
+        items: po.items.map(item => ({
+            productId: item.productId, // Ensure your PO items have productId
+            quantity: item.quantity,
+            unitCost: item.unitPrice,
+            toWarehouse: 'wh-001' // Default to Main Warehouse for now
+        })),
+        notes: `Received from PO ${po.orderNumber}`
+    })
+
+    // 2. Update Stock Levels
+    po.items.forEach(item => {
+        // Default to warehouse wh-001 if no warehouse specified in PO item
+        // If the stock level entry doesn't exist, updateStockLevel might fail or return null?
+        // Let's ensure it handles non-existence or we create it.
+        // updateStockLevel implementation checks for existing index.
+        const warehouseId = 'wh-001'
+        const existing = getStockLevels({ warehouseId }).find(l => l.productId === item.productId)
+
+        if (existing) {
+            updateStockLevel(item.productId, warehouseId, item.quantity)
+        } else {
+            // Create new stock level entry
+            const levels = getStore(STORAGE_KEYS.stockLevels, [])
+            levels.push({
+                id: `stock-${Date.now()}-${Math.random()}`,
+                productId: item.productId,
+                warehouseId: warehouseId,
+                quantity: item.quantity,
+                reserved: 0,
+                available: item.quantity,
+                lastCount: new Date().toISOString().split('T')[0],
+                status: 'good'
+            })
+            setStore(STORAGE_KEYS.stockLevels, levels)
+        }
+    })
+
+    return movement
+}
+
 // ==================== INVENTORY STATS ====================
 export function getInventoryStats() {
     const products = getInventoryProducts()

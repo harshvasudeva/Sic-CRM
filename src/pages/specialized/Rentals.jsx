@@ -5,6 +5,7 @@ import DataTable from '../../components/DataTable'
 import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
 import { useToast } from '../../components/Toast'
+import { formatCurrency } from '../../stores/settingsStore'
 
 const statuses = [
     { value: 'reserved', label: 'Reserved' },
@@ -144,18 +145,17 @@ function Rentals() {
         {
             key: 'totalCost',
             label: 'Total Cost',
-            render: (rental) => `$${rental.totalCost?.toFixed(2) || '0.00'}`
+            render: (rental) => formatCurrency(rental.totalCost || 0)
         },
         {
             key: 'status',
             label: 'Status',
             render: (rental) => (
-                <span className={`px-2 py-1 rounded text-xs ${
-                    rental.status === 'returned' ? 'bg-green-600' :
-                    rental.status === 'rented' ? 'bg-blue-600' :
-                    rental.status === 'overdue' ? 'bg-red-600' :
-                    rental.status === 'cancelled' ? 'bg-gray-600' : 'bg-yellow-600'
-                }`}>
+                <span className={`px-2 py-1 rounded text-xs ${rental.status === 'returned' ? 'bg-green-600' :
+                        rental.status === 'rented' ? 'bg-blue-600' :
+                            rental.status === 'overdue' ? 'bg-red-600' :
+                                rental.status === 'cancelled' ? 'bg-gray-600' : 'bg-yellow-600'
+                    }`}>
                     {rental.status.toUpperCase()}
                 </span>
             )
@@ -272,7 +272,7 @@ function Rentals() {
                         onChange={(e) => setFormData({ ...formData, itemId: e.target.value })}
                         options={[
                             { value: '', label: 'Select an item' },
-                            ...rentalItems.map(item => ({ value: String(item.id), label: `${item.name} - $${item.rate}/${item.unit}` }))
+                            ...rentalItems.map(item => ({ value: String(item.id), label: `${item.name} - ${formatCurrency(item.rate)}/${item.unit}` }))
                         ]}
                     />
                     <FormInput

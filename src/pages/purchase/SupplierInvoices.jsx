@@ -6,6 +6,7 @@ import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
 import { useToast } from '../../components/Toast'
 import { getSupplierInvoices, createSupplierInvoice, updateSupplierInvoice, performThreeWayMatch, getVendors, getPurchaseOrders, getGRNs } from '../../stores/purchaseStore'
+import { formatCurrency } from '../../stores/settingsStore'
 
 function SupplierInvoices() {
     const toast = useToast()
@@ -75,30 +76,36 @@ function SupplierInvoices() {
         { key: 'invoiceNumber', label: 'Invoice #', render: (v) => <span className="invoice-number">{v}</span> },
         { key: 'invoiceDate', label: 'Invoice Date', render: (v) => <span>{new Date(v).toLocaleDateString()}</span> },
         { key: 'dueDate', label: 'Due Date', render: (v) => <span>{new Date(v).toLocaleDateString()}</span> },
-        { key: 'vendorId', label: 'Vendor', render: (v) => {
-            const vendor = getVendors().find(v => v.id === v)
-            return vendor ? vendor.name : '-'
-        }},
+        {
+            key: 'vendorId', label: 'Vendor', render: (v) => {
+                const vendor = getVendors().find(v => v.id === v)
+                return vendor ? vendor.name : '-'
+            }
+        },
         { key: 'poNumber', label: 'PO #', render: (v) => <span className="po-number">{v}</span> },
-        { key: 'totalAmount', label: 'Amount', render: (v) => <span className="amount">${v.toLocaleString()}</span> },
-        { key: 'taxAmount', label: 'Tax', render: (v) => <span className="tax">${v.toLocaleString()}</span> },
-        { key: 'status', label: 'Status', render: (v) => (
-            <span className={`status-badge ${v}`}>
-                {v.charAt(0).toUpperCase() + v.slice(1)}
-            </span>
-        )},
-        { key: 'actions', label: 'Actions', render: (_, row) => (
-            <div className="action-buttons">
-                {row.status === 'pending' && (
-                    <button className="btn-match" onClick={() => handleThreeWayMatch(row.id)}>
-                        <CheckCircle size={16} /> 3-Way Match
+        { key: 'totalAmount', label: 'Amount', render: (v) => <span className="amount">{formatCurrency(v)}</span> },
+        { key: 'taxAmount', label: 'Tax', render: (v) => <span className="tax">{formatCurrency(v)}</span> },
+        {
+            key: 'status', label: 'Status', render: (v) => (
+                <span className={`status-badge ${v}`}>
+                    {v.charAt(0).toUpperCase() + v.slice(1)}
+                </span>
+            )
+        },
+        {
+            key: 'actions', label: 'Actions', render: (_, row) => (
+                <div className="action-buttons">
+                    {row.status === 'pending' && (
+                        <button className="btn-match" onClick={() => handleThreeWayMatch(row.id)}>
+                            <CheckCircle size={16} /> 3-Way Match
+                        </button>
+                    )}
+                    <button className="btn-edit" onClick={() => handleEdit(row)}>
+                        Edit
                     </button>
-                )}
-                <button className="btn-edit" onClick={() => handleEdit(row)}>
-                    Edit
-                </button>
-            </div>
-        )}
+                </div>
+            )
+        }
     ]
 
     return (

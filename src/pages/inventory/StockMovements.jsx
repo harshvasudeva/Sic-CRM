@@ -16,8 +16,26 @@ function StockMovements() {
 
     const loadData = () => {
         const allMovements = getStockMovements()
-        setMovements(allMovements)
-        setFilteredMovements(allMovements)
+        const flatMovements = []
+
+        allMovements.forEach(m => {
+            if (m.items && m.items.length > 0) {
+                m.items.forEach(item => {
+                    flatMovements.push({
+                        ...m,
+                        productId: item.productId,
+                        quantity: item.quantity,
+                        warehouseId: item.toWarehouse || item.fromWarehouse || m.warehouseId,
+                        originalId: m.id
+                    })
+                })
+            } else if (m.productId) {
+                flatMovements.push(m)
+            }
+        })
+
+        setMovements(flatMovements)
+        setFilteredMovements(flatMovements)
     }
 
     useEffect(() => {
@@ -36,7 +54,7 @@ function StockMovements() {
 
     const columns = [
         { key: 'movementNumber', label: 'Movement #', render: (v) => <span className="movement-number">{v}</span> },
-        { key: 'movementDate', label: 'Date', render: (v) => <span>{new Date(v).toLocaleDateString()}</span> },
+        { key: 'date', label: 'Date', render: (v) => <span>{new Date(v).toLocaleDateString()}</span> },
         {
             key: 'type', label: 'Type', render: (v) => (
                 <span className={`type-badge ${v}`}>{v}</span>

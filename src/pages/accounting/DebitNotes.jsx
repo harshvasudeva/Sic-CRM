@@ -21,6 +21,7 @@ import {
     AlertTriangle
 } from 'lucide-react'
 import { useTallyShortcuts } from '../../hooks/useTallyShortcuts'
+import { formatCurrency } from '../../stores/settingsStore'
 
 function DebitNotes() {
     const [debitNotes, setDebitNotes] = useState([])
@@ -133,13 +134,7 @@ function DebitNotes() {
         pendingValue: debitNotes.filter(n => n.status === 'issued').reduce((sum, n) => sum + (n.totalAmount - n.appliedAmount), 0)
     }
 
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR',
-            maximumFractionDigits: 0
-        }).format(amount)
-    }
+
 
     if (loading) {
         return (

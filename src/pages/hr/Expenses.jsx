@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Receipt, Plus, Check, Clock, DollarSign, Filter } from 'lucide-react'
+import { Receipt, Plus, Check, Clock, Banknote, Filter } from 'lucide-react'
 import { getExpenses, getEmployees, submitExpense, approveExpense } from '../../stores/hrStore'
+import { formatCurrency } from '../../stores/settingsStore'
 import DataTable from '../../components/DataTable'
 import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
@@ -62,7 +63,7 @@ function Expenses() {
     const columns = [
         { key: 'employeeId', label: 'Employee', render: (v) => getEmployeeName(v) },
         { key: 'category', label: 'Category', render: (v) => <span className={`cat-badge ${v}`}>{v}</span> },
-        { key: 'amount', label: 'Amount', render: (v) => `$${v.toFixed(2)}` },
+        { key: 'amount', label: 'Amount', render: (v) => formatCurrency(v) },
         { key: 'description', label: 'Description' },
         { key: 'date', label: 'Date' },
         { key: 'status', label: 'Status', render: (v) => <span className={`status-badge ${v}`}>{v === 'approved' ? <Check size={14} /> : <Clock size={14} />} {v}</span> },
@@ -80,8 +81,8 @@ function Expenses() {
             </motion.div>
 
             <div className="expense-stats">
-                <div className="exp-stat orange"><Clock size={20} /><span>${totalPending.toFixed(2)}</span><small>Pending</small></div>
-                <div className="exp-stat green"><Check size={20} /><span>${totalApproved.toFixed(2)}</span><small>Approved</small></div>
+                <div className="exp-stat orange"><Clock size={20} /><span>{formatCurrency(totalPending)}</span><small>Pending</small></div>
+                <div className="exp-stat green"><Check size={20} /><span>{formatCurrency(totalApproved)}</span><small>Approved</small></div>
             </div>
 
             <div className="filters-bar">
@@ -101,7 +102,7 @@ function Expenses() {
                 <div className="form-grid">
                     <FormSelect label="Employee *" options={employeeOptions} value={formData.employeeId} onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })} />
                     <FormSelect label="Category" options={expenseCategories} value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} />
-                    <FormInput label="Amount *" type="number" icon={DollarSign} value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} />
+                    <FormInput label="Amount *" type="number" icon={Banknote} value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} />
                     <FormInput label="Date" type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
                 </div>
                 <FormTextarea label="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={2} />

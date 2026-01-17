@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Plus, Filter, Edit, Trash2, FileText, CheckCircle, XCircle, Receipt, ArrowUpCircle, ArrowDownCircle } from 'lucide-react'
 import { getCreditNotes, deleteCreditNote, createCreditNote, updateCreditNote, approveCreditNote, getDebitNotes, deleteDebitNote, createDebitNote, updateDebitNote, sendDebitNote, getSalesReturns, deleteSalesReturn, createSalesReturn, updateSalesReturn, approveSalesReturn, receiveReturnItems, getInvoices } from '../../stores/salesStore'
 import { getContacts } from '../../stores/crmStore'
+import { formatCurrency } from '../../stores/settingsStore'
 import DataTable from '../../components/DataTable'
 import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
@@ -184,7 +185,7 @@ function CreditNotesDebits() {
                 return customer ? `${customer.firstName} ${customer.lastName}` : '-'
             }
         },
-        { key: 'totalAmount', label: 'Amount', render: (v) => <span className="amount success">-${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)}</span> },
+        { key: 'totalAmount', label: 'Amount', render: (v) => <span className="amount success">-{formatCurrency(v)}</span> },
         { key: 'reason', label: 'Reason' },
         { key: 'noteDate', label: 'Date' },
         { key: 'status', label: 'Status', render: (v) => <span className={`status-badge ${v}`}>{v}</span> },
@@ -209,7 +210,7 @@ function CreditNotesDebits() {
                 return customer ? `${customer.firstName} ${customer.lastName}` : '-'
             }
         },
-        { key: 'totalAmount', label: 'Amount', render: (v) => <span className="amount danger">+${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)}</span> },
+        { key: 'totalAmount', label: 'Amount', render: (v) => <span className="amount danger">+{formatCurrency(v)}</span> },
         { key: 'reason', label: 'Reason' },
         { key: 'noteDate', label: 'Date' },
         { key: 'status', label: 'Status', render: (v) => <span className={`status-badge ${v}`}>{v}</span> },
@@ -234,7 +235,7 @@ function CreditNotesDebits() {
                 return customer ? `${customer.firstName} ${customer.lastName}` : '-'
             }
         },
-        { key: 'refundAmount', label: 'Refund', render: (v) => <span className="amount">${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)}</span> },
+        { key: 'refundAmount', label: 'Refund', render: (v) => <span className="amount">{formatCurrency(v)}</span> },
         { key: 'refundType', label: 'Type', render: (v) => <span className="type-badge">{v}</span> },
         { key: 'returnDate', label: 'Date' },
         { key: 'status', label: 'Status', render: (v) => <span className={`status-badge ${v}`}>{v}</span> },
@@ -309,7 +310,7 @@ function CreditNotesDebits() {
             <Modal isOpen={isCreditModalOpen} onClose={() => { setIsCreditModalOpen(false); setEditingItem(null); resetCreditData() }} title={editingItem ? 'Edit Credit Note' : 'New Credit Note'} size="medium">
                 <div className="form-grid">
                     <FormSelect label="Customer *" options={contacts.map(c => ({ value: c.id, label: `${c.firstName} ${c.lastName}` }))} value={creditData.customerId} onChange={(e) => setCreditData({ ...creditData, customerId: e.target.value })} />
-                    <FormSelect label="Related Invoice" options={[{ value: '', label: 'None' }, ...invoices.map(i => ({ value: i.id, label: `${i.invoiceNumber} - $${i.total}` }))]} value={creditData.invoiceId} onChange={(e) => setCreditData({ ...creditData, invoiceId: e.target.value })} />
+                    <FormSelect label="Related Invoice" options={[{ value: '', label: 'None' }, ...invoices.map(i => ({ value: i.id, label: `${i.invoiceNumber} - ${formatCurrency(i.total)}` }))]} value={creditData.invoiceId} onChange={(e) => setCreditData({ ...creditData, invoiceId: e.target.value })} />
                 </div>
                 <div className="form-grid">
                     <FormInput label="Amount *" type="number" value={creditData.amount} onChange={(e) => setCreditData({ ...creditData, amount: parseFloat(e.target.value) || 0 })} />
@@ -327,7 +328,7 @@ function CreditNotesDebits() {
             <Modal isOpen={isDebitModalOpen} onClose={() => { setIsDebitModalOpen(false); setEditingItem(null); resetDebitData() }} title={editingItem ? 'Edit Debit Note' : 'New Debit Note'} size="medium">
                 <div className="form-grid">
                     <FormSelect label="Customer *" options={contacts.map(c => ({ value: c.id, label: `${c.firstName} ${c.lastName}` }))} value={debitData.customerId} onChange={(e) => setDebitData({ ...debitData, customerId: e.target.value })} />
-                    <FormSelect label="Related Invoice" options={[{ value: '', label: 'None' }, ...invoices.map(i => ({ value: i.id, label: `${i.invoiceNumber} - $${i.total}` }))]} value={debitData.invoiceId} onChange={(e) => setDebitData({ ...debitData, invoiceId: e.target.value })} />
+                    <FormSelect label="Related Invoice" options={[{ value: '', label: 'None' }, ...invoices.map(i => ({ value: i.id, label: `${i.invoiceNumber} - ${formatCurrency(i.total)}` }))]} value={debitData.invoiceId} onChange={(e) => setDebitData({ ...debitData, invoiceId: e.target.value })} />
                 </div>
                 <div className="form-grid">
                     <FormInput label="Amount *" type="number" value={debitData.amount} onChange={(e) => setDebitData({ ...debitData, amount: parseFloat(e.target.value) || 0 })} />

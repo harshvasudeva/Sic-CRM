@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Plus, ClipboardList, CheckCircle, AlertTriangle, RotateCcw, Search, Download } from 'lucide-react'
 import { getInventoryProducts, getWarehouses, getStockLevels } from '../../stores/inventoryStore'
+import { useTallyShortcuts } from '../../hooks/useTallyShortcuts'
 import DataTable from '../../components/DataTable'
 import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
@@ -20,6 +21,14 @@ function PhysicalStock() {
         warehouseId: '',
         countDate: new Date().toISOString().split('T')[0],
         notes: ''
+    })
+
+    useTallyShortcuts({
+        create: () => setIsSessionModalOpen(true),
+        save: () => {
+            if (isSessionModalOpen) startSession()
+            else if (countSession) saveCount()
+        }
     })
 
     useEffect(() => {

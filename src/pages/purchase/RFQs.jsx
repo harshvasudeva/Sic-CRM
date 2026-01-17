@@ -6,6 +6,7 @@ import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
 import { useToast } from '../../components/Toast'
 import { getRFQs, createRFQ, updateRFQ, deleteRFQ, sendRFQ, getVendors } from '../../stores/purchaseStore'
+import { formatCurrency } from '../../stores/settingsStore'
 
 function RFQs() {
     const toast = useToast()
@@ -75,27 +76,31 @@ function RFQs() {
         { key: 'number', label: 'Number', render: (v) => <span className="rfq-number">{v}</span> },
         { key: 'rfqDate', label: 'RFQ Date', render: (v) => <span>{new Date(v).toLocaleDateString()}</span> },
         { key: 'validUntil', label: 'Valid Until', render: (v) => <span>{new Date(v).toLocaleDateString()}</span> },
-        { key: 'totalEstimated', label: 'Estimated', render: (v) => <span className="amount">${v.toLocaleString()}</span> },
-        { key: 'status', label: 'Status', render: (v) => (
-            <span className={`status-badge ${v}`}>
-                {v.charAt(0).toUpperCase() + v.slice(1)}
-            </span>
-        )},
-        { key: 'actions', label: 'Actions', render: (_, row) => (
-            <div className="action-buttons">
-                {row.status === 'draft' && (
-                    <button className="btn-send" onClick={() => handleSend(row.id)}>
-                        <Send size={16} /> Send
+        { key: 'totalEstimated', label: 'Estimated', render: (v) => <span className="amount">{formatCurrency(v)}</span> },
+        {
+            key: 'status', label: 'Status', render: (v) => (
+                <span className={`status-badge ${v}`}>
+                    {v.charAt(0).toUpperCase() + v.slice(1)}
+                </span>
+            )
+        },
+        {
+            key: 'actions', label: 'Actions', render: (_, row) => (
+                <div className="action-buttons">
+                    {row.status === 'draft' && (
+                        <button className="btn-send" onClick={() => handleSend(row.id)}>
+                            <Send size={16} /> Send
+                        </button>
+                    )}
+                    <button className="btn-edit" onClick={() => handleEdit(row)}>
+                        Edit
                     </button>
-                )}
-                <button className="btn-edit" onClick={() => handleEdit(row)}>
-                    Edit
-                </button>
-                <button className="btn-delete" onClick={() => handleDelete(row.id)}>
-                    Delete
-                </button>
-            </div>
-        )}
+                    <button className="btn-delete" onClick={() => handleDelete(row.id)}>
+                        Delete
+                    </button>
+                </div>
+            )
+        }
     ]
 
     return (
