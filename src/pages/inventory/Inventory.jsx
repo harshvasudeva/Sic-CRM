@@ -26,12 +26,12 @@ function Inventory() {
     const [stats, setStats] = useState(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [adjustModal, setAdjustModal] = useState(null)
-    
+
     const [productData, setProductData] = useState({
         name: '', sku: '', category: 'finished', type: 'stockable', unit: 'piece',
         price: 0, cost: 0, stock: 0, minStock: 0, description: '', warehouseId: '', reorderLevel: 0
     })
-    
+
     const [adjustData, setAdjustData] = useState({
         productId: '', warehouseId: '', quantity: 0, type: 'adjust', reason: ''
     })
@@ -84,17 +84,21 @@ function Inventory() {
         { key: 'type', label: 'Type', render: (v) => <span className="type-badge">{v}</span> },
         { key: 'unit', label: 'Unit' },
         { key: 'price', label: 'Price', render: (v) => <span className="amount">${v}</span> },
-        { key: 'stock', label: 'Stock', render: (v) => (
-            <div className="stock-level">
-                <span className="stock-number">{v}</span>
-                <span className={`stock-status ${v < 50 ? 'low' : v < 100 ? 'good' : 'high'}`}></span>
-            </div>
-        )},
+        {
+            key: 'stock', label: 'Stock', render: (v) => (
+                <div className="stock-level">
+                    <span className="stock-number">{v}</span>
+                    <span className={`stock-status ${v < 50 ? 'low' : v < 100 ? 'good' : 'high'}`}></span>
+                </div>
+            )
+        },
         { key: 'value', label: 'Value', render: (_, row) => <span className="amount">${(row.stock * row.price).toLocaleString()}</span> },
-        { key: 'warehouse', label: 'Warehouse', render: (_, row) => {
-            const wh = getWarehouses().find(w => w.id === row.warehouseId)
-            return wh ? wh.name : '-'
-        }}
+        {
+            key: 'warehouse', label: 'Warehouse', render: (_, row) => {
+                const wh = getWarehouses().find(w => w.id === row.warehouseId)
+                return wh ? wh.name : '-'
+            }
+        }
     ]
 
     return (
@@ -110,63 +114,64 @@ function Inventory() {
 
             {stats && (
                 <>
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-                    <div className="stats-grid">
-                        <div className="stat-card">
-                            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
-                                <Package size={32} />
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+                        <div className="stats-grid">
+                            <div className="stat-card">
+                                <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+                                    <Package size={32} />
+                                </div>
+                                <div className="stat-content">
+                                    <div className="stat-label">Total Products</div>
+                                    <div className="stat-value">{stats.totalProducts}</div>
+                                </div>
                             </div>
-                            <div className="stat-content">
-                                <div className="stat-label">Total Products</div>
-                                <div className="stat-value">{stats.totalProducts}</div>
+
+                            <div className="stat-card">
+                                <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #10b981, #34d399)' }}>
+                                    <Warehouse size={32} />
+                                </div>
+                                <div className="stat-content">
+                                    <div className="stat-label">Total Warehouses</div>
+                                    <div className="stat-value">{stats.totalWarehouses}</div>
+                                </div>
+                            </div>
+
+                            <div className="stat-card">
+                                <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f59e0b, #fb923c)' }}>
+                                    <TrendingUp size={32} />
+                                </div>
+                                <div className="stat-content">
+                                    <div className="stat-label">Total Stock Value</div>
+                                    <div className="stat-value">${stats.totalStockValue}</div>
+                                </div>
+                            </div>
+
+                            <div className="stat-card">
+                                <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #ef4444, #f87171)' }}>
+                                    <AlertTriangle size={32} />
+                                </div>
+                                <div className="stat-content">
+                                    <div className="stat-label">Low Stock Items</div>
+                                    <div className="stat-value danger">{stats.lowStockItems}</div>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="stat-card">
-                            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #10b981, #34d399)' }}>
-                                <Warehouse size={32} />
-                            </div>
-                            <div className="stat-content">
-                                <div className="stat-label">Total Warehouses</div>
-                                <div className="stat-value">{stats.totalWarehouses}</div>
-                            </div>
+                        <div className="actions-row">
+                            <button className="action-btn" onClick={handleResetStock}>
+                                <RotateCcw size={18} />
+                                Reset Stock Levels
+                            </button>
+                            <button className="btn-primary" onClick={handleAddProduct}>
+                                <Plus size={20} /> Add Product
+                            </button>
                         </div>
+                    </motion.div>
 
-                        <div className="stat-card">
-                            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f59e0b, #fb923c)' }}>
-                                <TrendingUp size={32} />
-                            </div>
-                            <div className="stat-content">
-                                <div className="stat-label">Total Stock Value</div>
-                                <div className="stat-value">${stats.totalStockValue}</div>
-                            </div>
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                        <div className="section-header">
+                            <h3>Quick Actions</h3>
                         </div>
-
-                        <div className="stat-card">
-                            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #ef4444, #f87171)' }}>
-                                <AlertTriangle size={32} />
-                            </div>
-                            <div className="stat-content">
-                                <div className="stat-label">Low Stock Items</div>
-                                <div className="stat-value danger">{stats.lowStockItems}</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="actions-row">
-                        <button className="action-btn" onClick={handleResetStock}>
-                            <RotateCcw size={18} />
-                            Reset Stock Levels
-                        </button>
-                        <button className="btn-primary" onClick={handleAddProduct}>
-                            <Plus size={20} /> Add Product
-                        </button>
-                    </div>
-                </motion.div>
-
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-                    <div className="section-header">
-                        <h3 style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>Quick Actions</h3>
                         <div className="action-cards">
                             <Link to="/inventory/warehouses" className="action-link">
                                 <Warehouse size={24} />
@@ -189,22 +194,21 @@ function Inventory() {
                                 <span>{0} items tracked</span>
                             </Link>
                         </div>
-                    </div>
-                </motion.div>
+                    </motion.div>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-                    <div className="section-header">
-                        <h3>Current Stock Levels</h3>
-                    </div>
-                    <DataTable 
-                        columns={columns} 
-                        data={getInventoryProducts()} 
-                        searchable 
-                        exportable 
-                    />
-                </motion.div>
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                        <div className="section-header">
+                            <h3>Current Stock Levels</h3>
+                        </div>
+                        <DataTable
+                            columns={columns}
+                            data={getInventoryProducts()}
+                            searchable
+                            exportable
+                        />
+                    </motion.div>
                 </>
-                )}
+            )}
 
             {/* Add/Edit Product Modal */}
             <Modal isOpen={isModalOpen && !adjustModal} onClose={() => { setIsModalOpen(false); setAdjustModal(null) }} title="Add Product" size="large">
@@ -285,7 +289,7 @@ function Inventory() {
                 .action-btn:hover { background: var(--bg-tertiary); border-color: var(--accent-primary); }
                 .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
                 .section-header h3 { font-size: 1rem; color: var(--text-primary); }
-                .action-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+                .action-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
                 .action-link { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-secondary); text-decoration: none; transition: all 0.2s ease; }
                 .action-link:hover { background: var(--bg-tertiary); border-color: var(--accent-primary); transform: translateY(-2px); }
                 .action-link span { font-size: 0.75rem; color: var(--text-muted); }
