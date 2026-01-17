@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { Plus, Filter, Edit, Trash2, Building2, Mail, Phone, MapPin, Star } from 'lucide-react'
-import { getVendors, deleteVendor, createVendor, updateVendor } from '../../stores/purchaseStore'
+import React, { useState, useEffect } from 'react'
+import { Plus, Search, Filter, MoreVertical, FileText, Trash2, Edit2, Download, Upload } from 'lucide-react'
+import PageHelp from '../../components/PageHelp'
+import { getVendors, deleteVendor } from '../../stores/purchaseStore'
 import DataTable from '../../components/DataTable'
 import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
@@ -104,14 +104,16 @@ function Vendors() {
         { key: 'contactPerson', label: 'Contact' },
         { key: 'email', label: 'Email' },
         { key: 'type', label: 'Type', render: (v) => <span className="type-badge">{v}</span> },
-        { key: 'rating', label: 'Rating', render: (v) => (
-            <div className="rating-container">
-                {Array(5).fill(0).map((_, i) => (
-                    <Star key={i} size={14} className={i < v ? 'filled' : 'empty'} />
-                ))}
-                <span className="rating-text">{v}</span>
-            </div>
-        )},
+        {
+            key: 'rating', label: 'Rating', render: (v) => (
+                <div className="rating-container">
+                    {Array(5).fill(0).map((_, i) => (
+                        <Star key={i} size={14} className={i < v ? 'filled' : 'empty'} />
+                    ))}
+                    <span className="rating-text">{v}</span>
+                </div>
+            )
+        },
         { key: 'creditLimit', label: 'Credit Limit', render: (v) => <span className="amount">${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)}</span> },
         { key: 'status', label: 'Status', render: (v) => <span className={`status-badge ${v}`}>{v}</span> },
         { key: 'createdAt', label: 'Created' },
@@ -222,8 +224,29 @@ function Vendors() {
                 .action-btn.edit { background: rgba(59, 130, 246, 0.1); color: var(--info); }
                 .action-btn.delete { background: rgba(239, 68, 68, 0.1); color: var(--error); }
             `}</style>
+
+            <PageHelp
+                title="Vendor Management"
+                description="Manage your supplier database, track performance, and handle contact details."
+                shortcuts={[
+                    { keys: ['Alt', 'N'], action: 'Create New Vendor' },
+                    { keys: ['/'], action: 'Focus Search Bar' },
+                    { keys: ['Esc'], action: 'Close Modal' }
+                ]}
+                walkthroughSteps={[
+                    { title: 'Vendor List', description: 'View all your active and inactive vendors here. Use filters to narrow down by type.' },
+                    { title: 'Performance Rating', description: 'Star ratings are auto-calculated based on delivery time and quality checks.' },
+                    { title: 'Credit Limits', description: 'Monitor available credit with each vendor to avoid payment blockers.' }
+                ]}
+                faqs={[
+                    { question: 'How do I deactivate a vendor?', answer: 'Edit the vendor and change status to "Inactive". This preserves history but prevents new POs.' },
+                    { question: 'Can I import vendors?', answer: 'Yes, use the Import button (coming soon) to upload a CSV file.' }
+                ]}
+            />
         </div>
     )
 }
 
 export default Vendors
+
+

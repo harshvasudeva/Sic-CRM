@@ -1,601 +1,289 @@
-// Purchase Store with localStorage persistence
 
-const STORAGE_KEYS = {
-    purchaseRequisitions: 'sic-purchase-requisitions',
-    purchaseOrders: 'sic-purchase-orders',
-    vendors: 'sic-purchase-vendors',
-    rfqs: 'sic-purchase-rfqs',
-    grns: 'sic-purchase-grns',
-    vendorReturns: 'sic-purchase-vendor-returns',
-    supplierInvoices: 'sic-purchase-supplier-invoices',
-    vendorEvaluations: 'sic-purchase-vendor-evaluations'
+import api from '../utils/api'
+
+// Purchase Store with API integration
+
+export const getVendors = async (filters = {}) => {
+    try {
+        const queryParams = new URLSearchParams()
+        if (filters.status) queryParams.append('status', filters.status)
+        if (filters.type) queryParams.append('type', filters.type)
+        if (filters.search) queryParams.append('search', filters.search)
+
+        const response = await api.get(`/vendors?${queryParams.toString()}`)
+        return response.vendors || []
+    } catch (error) {
+        console.error('Error fetching vendors:', error)
+        return []
+    }
 }
 
-// ==================== VENDORS ====================
-const initialVendors = [
-    {
-        id: 'vendor-001',
-        vendorCode: 'VENDOR-001',
-        name: 'TechSupply Inc.',
-        contactPerson: 'John Smith',
-        email: 'john@techsupply.com',
-        phone: '+1-555-0101',
-        address: '100 Tech Street, San Francisco, CA',
-        country: 'USA',
-        type: 'product',
-        status: 'active',
-        paymentTerms: 'Net 30',
-        taxId: 'TAX-12345',
-        creditLimit: 100000,
-        rating: 4.5,
-        notes: 'Primary technology supplier',
-        createdAt: '2026-01-01'
-    },
-    {
-        id: 'vendor-002',
-        vendorCode: 'VENDOR-002',
-        name: 'Office Essentials Co.',
-        contactPerson: 'Sarah Johnson',
-        email: 'sarah@officeessentials.com',
-        phone: '+1-555-0102',
-        address: '200 Office Ave, New York, NY',
-        country: 'USA',
-        type: 'consumable',
-        status: 'active',
-        paymentTerms: 'Net 15',
-        taxId: 'TAX-67890',
-        creditLimit: 50000,
-        rating: 4.2,
-        notes: 'Office supplies vendor',
-        createdAt: '2026-01-01'
+export const getVendor = async (id) => {
+    try {
+        const response = await api.get(`/vendors/${id}`)
+        return response.vendor
+    } catch (error) {
+        console.error('Error fetching vendor:', error)
+        return null
     }
-]
+}
+
+export const createVendor = async (data) => {
+    try {
+        const response = await api.post('/vendors', data)
+        return response.vendor
+    } catch (error) {
+        throw error
+    }
+}
+
+export const updateVendor = async (id, data) => {
+    try {
+        const response = await api.put(`/vendors/${id}`, data)
+        return response.vendor
+    } catch (error) {
+        throw error
+    }
+}
+
+export const deleteVendor = async (id) => {
+    try {
+        await api.delete(`/vendors/${id}`)
+        return true
+    } catch (error) {
+        throw error
+    }
+}
 
 // ==================== PURCHASE REQUISITIONS ====================
-const initialPurchaseRequisitions = [
-    {
-        id: 'pr-001',
-        requisitionNumber: 'PR-2026-001',
-        requestedBy: 'emp-002',
-        department: 'IT',
-        requestDate: '2026-01-10',
-        requiredBy: '2026-01-25',
-        items: [
-            { productId: 'prod-001', name: 'Laptop Computer', quantity: 5, estimatedPrice: 1200, priority: 'high' }
-        ],
-        totalEstimatedAmount: 6000,
-        justification: 'Replacement of outdated laptops',
-        status: 'pending',
-        approvedBy: null,
-        approvedDate: null,
-        createdAt: '2026-01-10'
+
+export const getPurchaseRequisitions = async (filters = {}) => {
+    try {
+        const queryParams = new URLSearchParams()
+        if (filters.status) queryParams.append('status', filters.status)
+        if (filters.department) queryParams.append('department', filters.department)
+
+        const response = await api.get(`/purchase/requisitions?${queryParams.toString()}`)
+        return response
+    } catch (error) {
+        console.error('Error fetching requisitions:', error)
+        return []
     }
-]
+}
+
+export const createPurchaseRequisition = async (data) => {
+    return await api.post('/purchase/requisitions', data)
+}
+
+export const approvePurchaseRequisition = async (id, approvedBy) => {
+    return await api.put(`/purchase/requisitions/${id}/status`, { status: 'approved', approvedBy })
+}
+
+export const updatePurchaseRequisition = async (id, data) => {
+    return await api.put(`/purchase/requisitions/${id}`, data)
+}
+
+export const deletePurchaseRequisition = async (id) => {
+    try {
+        await api.delete(`/purchase/requisitions/${id}`)
+        return true
+    } catch (error) {
+        throw error
+    }
+}
 
 // ==================== PURCHASE ORDERS ====================
-const initialPurchaseOrders = [
-    {
-        id: 'po-001',
-        orderNumber: 'PO-2026-001',
-        vendorId: 'vendor-001',
-        requisitionId: 'pr-001',
-        orderDate: '2026-01-12',
-        expectedDelivery: '2026-01-25',
-        items: [
-            { productId: 'prod-001', name: 'Laptop Computer', description: '15.6" Laptop', quantity: 5, unitPrice: 1100, discount: 0, tax: 0, total: 5500 }
-        ],
-        subtotal: 5500,
-        discount: 0,
-        tax: 0,
-        shippingCost: 100,
-        total: 5600,
-        currency: 'USD',
-        paymentTerms: 'Net 30',
-        status: 'issued',
-        received: false,
-        invoiceMatched: false,
-        notes: 'Fulfill from San Francisco warehouse',
-        createdAt: '2026-01-12'
-    }
-]
 
-// ==================== RFQS ====================
-const initialRFQs = [
-    {
-        id: 'rfq-001',
-        rfqNumber: 'RFQ-2026-001',
-        title: 'Office Supplies Q1 2026',
-        description: 'Quarterly office supplies procurement',
-        requisitionId: null,
-        issueDate: '2026-01-15',
-        dueDate: '2026-01-25',
-        items: [
-            { name: 'Printer Paper', quantity: 500, unit: 'reams', specifications: 'A4, 80gsm' },
-            { name: 'Toner Cartridges', quantity: 20, unit: 'pieces', specifications: 'HP LaserJet Pro M404' }
-        ],
-        status: 'sent',
-        createdAt: '2026-01-15'
-    }
-]
+export const getPurchaseOrders = async (filters = {}) => {
+    try {
+        const queryParams = new URLSearchParams()
+        if (filters.status) queryParams.append('status', filters.status)
+        if (filters.vendorId) queryParams.append('vendorId', filters.vendorId)
 
-// ==================== GRNS ====================
-const initialGRNs = [
-    {
-        id: 'grn-001',
-        grnNumber: 'GRN-2026-001',
-        purchaseOrderId: 'po-001',
-        vendorId: 'vendor-001',
-        receiptDate: '2026-01-20',
-        receivedBy: 'emp-003',
-        items: [
-            { productId: 'prod-001', name: 'Laptop Computer', orderedQty: 5, receivedQty: 5, rejectedQty: 0, reason: '' }
-        ],
-        notes: 'All items in good condition',
-        status: 'completed',
-        createdAt: '2026-01-20'
+        const response = await api.get(`/purchase/orders?${queryParams.toString()}`)
+        return response
+    } catch (error) {
+        console.error('Error fetching POs:', error)
+        return []
     }
-]
+}
 
-// ==================== VENDOR RETURNS ====================
-const initialVendorReturns = [
-    {
-        id: 'vr-001',
-        returnNumber: 'VR-2026-001',
-        vendorId: 'vendor-001',
-        purchaseOrderId: 'po-001',
-        returnDate: '2026-01-22',
-        items: [
-            { productId: 'prod-001', name: 'Laptop Computer', quantity: 1, reason: 'Damaged upon arrival' }
-        ],
-        returnType: 'replacement',
-        status: 'approved',
-        creditNoteId: null,
-        notes: 'Received damaged unit',
-        createdAt: '2026-01-22'
-    }
-]
+export const createPurchaseOrder = async (data) => {
+    return await api.post('/purchase/orders', data)
+}
 
-// ==================== SUPPLIER INVOICES ====================
-const initialSupplierInvoices = [
-    {
-        id: 'si-001',
-        invoiceNumber: 'INV-2026-001',
-        vendorId: 'vendor-001',
-        purchaseOrderId: 'po-001',
-        invoiceDate: '2026-01-21',
-        dueDate: '2026-02-20',
-        items: [
-            { productId: 'prod-001', name: 'Laptop Computer', quantity: 5, unitPrice: 1100, tax: 0, total: 5500 }
-        ],
-        subtotal: 5500,
-        discount: 0,
-        tax: 0,
-        shippingCost: 100,
-        total: 5600,
-        paid: 0,
-        balance: 5600,
-        status: 'received',
-        threeWayMatched: true,
-        createdAt: '2026-01-21'
+export const updatePurchaseOrder = async (id, data) => {
+    // Note: Full update might need a specific endpoint if not just status
+    return await api.put(`/purchase/orders/${id}`, data)
+}
+
+export const updatePOStatus = async (id, status) => {
+    return await api.put(`/purchase/orders/${id}/status`, { status })
+}
+
+export const issuePurchaseOrder = async (id) => {
+    return await updatePOStatus(id, 'issued')
+}
+
+export const receivePurchaseOrder = async (id) => {
+    return await updatePOStatus(id, 'received')
+}
+
+export const deletePurchaseOrder = async (id) => {
+    try {
+        await api.delete(`/purchase/orders/${id}`)
+        return true
+    } catch (error) {
+        throw error
     }
-]
+}
+
+// ==================== SUBSCRIPTIONS (IT SERVICES) ====================
+
+export const getSubscriptions = async () => {
+    try {
+        // Fetch POs that are marked as recurring/subscriptions
+        // The backend controller needs to support filtering by item type or similar
+        // For now we ask for filter type=subscription (assumed backend support or future impl)
+        const response = await api.get('/purchase/orders?serviceType=subscription')
+        return response.orders || []
+    } catch (error) {
+        console.error('Error fetching subscriptions:', error)
+        return []
+    }
+}
+
+// ==================== RFQs ====================
+
+export const getRFQs = async (filters = {}) => {
+    try {
+        const queryParams = new URLSearchParams()
+        if (filters.status) queryParams.append('status', filters.status)
+
+        const response = await api.get(`/purchase/rfqs?${queryParams.toString()}`)
+        return response
+    } catch (error) {
+        console.error('Error fetching RFQs:', error)
+        return []
+    }
+}
+
+export const createRFQ = async (data) => {
+    return await api.post('/purchase/rfqs', data)
+}
+
+export const updateRFQ = async (id, data) => {
+    return await api.put(`/purchase/rfqs/${id}`, data)
+}
+
+export const deleteRFQ = async (id) => {
+    try {
+        await api.delete(`/purchase/rfqs/${id}`)
+        return true
+    } catch (error) {
+        throw error
+    }
+}
+
+export const sendRFQ = async (id) => {
+    return await api.post(`/purchase/rfqs/${id}/send`)
+}
+
+export const addQuoteToRFQ = async (id, quoteData) => {
+    return await api.post(`/purchase/rfqs/${id}/quote`, quoteData)
+}
+
+// ==================== GRNs ====================
+
+export const getGRNs = async (filters = {}) => {
+    try {
+        const queryParams = new URLSearchParams()
+        if (filters.vendorId) queryParams.append('vendorId', filters.vendorId)
+        if (filters.purchaseOrderId) queryParams.append('purchaseOrderId', filters.purchaseOrderId)
+
+        const response = await api.get(`/purchase/grns?${queryParams.toString()}`)
+        return response
+    } catch (error) {
+        console.error('Error fetching GRNs:', error)
+        return []
+    }
+}
+
+export const createGRN = async (data) => {
+    return await api.post('/purchase/grns', data)
+}
+
+export const updateGRN = async (id, data) => {
+    return await api.put(`/purchase/grns/${id}`, data)
+}
+
+export const deleteGRN = async (id) => {
+    try {
+        await api.delete(`/purchase/grns/${id}`)
+        return true
+    } catch (error) {
+        throw error
+    }
+}
 
 // ==================== VENDOR EVALUATIONS ====================
-const initialVendorEvaluations = [
-    {
-        id: 've-001',
-        vendorId: 'vendor-001',
-        evaluationPeriod: 'Q4 2025',
-        evaluationDate: '2026-01-05',
-        evaluatedBy: 'emp-001',
-        scores: {
-            quality: 4.5,
-            delivery: 4.0,
-            price: 4.2,
-            service: 4.3,
-            documentation: 4.0
-        },
-        overallScore: 4.2,
-        status: 'approved',
-        notes: 'Good performance overall',
-        recommendations: 'Maintain current relationship',
-        createdAt: '2026-01-05'
+
+export const getVendorEvaluations = async (vendorId) => {
+    try {
+        const queryParams = new URLSearchParams()
+        if (vendorId) queryParams.append('vendorId', vendorId)
+
+        const response = await api.get(`/purchase/evaluations?${queryParams.toString()}`)
+        return response
+    } catch (error) {
+        console.error('Error fetching evaluations:', error)
+        return []
     }
-]
-
-// ==================== HELPERS ====================
-function getStore(key, initial) {
-    const stored = localStorage.getItem(key)
-    if (stored) return JSON.parse(stored)
-    localStorage.setItem(key, JSON.stringify(initial))
-    return initial
 }
 
-function setStore(key, data) {
-    localStorage.setItem(key, JSON.stringify(data))
+export const createVendorEvaluation = async (data) => {
+    return await api.post('/purchase/evaluations', data)
 }
 
-function generateNumber(prefix, year, sequence) {
-    return `${prefix}-${year}-${String(sequence).padStart(4, '0')}`
+export const updateVendorEvaluation = async (id, data) => {
+    return await api.put(`/purchase/evaluations/${id}`, data)
 }
 
-// ==================== VENDORS CRUD ====================
-export function getVendors(filters = {}) {
-    let vendors = getStore(STORAGE_KEYS.vendors, initialVendors)
-    if (filters.status) vendors = vendors.filter(v => v.status === filters.status)
-    if (filters.type) vendors = vendors.filter(v => v.type === filters.type)
-    return vendors
-}
+// ==================== SUPPLIER INVOICES ====================
 
-export function getVendor(id) {
-    return getVendors().find(v => v.id === id)
-}
-
-export function createVendor(data) {
-    const vendors = getStore(STORAGE_KEYS.vendors, initialVendors)
-    const existingCount = vendors.length
-    const vendorCode = data.vendorCode || `VENDOR-${String(existingCount + 1).padStart(3, '0')}`
-
-    const newVendor = {
-        ...data,
-        id: `vendor-${Date.now()}`,
-        vendorCode: vendorCode,
-        rating: data.rating || 0,
-        creditLimit: data.creditLimit || 0,
-        status: 'active',
-        createdAt: new Date().toISOString().split('T')[0]
+export const getSupplierInvoices = async () => {
+    try {
+        const response = await api.get('/purchase/invoices')
+        return response.invoices || []
+    } catch (error) {
+        console.error('Error fetching invoices:', error)
+        return []
     }
-    vendors.push(newVendor)
-    setStore(STORAGE_KEYS.vendors, vendors)
-    return newVendor
 }
 
-export function updateVendor(id, data) {
-    const vendors = getVendors()
-    const index = vendors.findIndex(v => v.id === id)
-    if (index === -1) return null
-    vendors[index] = { ...vendors[index], ...data }
-    setStore(STORAGE_KEYS.vendors, vendors)
-    return vendors[index]
+export const createSupplierInvoice = async (data) => {
+    return await api.post('/purchase/invoices', data)
 }
 
-export function deleteVendor(id) {
-    const vendors = getVendors().filter(v => v.id !== id)
-    setStore(STORAGE_KEYS.vendors, vendors)
-    return true
+export const updateSupplierInvoice = async (id, data) => {
+    return await api.put(`/purchase/invoices/${id}`, data)
 }
 
-// ==================== PURCHASE REQUISITIONS CRUD ====================
-export function getPurchaseRequisitions(filters = {}) {
-    let reqs = getStore(STORAGE_KEYS.purchaseRequisitions, initialPurchaseRequisitions)
-    if (filters.status) reqs = reqs.filter(r => r.status === filters.status)
-    if (filters.department) reqs = reqs.filter(r => r.department === filters.department)
-    return reqs
+export const performThreeWayMatch = async (invoiceId) => {
+    return await api.post(`/purchase/invoices/${invoiceId}/match`)
 }
 
-export function createPurchaseRequisition(data) {
-    const reqs = getStore(STORAGE_KEYS.purchaseRequisitions, initialPurchaseRequisitions)
-    const existingCount = reqs.length
-    const requisitionNumber = generateNumber('PR', new Date().getFullYear(), existingCount + 1)
-
-    const totalEstimated = data.items.reduce((sum, item) => sum + (item.estimatedPrice * item.quantity), 0)
-
-    const newReq = {
-        ...data,
-        id: `pr-${Date.now()}`,
-        requisitionNumber: data.requisitionNumber || requisitionNumber,
-        requestDate: data.requestDate || new Date().toISOString().split('T')[0],
-        totalEstimatedAmount: totalEstimated,
-        status: 'pending',
-        approvedBy: null,
-        approvedDate: null,
-        createdAt: new Date().toISOString().split('T')[0]
-    }
-    reqs.push(newReq)
-    setStore(STORAGE_KEYS.purchaseRequisitions, reqs)
-    return newReq
-}
-
-export function approvePurchaseRequisition(id, approvedBy) {
-    const reqs = getStore(STORAGE_KEYS.purchaseRequisitions, initialPurchaseRequisitions)
-    const index = reqs.findIndex(r => r.id === id)
-    if (index === -1) return null
-    reqs[index] = {
-        ...reqs[index],
-        status: 'approved',
-        approvedBy: approvedBy,
-        approvedDate: new Date().toISOString().split('T')[0]
-    }
-    setStore(STORAGE_KEYS.purchaseRequisitions, reqs)
-    return reqs[index]
-}
-
-export function updatePurchaseRequisition(id, data) {
-    const reqs = getStore(STORAGE_KEYS.purchaseRequisitions, initialPurchaseRequisitions)
-    const index = reqs.findIndex(r => r.id === id)
-    if (index === -1) return null
-    reqs[index] = { ...reqs[index], ...data }
-    setStore(STORAGE_KEYS.purchaseRequisitions, reqs)
-    return reqs[index]
-}
-
-export function deletePurchaseRequisition(id) {
-    const reqs = getStore(STORAGE_KEYS.purchaseRequisitions, initialPurchaseRequisitions).filter(r => r.id !== id)
-    setStore(STORAGE_KEYS.purchaseRequisitions, reqs)
-    return true
-}
-
-// ==================== PURCHASE ORDERS CRUD ====================
-export function getPurchaseOrders(filters = {}) {
-    let orders = getStore(STORAGE_KEYS.purchaseOrders, initialPurchaseOrders)
-    if (filters.status) orders = orders.filter(o => o.status === filters.status)
-    if (filters.vendorId) orders = orders.filter(o => o.vendorId === filters.vendorId)
-    return orders
-}
-
-export function getPurchaseOrder(id) {
-    return getPurchaseOrders().find(o => o.id === id)
-}
-
-export function createPurchaseOrder(data) {
-    const orders = getStore(STORAGE_KEYS.purchaseOrders, initialPurchaseOrders)
-    const existingCount = orders.length
-    const orderNumber = generateNumber('PO', new Date().getFullYear(), existingCount + 1)
-
-    const subtotal = data.items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0)
-    const discount = data.items.reduce((sum, item) => sum + item.discount, 0)
-    const tax = data.items.reduce((sum, item) => sum + item.tax, 0)
-
-    const newOrder = {
-        ...data,
-        id: `po-${Date.now()}`,
-        orderNumber: data.orderNumber || orderNumber,
-        orderDate: data.orderDate || new Date().toISOString().split('T')[0],
-        subtotal,
-        discount,
-        tax,
-        shippingCost: data.shippingCost || 0,
-        total: subtotal - discount + tax + (data.shippingCost || 0),
-        currency: data.currency || 'USD',
-        status: 'draft',
-        received: false,
-        invoiceMatched: false,
-        createdAt: new Date().toISOString().split('T')[0]
-    }
-    orders.push(newOrder)
-    setStore(STORAGE_KEYS.purchaseOrders, orders)
-    return newOrder
-}
-
-export function updatePurchaseOrder(id, data) {
-    const orders = getStore(STORAGE_KEYS.purchaseOrders, initialPurchaseOrders)
-    const index = orders.findIndex(o => o.id === id)
-    if (index === -1) return null
-    orders[index] = { ...orders[index], ...data }
-    setStore(STORAGE_KEYS.purchaseOrders, orders)
-    return orders[index]
-}
-
-export function deletePurchaseOrder(id) {
-    const orders = getStore(STORAGE_KEYS.purchaseOrders, initialPurchaseOrders).filter(o => o.id !== id)
-    setStore(STORAGE_KEYS.purchaseOrders, orders)
-    return true
-}
-
-export function issuePurchaseOrder(id) {
-    return updatePurchaseOrder(id, { status: 'issued' })
-}
-
-export function receivePurchaseOrder(id) {
-    return updatePurchaseOrder(id, { status: 'received' })
-}
-
-// ==================== RFQS CRUD ====================
-export function getRFQs(filters = {}) {
-    let rfqs = getStore(STORAGE_KEYS.rfqs, initialRFQs)
-    if (filters.status) rfqs = rfqs.filter(r => r.status === filters.status)
-    return rfqs
-}
-
-export function createRFQ(data) {
-    const rfqs = getStore(STORAGE_KEYS.rfqs, initialRFQs)
-    const existingCount = rfqs.length
-    const rfqNumber = generateNumber('RFQ', new Date().getFullYear(), existingCount + 1)
-
-    const newRFQ = {
-        ...data,
-        id: `rfq-${Date.now()}`,
-        rfqNumber: data.rfqNumber || rfqNumber,
-        issueDate: data.issueDate || new Date().toISOString().split('T')[0],
-        status: 'draft',
-        createdAt: new Date().toISOString().split('T')[0]
-    }
-    rfqs.push(newRFQ)
-    setStore(STORAGE_KEYS.rfqs, rfqs)
-    return newRFQ
-}
-
-export function updateRFQ(id, data) {
-    const rfqs = getStore(STORAGE_KEYS.rfqs, initialRFQs)
-    const index = rfqs.findIndex(r => r.id === id)
-    if (index === -1) return null
-    rfqs[index] = { ...rfqs[index], ...data }
-    setStore(STORAGE_KEYS.rfqs, rfqs)
-    return rfqs[index]
-}
-
-export function deleteRFQ(id) {
-    const rfqs = getStore(STORAGE_KEYS.rfqs, initialRFQs).filter(r => r.id !== id)
-    setStore(STORAGE_KEYS.rfqs, rfqs)
-    return true
-}
-
-export function sendRFQ(id) {
-    return updateRFQ(id, { status: 'sent' })
-}
-
-// ==================== GRNS CRUD ====================
-export function getGRNs(filters = {}) {
-    let grns = getStore(STORAGE_KEYS.grns, initialGRNs)
-    if (filters.status) grns = grns.filter(g => g.status === filters.status)
-    if (filters.vendorId) grns = grns.filter(g => g.vendorId === filters.vendorId)
-    return grns
-}
-
-export function createGRN(data) {
-    const grns = getStore(STORAGE_KEYS.grns, initialGRNs)
-    const existingCount = grns.length
-    const grnNumber = generateNumber('GRN', new Date().getFullYear(), existingCount + 1)
-
-    const newGRN = {
-        ...data,
-        id: `grn-${Date.now()}`,
-        grnNumber: data.grnNumber || grnNumber,
-        receiptDate: data.receiptDate || new Date().toISOString().split('T')[0],
-        status: 'pending',
-        createdAt: new Date().toISOString().split('T')[0]
-    }
-    grns.push(newGRN)
-    setStore(STORAGE_KEYS.grns, grns)
-    return newGRN
-}
-
-export function updateGRN(id, data) {
-    const grns = getStore(STORAGE_KEYS.grns, initialGRNs)
-    const index = grns.findIndex(g => g.id === id)
-    if (index === -1) return null
-    grns[index] = { ...grns[index], ...data }
-    setStore(STORAGE_KEYS.grns, grns)
-    return grns[index]
-}
-
-export function deleteGRN(id) {
-    const grns = getStore(STORAGE_KEYS.grns, initialGRNs).filter(g => g.id !== id)
-    setStore(STORAGE_KEYS.grns, grns)
-    return true
-}
-
-// ==================== SUPPLIER INVOICES CRUD ====================
-export function getSupplierInvoices(filters = {}) {
-    let invoices = getStore(STORAGE_KEYS.supplierInvoices, initialSupplierInvoices)
-    if (filters.status) invoices = invoices.filter(i => i.status === filters.status)
-    if (filters.vendorId) invoices = invoices.filter(i => i.vendorId === filters.vendorId)
-    return invoices
-}
-
-export function createSupplierInvoice(data) {
-    const invoices = getStore(STORAGE_KEYS.supplierInvoices, initialSupplierInvoices)
-    const existingCount = invoices.length
-    const invoiceNumber = generateNumber('INV', new Date().getFullYear(), existingCount + 1)
-
-    const subtotal = data.items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0)
-    const discount = data.discount || 0
-    const tax = data.items.reduce((sum, item) => sum + item.tax, 0)
-
-    const newInvoice = {
-        ...data,
-        id: `si-${Date.now()}`,
-        invoiceNumber: data.invoiceNumber || invoiceNumber,
-        invoiceDate: data.invoiceDate || new Date().toISOString().split('T')[0],
-        subtotal,
-        discount,
-        tax,
-        shippingCost: data.shippingCost || 0,
-        total: subtotal - discount + tax + (data.shippingCost || 0),
-        paid: 0,
-        balance: subtotal - discount + tax + (data.shippingCost || 0),
-        status: 'received',
-        threeWayMatched: false,
-        createdAt: new Date().toISOString().split('T')[0]
-    }
-    invoices.push(newInvoice)
-    setStore(STORAGE_KEYS.supplierInvoices, invoices)
-    return newInvoice
-}
-
-export function updateSupplierInvoice(id, data) {
-    const invoices = getStore(STORAGE_KEYS.supplierInvoices, initialSupplierInvoices)
-    const index = invoices.findIndex(i => i.id === id)
-    if (index === -1) return null
-    invoices[index] = { ...invoices[index], ...data }
-    setStore(STORAGE_KEYS.supplierInvoices, invoices)
-    return invoices[index]
-}
-
-export function performThreeWayMatch(invoiceId) {
-    const invoice = getSupplierInvoices().find(i => i.id === invoiceId)
-    if (!invoice) return null
-
-    const po = getPurchaseOrders().find(o => o.id === invoice.purchaseOrderId)
-    const grn = getGRNs().find(g => g.purchaseOrderId === invoice.purchaseOrderId)
-
-    const matched = po && grn && po.status === 'received' && grn.status === 'completed'
-
-    return updateSupplierInvoice(invoiceId, { threeWayMatched: matched })
-}
-
-// ==================== VENDOR EVALUATIONS CRUD ====================
-export function getVendorEvaluations(filters = {}) {
-    let evaluations = getStore(STORAGE_KEYS.vendorEvaluations, initialVendorEvaluations)
-    if (filters.vendorId) evaluations = evaluations.filter(e => e.vendorId === filters.vendorId)
-    return evaluations
-}
-
-export function createVendorEvaluation(data) {
-    const evaluations = getStore(STORAGE_KEYS.vendorEvaluations, initialVendorEvaluations)
-
-    const overallScore = Object.values(data.scores || {}).reduce((sum, score) => sum + score, 0) / 5
-
-    const newEvaluation = {
-        ...data,
-        id: `ve-${Date.now()}`,
-        evaluationDate: data.evaluationDate || new Date().toISOString().split('T')[0],
-        overallScore: overallScore,
-        status: 'draft',
-        createdAt: new Date().toISOString().split('T')[0]
-    }
-    evaluations.push(newEvaluation)
-    setStore(STORAGE_KEYS.vendorEvaluations, evaluations)
-    return newEvaluation
-}
-
-export function updateVendorEvaluation(id, data) {
-    const evaluations = getStore(STORAGE_KEYS.vendorEvaluations, initialVendorEvaluations)
-    const index = evaluations.findIndex(e => e.id === id)
-    if (index === -1) return null
-    evaluations[index] = { ...evaluations[index], ...data }
-    setStore(STORAGE_KEYS.vendorEvaluations, evaluations)
-    return evaluations[index]
-}
-
-// ==================== STATISTICS ====================
-export function getPurchaseStats() {
-    const vendors = getVendors()
-    const requisitions = getPurchaseRequisitions()
-    const orders = getPurchaseOrders()
-    const rfqs = getRFQs()
-    const grns = getGRNs()
-    const supplierInvoices = getSupplierInvoices()
-
-    const totalOrdersValue = orders.reduce((sum, o) => sum + o.total, 0)
-    const pendingOrders = orders.filter(o => o.status === 'issued').length
-    const receivedOrders = orders.filter(o => o.status === 'received').length
-
-    return {
-        totalVendors: vendors.length,
-        activeVendors: vendors.filter(v => v.status === 'active').length,
-        totalRequisitions: requisitions.length,
-        pendingRequisitions: requisitions.filter(r => r.status === 'pending').length,
-        approvedRequisitions: requisitions.filter(r => r.status === 'approved').length,
-        totalOrders: orders.length,
-        pendingOrders: pendingOrders,
-        receivedOrders: receivedOrders,
-        ordersValue: totalOrdersValue,
-        totalRFQs: rfqs.length,
-        openRFQs: rfqs.filter(r => r.status === 'sent').length,
-        totalGRNs: grns.length,
-        totalSupplierInvoices: supplierInvoices.length,
-        pendingInvoices: supplierInvoices.filter(i => i.status === 'received' && i.balance > 0).length,
-        averageVendorRating: vendors.length > 0 ? vendors.reduce((sum, v) => sum + v.rating, 0) / vendors.length : 0
+export const getPurchaseStats = async () => {
+    try {
+        const response = await api.get('/purchase/stats')
+        return response
+    } catch (error) {
+        console.error('Error fetching stats:', error)
+        return {
+            activeVendors: 0,
+            pendingReqs: 0,
+            pendingPOs: 0,
+            totalSpend: 0
+        }
     }
 }

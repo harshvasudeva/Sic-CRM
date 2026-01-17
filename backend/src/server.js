@@ -7,7 +7,11 @@ const { PrismaClient } = require('@prisma/client');
 const { initScylla, client: scyllaClient } = require('./config/scylla');
 const { v4: uuidv4 } = require('uuid');
 
-require('dotenv').config();
+const path = require('path');
+// Force reload .env to ensure fresh config
+require('dotenv').config({ path: path.join(__dirname, '../.env'), override: true });
+console.log('--- SERVER STARTING ---');
+console.log('DATABASE_URL loaded:', process.env.DATABASE_URL);
 
 // Initialize DB Clients
 const prisma = new PrismaClient();
@@ -82,7 +86,16 @@ app.use('/api/accounts', accountsRoutes);
 app.use('/api/bills', billsRoutes);
 app.use('/api/payments', paymentsRoutes);
 app.use('/api/credit-notes', creditNotesRoutes);
+// Accounting (QuickBooks/Zoho style)
+app.use('/api/accounts', accountsRoutes);
+app.use('/api/bills', billsRoutes);
+app.use('/api/payments', paymentsRoutes);
+app.use('/api/credit-notes', creditNotesRoutes);
 app.use('/api/debit-notes', debitNotesRoutes);
+
+// Purchase & Procurement
+const purchaseRoutes = require('./routes/purchase');
+app.use('/api/purchase', purchaseRoutes);
 
 // Webhooks (QuickBooks-style)
 const webhooksRoutes = require('./routes/webhooks');
@@ -96,6 +109,10 @@ app.use('/api/financial-reports', financialReportsRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/logs', logsRoutes);
 
+
+// Setup Wizard Routes
+const setupRoutes = require('./routes/setupRoutes');
+app.use('/api/setup', setupRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({

@@ -259,7 +259,9 @@ model DebitNote {
   id               String   @id @default(uuid())
   debitNoteNumber  String   @unique
   vendorId         String
+  vendor           Vendor   @relation(fields: [vendorId], references: [id])
   billId           String?  // Original bill if applicable
+  bill             Bill?    @relation(fields: [billId], references: [id])
   issueDate        DateTime
   reason           String
   subtotal         Float
@@ -292,8 +294,11 @@ model Bill {
   id              String   @id @default(uuid())
   billNumber      String   @unique
   vendorId        String
+  vendor          Vendor   @relation(fields: [vendorId], references: [id])
   purchaseOrderId String?
+  purchaseOrder   PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
   grnId           String?
+  grn             GRN?     @relation(fields: [grnId], references: [id])
   billDate        DateTime
   dueDate         DateTime
   subtotal        Float
@@ -311,6 +316,7 @@ model Bill {
 
   items           BillItem[]
   payments        BillPayment[]
+  debitNotes      DebitNote[]
 }
 
 model BillItem {
@@ -484,5 +490,215 @@ model AuditLog {
   ipAddress   String?
   userAgent   String?
   createdAt   DateTime @default(now())
+}
+
+// ==================== PURCHASE MODULE MODELS ====================
+
+model Vendor {
+  id            String   @id @default(uuid())
+  vendorCode    String   @unique
+  name          String
+  contactPerson String?
+  email         String?
+  phone         String?
+  address       String?
+  country       String?
+  type          String   @default("product") // product, service, consumable
+  status        String   @default("active")
+  paymentTerms  String?
+  taxId         String?
+  creditLimit   Float    @default(0)
+  rating        Float    @default(0)
+  notes         String?
+  
+  // Relations
+  purchaseOrders PurchaseOrder[]
+  bills          Bill[]
+  debitNotes     DebitNote[]
+  rfqs           RFQ[]
+  grns           GRN[]
+  evaluations    VendorEvaluation[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model PurchaseRequisition {
+  id                String   @id @default(uuid())
+  requisitionNumber String   @unique
+  requestedBy       String
+  department        String
+  requestDate       DateTime
+  requiredBy        DateTime
+  totalEstimatedAmount Float
+  justification     String?
+  status            String   @default("pending") // pending, approved, rejected, ordered
+  approvedBy        String?
+  approvedDate      DateTime?
+  
+  items             PurchaseRequisitionItem[]
+  purchaseOrders    PurchaseOrder[] // Can generate multiple POs
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model PurchaseRequisitionItem {
+  id            String   @id @default(uuid())
+  requisitionId String
+  requisition   PurchaseRequisition @relation(fields: [requisitionId], references: [id], onDelete: Cascade)
+  productId     String?
+  name          String   // Keep name in case product not in DB
+  quantity      Float
+  estimatedPrice Float
+  priority      String   @default("medium")
+  status        String   @default("pending") // pending, ordered
+}
+
+model RFQ {
+  id            String   @id @default(uuid())
+  rfqNumber     String   @unique
+  vendorId      String?  // Optional, if sent to specific vendor
+  vendor        Vendor?  @relation(fields: [vendorId], references: [id])
+  title         String
+  description   String?
+  issueDate     DateTime
+  dueDate       DateTime
+  status        String   @default("draft") // draft, sent, closed
+  
+  items         RFQItem[]
+  quotes        VendorQuote[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model RFQItem {
+  id             String   @id @default(uuid())
+  rfqId          String
+  rfq            RFQ      @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  name           String
+  quantity       Float
+  unit           String?
+  specifications String?
+}
+
+model VendorQuote {
+  id          String   @id @default(uuid())
+  rfqId       String
+  rfq         RFQ      @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  vendorName  String
+  totalAmount Float
+  validUntil  DateTime?
+  status      String   @default("received") // received, accepted, rejected
+  remarks     String?
+}
+
+model PurchaseOrder {
+  id              String   @id @default(uuid())
+  orderNumber     String   @unique
+  vendorId        String
+  vendor          Vendor   @relation(fields: [vendorId], references: [id])
+  requisitionId   String?
+  requisition     PurchaseRequisition? @relation(fields: [requisitionId], references: [id])
+  orderDate       DateTime
+  expectedDelivery DateTime?
+  subtotal        Float
+  taxAmount       Float    @default(0)
+  discountAmount  Float    @default(0)
+  shippingCost    Float    @default(0)
+  totalAmount     Float
+  currency        String   @default("USD")
+  paymentTerms    String?
+  status          String   @default("draft") // draft, issued, received, partial, closed, cancelled
+  receivedStatus  String   @default("pending") // pending, partial, received
+  billingStatus   String   @default("pending") // pending, partial, billed
+  notes           String?
+  
+  items           PurchaseOrderItem[]
+  grns            GRN[]
+  bills           Bill[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(uuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  productId       String?
+  name            String
+  description     String?
+  quantity        Float
+  unitPrice       Float
+  discount        Float         @default(0)
+  taxRate         Float         @default(0)
+  total           Float
+  // IT Services / Subscription Fields
+  startDate       DateTime?
+  endDate         DateTime?
+  period          String?       // monthly, yearly, one-time
+  serviceType     String?       // saas, consulting, maintenance, hardware
+  
+  // Tracking fulfillment
+  receivedQty     Float         @default(0)
+  billedQty       Float         @default(0)
+}
+
+model GRN {
+  id              String   @id @default(uuid())
+  grnNumber       String   @unique
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  vendorId        String
+  vendor          Vendor   @relation(fields: [vendorId], references: [id])
+  receiptDate     DateTime
+  receivedBy      String?
+  notes           String?
+  status          String   @default("completed") // pending, completed
+  
+  // IT Service Fields
+  isServiceEntry  Boolean  @default(false)
+  
+  items           GRNItem[]
+  bills           Bill[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model GRNItem {
+  id           String   @id @default(uuid())
+  grnId        String
+  grn          GRN      @relation(fields: [grnId], references: [id], onDelete: Cascade)
+  productId    String?
+  name         String
+  orderedQty   Float
+  receivedQty  Float
+  rejectedQty  Float    @default(0)
+  acceptedQty  Float
+  reason       String? // Reason for rejection
+  
+  // Service entry specific
+  serviceDate  DateTime?
+  performedBy  String? // Consultant Name
+}
+
+model VendorEvaluation {
+  id              String   @id @default(uuid())
+  vendorId        String
+  vendor          Vendor   @relation(fields: [vendorId], references: [id])
+  evaluationPeriod String
+  evaluationDate  DateTime
+  evaluatedBy     String?
+  overallScore    Float
+  scores          Json     // Key-value pairs for criteria
+  notes           String?
+  recommendations String?
+  status          String   @default("draft")
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 

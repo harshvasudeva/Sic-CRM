@@ -19,6 +19,8 @@ const DEFAULT_CONFIGS = {
     bill_payment: { prefix: 'PAY', padding: 4 },
     purchase_order: { prefix: 'PO', padding: 4 },
     grn: { prefix: 'GRN', padding: 4 },
+    purchase_requisition: { prefix: 'PR', padding: 4 },
+    rfq: { prefix: 'RFQ', padding: 4 },
     sales_order: { prefix: 'SO', padding: 4 },
     quotation: { prefix: 'QT', padding: 4 },
     stock_journal: { prefix: 'STK', padding: 4 },

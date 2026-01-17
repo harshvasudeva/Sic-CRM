@@ -9,11 +9,14 @@ import {
     Truck,
     ArrowDownUp,
     Settings,
-    ClipboardCheck
+    ClipboardCheck,
+    Cloud
 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import WorkflowDiagram from '../components/WorkflowDiagram'
 import FeatureSection from '../components/FeatureSection'
 import FeatureItem from '../components/FeatureItem'
+import PageHelp from '../components/PageHelp'
 
 const purchaseWorkflow = [
     { icon: FileText, label: 'RFQ' },
@@ -173,8 +176,70 @@ function Purchase() {
                     </motion.div>
                 </div>
             </FeatureSection>
+
+            {/* IT Services */}
+            <FeatureSection icon={Cloud} title="IT Services & Software" delay={0.5}>
+                <div className="grid-2">
+                    <Link to="/purchase/subscriptions" style={{ textDecoration: 'none', color: 'inherit' }}>
+                        <motion.div className="card" whileHover={{ scale: 1.02 }} style={{ cursor: 'pointer' }}>
+                            <div className="card-header">
+                                <div className="card-icon" style={{ background: 'linear-gradient(135deg, #8b5cf6, #d946ef)' }}>
+                                    <Cloud size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="card-title">SaaS Subscriptions</h3>
+                                    <p className="card-subtitle">Manage recurring software costs</p>
+                                </div>
+                            </div>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '16px' }}>
+                                Track license renewal dates, usage, and monthly spend across all your software subscriptions.
+                            </p>
+                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                <span className="badge" style={{ background: 'rgba(139, 92, 246, 0.15)', color: '#8b5cf6' }}>Renewal Alerts</span>
+                                <span className="badge" style={{ background: 'rgba(139, 92, 246, 0.15)', color: '#8b5cf6' }}>Cost Tracking</span>
+                            </div>
+                        </motion.div>
+                    </Link>
+
+                    <motion.div className="card" whileHover={{ scale: 1.02 }}>
+                        <div className="card-header">
+                            <div className="card-icon" style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)' }}>
+                                <ClipboardCheck size={24} />
+                            </div>
+                            <div>
+                                <h3 className="card-title">Service Entry Sheets</h3>
+                                <p className="card-subtitle">Track intangible deliverables</p>
+                            </div>
+                        </div>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '16px' }}>
+                            Verify completion of consulting hours, milestones, or project phases before approving payments.
+                        </p>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            <span className="badge warning">Milestone Check</span>
+                            <span className="badge warning">Timesheets</span>
+                        </div>
+                    </motion.div>
+                </div>
+            </FeatureSection>
+
+            <PageHelp
+                title="Purchase Module Overview"
+                description="Your central hub for all procurement activities."
+                shortcuts={[
+                    { keys: ['G', 'V'], action: 'Go to Vendors' },
+                    { keys: ['G', 'P'], action: 'Go to Purchase Orders' }
+                ]}
+                walkthroughSteps={[
+                    { title: 'Workflow Diagram', description: 'Visualizes the flow from RFQ to Payment.' },
+                    { title: 'Key Features', description: 'Highlights important capabilities like 3-Way Matching.' },
+                    { title: 'Logistics', description: 'Learn about Drop Shipping and Delivery options.' }
+                ]}
+                videoUrl="#"
+            />
         </div>
     )
 }
 
 export default Purchase
+
+

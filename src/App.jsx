@@ -1,4 +1,5 @@
-import { Routes, Route, Outlet } from 'react-router-dom'
+import React from 'react';
+import { Routes, Route, Outlet, Navigate } from 'react-router-dom'
 import { ToastProvider } from './components/Toast'
 import ErrorBoundary from './components/ErrorBoundary'
 import ModuleErrorBoundary from './components/ModuleErrorBoundary'
@@ -30,6 +31,7 @@ import GRNs from './pages/purchase/GRNs'
 import SupplierInvoices from './pages/purchase/SupplierInvoices'
 import VendorReturns from './pages/purchase/VendorReturns'
 import VendorEvaluations from './pages/purchase/VendorEvaluations'
+import Subscriptions from './pages/purchase/Subscriptions'
 
 // Accounting Module
 import JournalEntries from './pages/accounting/JournalEntries'
@@ -94,12 +96,32 @@ import Reports from './pages/Reports'
 import TallyHelp from './pages/TallyHelp'
 import NotFound from './pages/NotFound'
 
+// Setup
+import Setup from './pages/Setup'
+
 function App() {
+  const [isConfigured, setIsConfigured] = React.useState(true); // Optimistic default
+
+  React.useEffect(() => {
+    // Check if DB is configured
+    fetch('http://localhost:5000/api/setup/status')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.configured) setIsConfigured(false);
+      })
+      .catch(() => {
+        // Assume failure means not configured or down, safe to show setup or error
+        // For now, let's just log it
+        console.log('Setup check failed');
+      });
+  }, []);
+
   return (
     <ErrorBoundary>
       <ToastProvider>
         <Routes>
-          <Route path="/" element={<Layout />}>
+          <Route path="/setup" element={<Setup />} />
+          <Route path="/" element={!isConfigured ? <Navigate to="/setup" /> : <Layout />}>
             <Route index element={<Dashboard />} />
 
 
@@ -128,6 +150,7 @@ function App() {
               <Route path="purchase/supplier-invoices" element={<SupplierInvoices />} />
               <Route path="purchase/returns" element={<VendorReturns />} />
               <Route path="purchase/evaluations" element={<VendorEvaluations />} />
+              <Route path="purchase/subscriptions" element={<Subscriptions />} />
             </Route>
 
             {/* Accounting Module Routes */}

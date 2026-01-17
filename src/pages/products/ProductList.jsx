@@ -100,7 +100,6 @@ function ProductList() {
         {
             key: 'price',
             label: 'Price',
-            label: 'Price',
             render: (value) => formatCurrency(value)
         },
         {
