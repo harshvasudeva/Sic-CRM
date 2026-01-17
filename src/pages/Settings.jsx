@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { getSettings, setCurrency, CURRENCIES, getShortcuts } from '../stores/settingsStore'
 import {
     Settings as SettingsIcon,
     Moon,
@@ -11,10 +12,13 @@ import {
     User,
     Mail,
     Save,
-    Check
+    Check,
+    Keyboard
 } from 'lucide-react'
 
 function Settings() {
+    const settings = getSettings()
+    const [currency, setLocalCurrency] = useState(settings.currency || 'USD')
     const [notifications, setNotifications] = useState({
         email: true,
         push: true,
@@ -22,9 +26,13 @@ function Settings() {
     })
     const [saved, setSaved] = useState(false)
 
-    const handleSave = () => {
+    const handleSave = async () => {
         setSaved(true)
+        await setCurrency(currency)
         setTimeout(() => setSaved(false), 2000)
+
+        // Simple way to ensure all components re-render with new currency format
+        setTimeout(() => window.location.reload(), 500)
     }
 
     return (
@@ -179,6 +187,23 @@ function Settings() {
                             <label>Email Address</label>
                             <input type="email" defaultValue="admin@siccrm.com" className="form-input" />
                         </div>
+
+                        {/* Added Currency Selector */}
+                        <div className="form-group">
+                            <label>Currency (Real-time)</label>
+                            <select
+                                className="form-input"
+                                value={currency}
+                                onChange={(e) => setLocalCurrency(e.target.value)}
+                            >
+                                {Object.values(CURRENCIES).map(c => (
+                                    <option key={c.code} value={c.code}>
+                                        {c.code} ({c.symbol}) - {c.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
                         <div className="form-group">
                             <label>Language</label>
                             <select className="form-input">
@@ -234,6 +259,47 @@ function Settings() {
                             </div>
                         </div>
                         <button className="settings-btn-outline">View</button>
+                    </div>
+                </motion.section>
+
+                {/* Keyboard Shortcuts */}
+                <motion.section
+                    className="settings-section settings-section-full"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                >
+                    <div className="settings-section-header">
+                        <div className="settings-section-icon">
+                            <Keyboard size={20} />
+                        </div>
+                        <h2>Keyboard Shortcuts</h2>
+                    </div>
+
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                        Type these key sequences quickly on any accounting page to navigate instantly. Inspired by Tally shortcuts.
+                    </p>
+
+                    <div className="shortcuts-table">
+                        <div className="shortcuts-header">
+                            <span>Sequence</span>
+                            <span>Action</span>
+                            <span>Description</span>
+                        </div>
+                        {getShortcuts().map((shortcut, index) => (
+                            <div key={index} className="shortcuts-row">
+                                <span className="shortcut-key">{shortcut.sequence.toUpperCase()}</span>
+                                <span className="shortcut-label">{shortcut.label}</span>
+                                <span className="shortcut-desc">{shortcut.description}</span>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                        <h4 style={{ fontSize: '0.9rem', marginBottom: '8px', color: 'var(--accent-primary)' }}>💡 Quick Tip</h4>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                            F-key shortcuts are also available: <strong>F5</strong> (Expenses), <strong>F6</strong> (Bank), <strong>F7</strong> (Journal)
+                        </p>
                     </div>
                 </motion.section>
             </div>
@@ -465,6 +531,76 @@ function Settings() {
 
         .save-btn.saved {
           background: linear-gradient(135deg, #10b981, #34d399);
+        }
+
+        .settings-section-full {
+          grid-column: 1 / -1;
+        }
+
+        .shortcuts-table {
+          display: flex;
+          flex-direction: column;
+          border: 1px solid var(--border-color);
+          border-radius: var(--radius-md);
+          overflow: hidden;
+        }
+
+        .shortcuts-header {
+          display: grid;
+          grid-template-columns: 100px 1fr 1fr;
+          gap: 16px;
+          padding: 12px 16px;
+          background: var(--bg-tertiary);
+          font-weight: 600;
+          font-size: 0.8rem;
+          color: var(--text-secondary);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .shortcuts-row {
+          display: grid;
+          grid-template-columns: 100px 1fr 1fr;
+          gap: 16px;
+          padding: 12px 16px;
+          border-top: 1px solid var(--border-color);
+          transition: background 0.2s;
+        }
+
+        .shortcuts-row:hover {
+          background: rgba(99, 102, 241, 0.05);
+        }
+
+        .shortcut-key {
+          font-family: 'Fira Code', 'Monaco', monospace;
+          font-weight: 600;
+          background: var(--accent-gradient);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          font-size: 0.95rem;
+          letter-spacing: 1px;
+        }
+
+        .shortcut-label {
+          font-weight: 500;
+          color: var(--text-primary);
+        }
+
+        .shortcut-desc {
+          font-size: 0.85rem;
+          color: var(--text-muted);
+        }
+
+        @media (max-width: 600px) {
+          .shortcuts-header,
+          .shortcuts-row {
+            grid-template-columns: 80px 1fr;
+          }
+          .shortcuts-header span:last-child,
+          .shortcuts-row span:last-child {
+            display: none;
+          }
         }
       `}</style>
         </div>

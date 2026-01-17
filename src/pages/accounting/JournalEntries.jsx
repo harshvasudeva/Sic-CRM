@@ -6,13 +6,14 @@ import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
 import { useToast } from '../../components/Toast'
 import { getJournalEntries, createJournalEntry, getChartOfAccounts } from '../../stores/accountingStore'
-import { formatCurrency } from '../../stores/settingsStore'
+import { formatCurrency, getSettings } from '../../stores/settingsStore'
 import { useTallyShortcuts } from '../../hooks/useTallyShortcuts'
 
 function JournalEntries() {
     const toast = useToast()
     const [entries, setEntries] = useState([])
     const [isModalOpen, setIsModalOpen] = useState(false)
+    const [udfs, setUdfs] = useState([]) // UDF Config
 
     // Shortcuts: Alt+C to create, Esc to close modal
     useTallyShortcuts({
@@ -30,6 +31,9 @@ function JournalEntries() {
 
     const loadData = () => {
         setEntries(getJournalEntries())
+        // Load UDFs associated with 'journal' module
+        const allUdfs = getSettings().udfConfig || []
+        setUdfs(allUdfs.filter(u => u.module === 'journal' && u.enabled))
     }
 
     const handleAdd = () => {
@@ -40,7 +44,8 @@ function JournalEntries() {
             debitAccountId: '',
             creditAccountId: '',
             amount: 0,
-            status: 'posted'
+            status: 'posted',
+            customFields: {} // Store UDF values here
         })
         setIsModalOpen(true)
     }
@@ -100,6 +105,24 @@ function JournalEntries() {
                     <FormInput label="Amount *" type="number" placeholder="0.00" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })} />
                     <FormInput label="Status" readOnly value={formData.status} />
                 </div>
+
+                {/* User Defined Fields Section */}
+                {udfs.length > 0 && (
+                    <div className="form-grid" style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed var(--border-color)' }}>
+                        {udfs.map(udf => (
+                            <FormInput
+                                key={udf.id}
+                                label={udf.label}
+                                type={udf.type} // text, number, date
+                                value={formData.customFields?.[udf.id] || ''}
+                                onChange={(e) => setFormData({
+                                    ...formData,
+                                    customFields: { ...formData.customFields, [udf.id]: e.target.value }
+                                })}
+                            />
+                        ))}
+                    </div>
+                )}
                 <ModalFooter>
                     <button className="btn-secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
                     <button className="btn-primary" onClick={handleSave}>Post Entry</button>

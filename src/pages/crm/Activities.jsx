@@ -25,31 +25,45 @@ function Activities() {
         type: 'call', subject: '', contactId: '', date: '', duration: '', notes: ''
     })
 
-    const loadData = () => {
+    const loadData = async () => {
         const filters = {}
         if (filterCompleted !== '') filters.completed = filterCompleted === 'true'
-        setActivities(getActivities(filters).filter(a => !filterType || a.type === filterType))
-        setContacts(getContacts())
+        try {
+            const activitiesData = await getActivities(filters)
+            setActivities(activitiesData.filter(a => !filterType || a.type === filterType))
+            const contactsData = await getContacts()
+            setContacts(contactsData)
+        } catch (error) {
+            console.error('Failed to load activity data', error)
+        }
     }
 
     useEffect(() => { loadData() }, [filterType, filterCompleted])
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!formData.subject || !formData.date) {
             toast.error('Subject and date are required')
             return
         }
-        createActivity(formData)
-        toast.success('Activity created')
-        setIsModalOpen(false)
-        setFormData({ type: 'call', subject: '', contactId: '', date: '', duration: '', notes: '' })
-        loadData()
+        try {
+            await createActivity(formData)
+            toast.success('Activity created')
+            setIsModalOpen(false)
+            setFormData({ type: 'call', subject: '', contactId: '', date: '', duration: '', notes: '' })
+            loadData()
+        } catch (err) {
+            toast.error('Operation failed')
+        }
     }
 
-    const handleComplete = (id) => {
-        completeActivity(id)
-        toast.success('Activity completed')
-        loadData()
+    const handleComplete = async (id) => {
+        try {
+            await completeActivity(id)
+            toast.success('Activity completed')
+            loadData()
+        } catch (err) {
+            toast.error('Update failed')
+        }
     }
 
     const getContactName = (id) => {

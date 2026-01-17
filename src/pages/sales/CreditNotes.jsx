@@ -36,7 +36,7 @@ function CreditNotesDebits() {
     const [returns, setReturns] = useState([])
     const [invoices, setInvoices] = useState([])
     const [contacts, setContacts] = useState([])
-    
+
     const [isCreditModalOpen, setIsCreditModalOpen] = useState(false)
     const [isDebitModalOpen, setIsDebitModalOpen] = useState(false)
     const [isReturnModalOpen, setIsReturnModalOpen] = useState(false)
@@ -56,12 +56,18 @@ function CreditNotesDebits() {
         customerId: '', orderId: '', invoiceId: '', items: [], refundType: 'credit', refundAmount: 0, notes: ''
     })
 
-    const loadData = () => {
+    const loadData = async () => {
         setCreditNotes(getCreditNotes())
         setDebitNotes(getDebitNotes())
         setReturns(getSalesReturns())
         setInvoices(getInvoices())
-        setContacts(getContacts())
+        try {
+            const contactsData = await getContacts()
+            setContacts(Array.isArray(contactsData) ? contactsData : [])
+        } catch (e) {
+            console.warn('Failed to load contacts:', e)
+            setContacts([])
+        }
     }
 
     useEffect(() => { loadData() }, [])
@@ -172,10 +178,12 @@ function CreditNotesDebits() {
 
     const creditColumns = [
         { key: 'creditNoteNumber', label: 'Credit Note #', render: (v) => <span className="note-number">{v}</span> },
-        { key: 'customerName', label: 'Customer', render: (_, row) => {
-            const customer = getContacts().find(c => c.id === row.customerId)
-            return customer ? `${customer.firstName} ${customer.lastName}` : '-'
-        }},
+        {
+            key: 'customerName', label: 'Customer', render: (_, row) => {
+                const customer = contacts.find(c => c.id === row.customerId)
+                return customer ? `${customer.firstName} ${customer.lastName}` : '-'
+            }
+        },
         { key: 'totalAmount', label: 'Amount', render: (v) => <span className="amount success">-${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)}</span> },
         { key: 'reason', label: 'Reason' },
         { key: 'noteDate', label: 'Date' },
@@ -195,10 +203,12 @@ function CreditNotesDebits() {
 
     const debitColumns = [
         { key: 'debitNoteNumber', label: 'Debit Note #', render: (v) => <span className="note-number">{v}</span> },
-        { key: 'customerName', label: 'Customer', render: (_, row) => {
-            const customer = getContacts().find(c => c.id === row.customerId)
-            return customer ? `${customer.firstName} ${customer.lastName}` : '-'
-        }},
+        {
+            key: 'customerName', label: 'Customer', render: (_, row) => {
+                const customer = contacts.find(c => c.id === row.customerId)
+                return customer ? `${customer.firstName} ${customer.lastName}` : '-'
+            }
+        },
         { key: 'totalAmount', label: 'Amount', render: (v) => <span className="amount danger">+${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)}</span> },
         { key: 'reason', label: 'Reason' },
         { key: 'noteDate', label: 'Date' },
@@ -218,10 +228,12 @@ function CreditNotesDebits() {
 
     const returnColumns = [
         { key: 'returnNumber', label: 'Return #', render: (v) => <span className="note-number">{v}</span> },
-        { key: 'customerName', label: 'Customer', render: (_, row) => {
-            const customer = getContacts().find(c => c.id === row.customerId)
-            return customer ? `${customer.firstName} ${customer.lastName}` : '-'
-        }},
+        {
+            key: 'customerName', label: 'Customer', render: (_, row) => {
+                const customer = contacts.find(c => c.id === row.customerId)
+                return customer ? `${customer.firstName} ${customer.lastName}` : '-'
+            }
+        },
         { key: 'refundAmount', label: 'Refund', render: (v) => <span className="amount">${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)}</span> },
         { key: 'refundType', label: 'Type', render: (v) => <span className="type-badge">{v}</span> },
         { key: 'returnDate', label: 'Date' },

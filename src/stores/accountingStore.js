@@ -1,4 +1,5 @@
-// Accounting Store with localStorage persistence
+import { getSettings, isDateLocked } from './settingsStore'
+import { analyzeTransactionsAI, detectAnomaliesRuleBased } from '../utils/aiService'
 
 const STORAGE_KEYS = {
     chartOfAccounts: 'sic-accounting-coa',
@@ -233,7 +234,21 @@ export function getJournalEntries(filters = {}) {
     return entries
 }
 
-import { getSettings, isDateLocked } from './settingsStore'
+// Phase 2: Bank Reconciliation Action
+export function reconcileTransaction(entryId, bankDate) {
+    const entries = getStore(STORAGE_KEYS.journalEntries, initialJournalEntries)
+    const index = entries.findIndex(e => e.id === entryId)
+    if (index === -1) throw new Error('Entry not found')
+
+    entries[index] = {
+        ...entries[index],
+        reconciled: true,
+        bankDate: bankDate
+    }
+    setStore(STORAGE_KEYS.journalEntries, entries)
+    return entries[index]
+}
+
 
 // Phase 1: Audit Logger
 function logAudit(action, entity, entityId, details, user = 'system') {
@@ -276,6 +291,14 @@ export function createJournalEntry(data) {
         totalCredit,
         status: 'posted', // Auto-post for Phase 1
         voucherType: data.voucherType || 'Journal',
+
+        // Phase 2: Banking & Instrument Details
+        instrumentType: data.instrumentType || null, // Cheque, NEFT, UPI
+        instrumentNumber: data.instrumentNumber || null,
+        instrumentDate: data.instrumentDate || null,
+        bankDate: null, // For BRS (Cleared Date)
+        reconciled: false,
+
         createdAt: new Date().toISOString()
     }
 
@@ -317,6 +340,7 @@ export function createBankAccount(data) {
     const newAccount = {
         ...data,
         id: `bank-${Date.now()}`,
+        currency: data.currency || getSettings().currency || 'INR',
         balance: data.openingBalance || 0,
         asOf: data.asOf || new Date().toISOString().split('T')[0],
         status: 'active',
@@ -474,12 +498,26 @@ export function getAccountsReceivable(filters = {}) {
 export function createAccountsReceivable(data) {
     const ar = getStore(STORAGE_KEYS.accountsReceivable, initialAccountsReceivable)
 
+    const existingCount = ar.length
+    // Phase 6: Tax Integration
+    const taxRate = data.taxRate || 18 // Default 18% if not specified
+    const amount = Number(data.amount) || 0
+    const taxAmount = (amount * taxRate) / (100 + taxRate) // Back-calculate tax from inclusive amount
+    const taxableValue = amount - taxAmount
+
     const newAR = {
         ...data,
         id: `ar-${Date.now()}`,
         invoiceDate: data.invoiceDate || new Date().toISOString().split('T')[0],
         dueDate: data.dueDate || new Date().toISOString().split('T')[0],
-        balance: data.amount,
+
+        // Financials
+        amount,
+        taxableValue,
+        taxRate,
+        taxAmount,
+
+        balance: amount,
         status: 'pending',
         paidAmount: 0,
         daysOverdue: 0,
@@ -503,6 +541,182 @@ export function receiveAccountsReceivable(id, amount) {
     }
     setStore(STORAGE_KEYS.accountsReceivable, ar)
     return ar[index]
+}
+
+// ==================== ESTIMATES (QUOTES) CRUD (Phase 3) ====================
+export function getEstimates(filters = {}) {
+    let estimates = getStore('sic-accounting-estimates', [])
+    if (filters.status) estimates = estimates.filter(e => e.status === filters.status)
+    if (filters.customerId) estimates = estimates.filter(e => e.customerId === filters.customerId)
+    return estimates
+}
+
+export function createEstimate(data) {
+    const estimates = getStore('sic-accounting-estimates', [])
+    const existingCount = estimates.length
+    const estimateNumber = generateNumber('EST', new Date().getFullYear(), existingCount + 1)
+
+    const newEstimate = {
+        ...data,
+        id: `est-${Date.now()}`,
+        estimateNumber: data.estimateNumber || estimateNumber,
+        date: data.date || new Date().toISOString().split('T')[0],
+        expiryDate: data.expiryDate || new Date().toISOString().split('T')[0],
+        status: 'draft', // draft, sent, accepted, rejected, invoiced
+        totalAmount: data.amount, // Simplified for Phase 3
+        createdAt: new Date().toISOString().split('T')[0]
+    }
+    estimates.push(newEstimate)
+    setStore('sic-accounting-estimates', estimates)
+    return newEstimate
+}
+
+export function updateEstimateStatus(id, status) {
+    const estimates = getStore('sic-accounting-estimates', [])
+    const index = estimates.findIndex(e => e.id === id)
+    if (index === -1) return null
+    estimates[index] = { ...estimates[index], status }
+    setStore('sic-accounting-estimates', estimates)
+    return estimates[index]
+}
+
+export function convertEstimateToInvoice(estimateId) {
+    const estimates = getStore('sic-accounting-estimates', [])
+    const estimate = estimates.find(e => e.id === estimateId)
+    if (!estimate) throw new Error('Estimate not found')
+
+    // Create Invoice (AR)
+    const newInvoice = createAccountsReceivable({
+        customerId: estimate.customerId,
+        amount: estimate.totalAmount,
+        invoiceDate: new Date().toISOString().split('T')[0],
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Net 30 default
+        status: 'pending',
+        notes: `Converted from Estimate ${estimate.estimateNumber}`
+    })
+
+    // Update Estimate Status
+    updateEstimateStatus(estimateId, 'invoiced')
+
+    return newInvoice
+}
+
+// ==================== PURCHASE ORDERS & GRN (Phase 4) ====================
+export function getPurchaseOrders(filters = {}) {
+    let pos = getStore('sic-accounting-pos', [])
+    if (filters.status) pos = pos.filter(p => p.status === filters.status)
+    return pos
+}
+
+export function createPurchaseOrder(data) {
+    const pos = getStore('sic-accounting-pos', [])
+    const existingCount = pos.length
+    const poNumber = generateNumber('PO', new Date().getFullYear(), existingCount + 1)
+
+    const newPO = {
+        ...data,
+        id: `po-${Date.now()}`,
+        poNumber: poNumber,
+        date: data.date || new Date().toISOString().split('T')[0],
+        expectedDate: data.expectedDate || null,
+        status: 'open', // open, received, billed
+        totalAmount: data.amount,
+        vendorId: data.vendorId,
+        createdAt: new Date().toISOString()
+    }
+    pos.push(newPO)
+    setStore('sic-accounting-pos', pos)
+    return newPO
+}
+
+export function createGRN(poId, receivedDate) {
+    const pos = getStore('sic-accounting-pos', [])
+    const index = pos.findIndex(p => p.id === poId)
+    if (index === -1) throw new Error('PO not found')
+
+    // Update PO Status
+    pos[index] = { ...pos[index], status: 'received' }
+    setStore('sic-accounting-pos', pos)
+
+    // Create Bill (AP)
+    createAccountsPayable({
+        vendorId: pos[index].vendorId,
+        billNumber: `BILL-${pos[index].poNumber}`,
+        billDate: receivedDate || new Date().toISOString().split('T')[0],
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        amount: pos[index].totalAmount
+    })
+
+    // logAudit('CREATE', 'GRN', poId, `Goods Received for PO ${pos[index].poNumber}`)
+}
+
+// ==================== INVENTORY & COSTING (Phase 5) ====================
+export function getStockItems() {
+    return getStore('sic-accounting-stock-items', [])
+}
+
+export function createStockItem(data) {
+    const items = getStore('sic-accounting-stock-items', [])
+    const newItem = {
+        ...data,
+        id: `item-${Date.now()}`,
+        sku: data.sku || `SKU-${items.length + 1}`,
+        valuationMethod: data.valuationMethod || 'FIFO', // FIFO, Weighted Average
+        currentStock: 0,
+        currentValue: 0,
+        createdAt: new Date().toISOString()
+    }
+    items.push(newItem)
+    setStore('sic-accounting-stock-items', items)
+    return newItem
+}
+
+export function createStockJournal(data) {
+    const items = getStore('sic-accounting-stock-items', [])
+    const journals = getStore('sic-accounting-stock-journals', [])
+
+    // Process each line item
+    data.lines.forEach(line => {
+        const itemIndex = items.findIndex(i => i.id === line.itemId)
+        if (itemIndex === -1) return
+
+        const qty = Number(line.qty)
+        const rate = Number(line.rate)
+
+        if (data.type === 'in') {
+            // Purchase / Inward
+            items[itemIndex].currentStock += qty
+            items[itemIndex].currentValue += (qty * rate)
+        } else if (data.type === 'out') {
+            // Sale / Outward
+            if (items[itemIndex].currentStock < qty) throw new Error(`Insufficient stock for ${items[itemIndex].name}`)
+            items[itemIndex].currentStock -= qty
+
+            // Simple valuation adjustment (Average Cost implication)
+            const avgRate = items[itemIndex].currentValue / (items[itemIndex].currentStock + qty)
+            items[itemIndex].currentValue -= (qty * avgRate)
+        }
+    })
+
+    const newJournal = {
+        ...data,
+        id: `sj-${Date.now()}`,
+        date: data.date || new Date().toISOString().split('T')[0],
+        createdAt: new Date().toISOString()
+    }
+    journals.push(newJournal)
+
+    setStore('sic-accounting-stock-items', items)
+    setStore('sic-accounting-stock-journals', journals)
+    return newJournal
+}
+
+export function getInventoryValuationReport() {
+    const items = getStore('sic-accounting-stock-items', [])
+    return items.map(item => ({
+        ...item,
+        avgRate: item.currentStock > 0 ? (item.currentValue / item.currentStock) : 0
+    }))
 }
 
 // ==================== FINANCIAL REPORTS ====================
@@ -594,6 +808,170 @@ export function getBalanceSheet(asOf) {
     }
 }
 
+
+
+// ==================== TAXATION (Phase 6) ====================
+export function getTaxRates() {
+    return getSettings().taxRates || []
+}
+
+export function getGSTR1Report(startDate, endDate) {
+    // Outward Supplies (Sales)
+    const journals = getJournalEntries({ status: 'posted', startDate, endDate })
+
+    // Filter for entries that involve revenue and have tax details (simplified)
+    // In real implementation, we'd check for specific 'Sales' voucher types or account groups
+    const salesEntries = journals.filter(j =>
+        j.lines.some(l => {
+            const acc = getAccount(l.accountId)
+            return acc && acc.type === 'equity' && acc.category === 'revenue'
+        })
+    )
+
+    return salesEntries.map(entry => {
+        // Assume first line is receivable (customer) and last is revenue
+        // This is heuristic for demo. Real app needs structured voucher data.
+        const customerLine = entry.lines.find(l => getAccount(l.accountId)?.category === 'current_assets')
+        return {
+            date: entry.entryDate,
+            invoiceNumber: entry.reference || entry.journalNumber,
+            customerName: customerLine ? customerLine.description : 'Cash Customer', // Simplified
+            taxableValue: entry.totalDebit, // Simplified
+            taxRate: 18, // Default or fetch from line if stored
+            taxAmount: (entry.totalDebit * 18) / 100, // Simplified calc
+            placeOfSupply: 'State'
+        }
+    })
+}
+
+export function getGSTR3BReport(startDate, endDate) {
+    // Summary of Outward Supplies & ITC
+    const sales = getGSTR1Report(startDate, endDate)
+    const totalSales = sales.reduce((sum, s) => sum + s.taxableValue, 0)
+    const outputTax = sales.reduce((sum, s) => sum + s.taxAmount, 0)
+
+    // Input Tax Credit (Purchases/Expenses)
+    const expenses = getExpenses({ status: 'paid', startDate, endDate })
+    const totalPurchases = expenses.reduce((sum, e) => sum + e.totalAmount, 0)
+    const inputTax = expenses.reduce((sum, e) => sum + (e.taxAmount || 0), 0)
+
+    return {
+        outwardSupplies: {
+            taxableValue: totalSales,
+            integratedTax: outputTax, // Simplified: assuming all IGST for demo
+            centralTax: 0,
+            stateTax: 0,
+            cess: 0
+        },
+        eligibleITC: {
+            integratedTax: inputTax,
+            centralTax: 0,
+            stateTax: 0,
+            cess: 0
+        },
+        netTaxPayable: Math.max(0, outputTax - inputTax)
+    }
+}
+
+export function getCashFlowStatement(startDate, endDate) {
+    const journalEntries = getJournalEntries({ status: 'posted', startDate, endDate })
+
+    let operatingActivities = 0
+    let investingActivities = 0
+    let financingActivities = 0
+
+    journalEntries.forEach(entry => {
+        // Simplified Logic: content based classification would be complex without explicit tags
+        // Attempting standard heuristics based on Account Types involved
+
+        let isInvesting = false
+        let isFinancing = false
+        let isOperating = true // Default
+
+        // Check lines for specific account categories
+        entry.lines.forEach(line => {
+            const account = getAccount(line.accountId)
+            if (!account) return
+
+            if (account.category === 'fixed_assets' || account.category === 'investments') {
+                isInvesting = true
+                isOperating = false
+            } else if (account.type === 'equity' || (account.type === 'liability' && account.category === 'long_term')) {
+                isFinancing = true
+                isOperating = false
+            }
+        })
+
+        // Determine Net Cash Impact for this entry
+        // Find 'Bank' or 'Cash' lines
+        const cashLine = entry.lines.find(l => {
+            const acc = getAccount(l.accountId)
+            return acc && (acc.category === 'cash' || acc.category === 'bank')
+        })
+
+        if (cashLine) {
+            const cashImpact = cashLine.debit - cashLine.credit // Debit increases cash, Credit decreases
+            if (isInvesting) {
+                investingActivities += cashImpact
+            } else if (isFinancing) {
+                financingActivities += cashImpact
+            } else {
+                operatingActivities += cashImpact
+            }
+        }
+    })
+
+    return {
+        operatingActivities,
+        investingActivities,
+        financingActivities,
+        netCashFlow: operatingActivities + investingActivities + financingActivities
+    }
+}
+
+// Phase 2: Bank Reconciliation Report (BRS)
+export function getBankReconciliationReport(accountId, asOfDate) {
+    const journalEntries = getJournalEntries({ status: 'posted', endDate: asOfDate })
+    const account = getAccount(accountId)
+    // if (!account || account.category !== 'current_assets') throw new Error('Invalid Bank Account')
+
+    let bookBalance = 0
+    let unclearedDebits = []  // Cheques deposited but not cleared
+    let unclearedCredits = [] // Cheques issued but not presented
+
+    journalEntries.forEach(entry => {
+        const line = entry.lines.find(l => l.accountId === accountId)
+        if (!line) return
+
+        // Update Book Balance
+        bookBalance += (line.debit - line.credit)
+
+        // Check Reconciliation Status
+        // If entry is NOT reconciled OR reconciled AFTER the report date
+        const isUncleared = !entry.reconciled || (entry.bankDate && entry.bankDate > asOfDate)
+
+        if (isUncleared) {
+            if (line.debit > 0) unclearedDebits.push({ ...entry, amount: line.debit })
+            if (line.credit > 0) unclearedCredits.push({ ...entry, amount: line.credit })
+        }
+    })
+
+    const totalUnclearedDebits = unclearedDebits.reduce((sum, e) => sum + e.amount, 0)
+    const totalUnclearedCredits = unclearedCredits.reduce((sum, e) => sum + e.amount, 0)
+
+    // Bank Balance = Book Balance + Unpresented Cheques (Credits) - Uncleared Deposits (Debits)
+    const bankBalance = bookBalance + totalUnclearedCredits - totalUnclearedDebits
+
+    return {
+        accountId,
+        asOfDate,
+        bookBalance,
+        bankBalance,
+        unclearedDebits,
+        unclearedCredits
+    }
+}
+
 // ==================== FIXED ASSETS CRUD ====================
 export function getFixedAssets() {
     return getStore('fixedAssets', [])
@@ -624,6 +1002,167 @@ export function deleteFixedAsset(id) {
     const assets = getStore('fixedAssets', []).filter(a => a.id !== id)
     localStorage.setItem('fixedAssets', JSON.stringify(assets))
     return true
+}
+
+// ==================== COST CENTERS & BUDGETING (Phase 7) ====================
+export function getCostCenters() {
+    return getStore('costCenters', [])
+}
+
+export function createCostCenter(data) {
+    const centers = getCostCenters()
+    const newCenter = {
+        ...data,
+        id: `cc-${Date.now()}`,
+        createdAt: new Date().toISOString()
+    }
+    centers.push(newCenter)
+    setStore('costCenters', centers)
+    return newCenter
+}
+
+export function getCostCenterReport(costCenterId) {
+    // 1. Get Expenses allocated to this Cost Center
+    // Assuming expenses have costCenterId based on previous context updates or will be added
+    const expenses = getExpenses({ status: 'paid' }) // or 'approved'
+        .filter(e => e.costCenterId === costCenterId)
+
+    // Note: If expense structure doesn't have costCenterId yet, this will return 0 until updated
+    const totalExpense = expenses.reduce((sum, e) => sum + e.totalAmount, 0)
+
+    // 2. Get Revenue (Invoices/Journal Entries) allocated
+    // For simplicity in this phase, assuming Journal Entries or Invoices have costCenterId
+    // Adding a filter for Journal Entries
+    const journals = getJournalEntries({ status: 'posted' })
+        .filter(j => j.costCenterId === costCenterId)
+
+    // Calculate Revenue from Journals (Credit to Revenue Accounts)
+    let totalRevenue = 0
+    journals.forEach(j => {
+        j.lines.forEach(line => {
+            // Logic to identify revenue lines. 
+            // Simplified: Assuming all 'credit' in this filtered view is revenue for now
+            totalRevenue += line.credit
+        })
+    })
+
+    return {
+        costCenterId,
+        totalRevenue: totalRevenue || 0,
+        totalExpense: totalExpense || 0,
+        netProfit: (totalRevenue || 0) - (totalExpense || 0),
+        margin: totalRevenue > 0 ? ((totalRevenue - totalExpense) / totalRevenue * 100) : 0
+    }
+}
+
+export function getBudgetVarianceReport() {
+    const budgets = getStore(STORAGE_KEYS.budgets, initialBudgets)
+    const currentYear = new Date().getFullYear()
+
+    return budgets.map(budget => {
+        // Calculate Actuals for this Budget Category (e.g., 'Travel')
+        // Matching by 'category' name or ID from Expenses
+
+        const expenses = getExpenses()
+            // Simplified matching: if budget.category matches expense.category or budget.name matches expense category
+            // Ideally should use ID. 
+            .filter(e => (e.category === budget.category || e.category === budget.name) && e.date.startsWith(String(currentYear)))
+
+        const actualAmount = expenses.reduce((sum, e) => sum + e.totalAmount, 0)
+        const variance = budget.amount - actualAmount
+        const variancePercent = budget.amount > 0 ? (variance / budget.amount) * 100 : 0
+
+        return {
+            ...budget,
+            actualAmount,
+            variance,
+            variancePercent, // Positive = Under Budget (Good), Negative = Over Budget
+            status: variance >= 0 ? 'On Track' : 'Over Budget'
+        }
+    })
+}
+
+// ==================== AUTOMATION & AI (Phase 9) ====================
+
+export async function getAnomalies() {
+    const transactions = [
+        ...getJournalEntries(),
+        ...getExpenses()
+    ]
+
+    // 1. Run Rule-Based Checks (Instant)
+    const ruleAnomalies = detectAnomaliesRuleBased(transactions)
+
+    // 2. Run AI Checks (Async, Optional)
+    let aiAnomalies = []
+    try {
+        aiAnomalies = await analyzeTransactionsAI(transactions)
+    } catch (e) {
+        console.warn('Skipping AI analysis', e)
+    }
+
+    // Merge Unique Anomalies
+    const combined = [...ruleAnomalies]
+    aiAnomalies.forEach(ai => {
+        if (!combined.find(c => c.id === ai.id)) {
+            combined.push({ ...ai, source: 'AI' })
+        }
+    })
+
+    return combined
+}
+
+const initialRecurringTemplates = [] // In real app, persist this
+export function getRecurringTemplates() {
+    return getStore('recurringTemplates', initialRecurringTemplates)
+}
+
+export function createRecurringTemplate(data) {
+    const templates = getRecurringTemplates()
+    const newTemplate = {
+        ...data,
+        id: `tpl-${Date.now()}`,
+        status: 'active',
+        nextRun: data.startDate // Initial run date
+    }
+    templates.push(newTemplate)
+    setStore('recurringTemplates', templates)
+    return newTemplate
+}
+
+export function processRecurringDue() {
+    const templates = getRecurringTemplates()
+    const today = new Date().toISOString().split('T')[0]
+    let processedCount = 0
+
+    const updatedTemplates = templates.map(tpl => {
+        if (tpl.status === 'active' && tpl.nextRun <= today) {
+            // Create Journal Entry
+            createJournalEntry({
+                ...tpl.entryData,
+                entryDate: today,
+                description: `${tpl.entryData.description} (Recurring)`
+            })
+
+            // Calculate Next Run
+            const nextDate = new Date(tpl.nextRun)
+            if (tpl.frequency === 'monthly') nextDate.setMonth(nextDate.getMonth() + 1)
+            else if (tpl.frequency === 'weekly') nextDate.setDate(nextDate.getDate() + 7)
+
+            processedCount++
+            return {
+                ...tpl,
+                lastRun: today,
+                nextRun: nextDate.toISOString().split('T')[0]
+            }
+        }
+        return tpl
+    })
+
+    if (processedCount > 0) {
+        setStore('recurringTemplates', updatedTemplates)
+    }
+    return processedCount
 }
 
 // ==================== ACCOUNTING STATS ====================

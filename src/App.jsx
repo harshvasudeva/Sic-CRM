@@ -1,6 +1,7 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Outlet } from 'react-router-dom'
 import { ToastProvider } from './components/Toast'
 import ErrorBoundary from './components/ErrorBoundary'
+import ModuleErrorBoundary from './components/ModuleErrorBoundary'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import Sales from './pages/Sales'
@@ -41,6 +42,10 @@ import ChartOfAccounts from './pages/accounting/ChartOfAccounts'
 import FinancialReports from './pages/accounting/FinancialReports'
 import FixedAssets from './pages/accounting/FixedAssets'
 import CostCenters from './pages/accounting/CostCenters'
+import Taxation from './pages/accounting/Taxation'
+import Automation from './pages/accounting/Automation'
+import ChequePrinting from './pages/accounting/ChequePrinting'
+import DebitNotes from './pages/accounting/DebitNotes'
 
 // Inventory Module
 import Inventory from './pages/inventory/Inventory'
@@ -50,6 +55,7 @@ import Warehouses from './pages/inventory/Warehouses'
 import SerialNumbers from './pages/inventory/SerialNumbers'
 import StockGroups from './pages/inventory/StockGroups'
 import Units from './pages/inventory/Units'
+import StockJournal from './pages/inventory/StockJournal'
 
 // HR Module
 import HRDashboard from './pages/hr/HRDashboard'
@@ -95,79 +101,96 @@ function App() {
             <Route path="accounting" element={<Accounting />} />
 
             {/* Sales Module Routes */}
-            <Route path="sales/quotations" element={<Quotations />} />
-            <Route path="sales/quotations/templates" element={<QuotationTemplates />} />
-            <Route path="sales/orders" element={<SalesOrders />} />
-            <Route path="sales/invoices" element={<Invoices />} />
-            <Route path="sales/invoices/templates" element={<InvoiceTemplates />} />
-            <Route path="sales/credit-notes" element={<CreditNotes />} />
-            <Route path="sales/pricing" element={<PricingRules />} />
-            <Route path="sales/targets" element={<SalesTargets />} />
+            <Route element={<ModuleErrorBoundary moduleName="Sales"><Outlet /></ModuleErrorBoundary>}>
+              <Route path="sales/quotations" element={<Quotations />} />
+              <Route path="sales/quotations/templates" element={<QuotationTemplates />} />
+              <Route path="sales/orders" element={<SalesOrders />} />
+              <Route path="sales/invoices" element={<Invoices />} />
+              <Route path="sales/invoices/templates" element={<InvoiceTemplates />} />
+              <Route path="sales/credit-notes" element={<CreditNotes />} />
+              <Route path="sales/pricing" element={<PricingRules />} />
+              <Route path="sales/targets" element={<SalesTargets />} />
+            </Route>
 
             {/* Purchase Module Routes */}
-            <Route path="purchase/vendors" element={<Vendors />} />
-            <Route path="purchase/orders" element={<PurchaseOrders />} />
-            <Route path="purchase/requisitions" element={<PurchaseRequisitions />} />
-            <Route path="purchase/rfqs" element={<RFQs />} />
-            <Route path="purchase/grns" element={<GRNs />} />
-            <Route path="purchase/supplier-invoices" element={<SupplierInvoices />} />
-            <Route path="purchase/returns" element={<VendorReturns />} />
-            <Route path="purchase/evaluations" element={<VendorEvaluations />} />
+            <Route element={<ModuleErrorBoundary moduleName="Purchase"><Outlet /></ModuleErrorBoundary>}>
+              <Route path="purchase/vendors" element={<Vendors />} />
+              <Route path="purchase/orders" element={<PurchaseOrders />} />
+              <Route path="purchase/requisitions" element={<PurchaseRequisitions />} />
+              <Route path="purchase/rfqs" element={<RFQs />} />
+              <Route path="purchase/grns" element={<GRNs />} />
+              <Route path="purchase/supplier-invoices" element={<SupplierInvoices />} />
+              <Route path="purchase/returns" element={<VendorReturns />} />
+              <Route path="purchase/evaluations" element={<VendorEvaluations />} />
+            </Route>
 
             {/* Accounting Module Routes */}
-            <Route path="accounting/journal" element={<JournalEntries />} />
-            <Route path="accounting/journal-entries" element={<JournalEntries />} />
-            <Route path="accounting/general-ledger" element={<GeneralLedger />} />
-            <Route path="accounting/ledger" element={<GeneralLedger />} />
-            <Route path="accounting/bank" element={<BankAccounts />} />
-            <Route path="accounting/bank-accounts" element={<BankAccounts />} />
-            <Route path="accounting/expenses" element={<AccountingExpenses />} />
-            <Route path="accounting/budgets" element={<Budgets />} />
-            <Route path="accounting/receivable" element={<AccountsReceivable />} />
-            <Route path="accounting/receivables" element={<AccountsReceivable />} />
-            <Route path="accounting/payable" element={<AccountsPayable />} />
-            <Route path="accounting/payables" element={<AccountsPayable />} />
-            <Route path="accounting/chart" element={<ChartOfAccounts />} />
-            <Route path="accounting/chart-of-accounts" element={<ChartOfAccounts />} />
-            <Route path="accounting/reports" element={<FinancialReports />} />
-            <Route path="accounting/assets" element={<FixedAssets />} />
-            <Route path="accounting/cost-centers" element={<CostCenters />} />
+            <Route element={<ModuleErrorBoundary moduleName="Accounting"><Outlet /></ModuleErrorBoundary>}>
+              <Route path="accounting/journal" element={<JournalEntries />} />
+              <Route path="accounting/journal-entries" element={<JournalEntries />} />
+              <Route path="accounting/general-ledger" element={<GeneralLedger />} />
+              <Route path="accounting/ledger" element={<GeneralLedger />} />
+              <Route path="accounting/bank" element={<BankAccounts />} />
+              <Route path="accounting/bank-accounts" element={<BankAccounts />} />
+              <Route path="accounting/expenses" element={<AccountingExpenses />} />
+              <Route path="accounting/budgets" element={<Budgets />} />
+              <Route path="accounting/receivable" element={<AccountsReceivable />} />
+              <Route path="accounting/receivables" element={<AccountsReceivable />} />
+              <Route path="accounting/payable" element={<AccountsPayable />} />
+              <Route path="accounting/payables" element={<AccountsPayable />} />
+              <Route path="accounting/chart" element={<ChartOfAccounts />} />
+              <Route path="accounting/chart-of-accounts" element={<ChartOfAccounts />} />
+              <Route path="accounting/reports" element={<FinancialReports />} />
+              <Route path="accounting/assets" element={<FixedAssets />} />
+              <Route path="accounting/cost-centers" element={<CostCenters />} />
+              <Route path="accounting/taxation" element={<Taxation />} />
+              <Route path="accounting/automation" element={<Automation />} />
+              <Route path="accounting/cheque-printing" element={<ChequePrinting />} />
+              <Route path="accounting/debit-notes" element={<DebitNotes />} />
+            </Route>
 
             {/* Inventory Module Routes */}
-            <Route path="inventory" element={<Inventory />} />
-            <Route path="inventory/movements" element={<StockMovements />} />
-            <Route path="inventory/transfers" element={<StockTransfers />} />
-            <Route path="inventory/warehouses" element={<Warehouses />} />
-            <Route path="inventory/serial-numbers" element={<SerialNumbers />} />
-            <Route path="inventory/stock-groups" element={<StockGroups />} />
-            <Route path="inventory/units" element={<Units />} />
+            <Route element={<ModuleErrorBoundary moduleName="Inventory"><Outlet /></ModuleErrorBoundary>}>
+              <Route path="inventory" element={<Inventory />} />
+              <Route path="inventory/movements" element={<StockMovements />} />
+              <Route path="inventory/transfers" element={<StockTransfers />} />
+              <Route path="inventory/warehouses" element={<Warehouses />} />
+              <Route path="inventory/serial-numbers" element={<SerialNumbers />} />
+              <Route path="inventory/stock-groups" element={<StockGroups />} />
+              <Route path="inventory/units" element={<Units />} />
+              <Route path="inventory/stock-journal" element={<StockJournal />} />
+            </Route>
 
             <Route path="products" element={<ProductList />} />
             <Route path="products/price-lists" element={<PriceLists />} />
             <Route path="purchase" element={<Purchase />} />
 
             {/* CRM Module Routes */}
-            <Route path="crm" element={<CRMDashboard />} />
-            <Route path="crm/leads" element={<Leads />} />
-            <Route path="crm/leads/new" element={<Leads />} />
-            <Route path="crm/opportunities" element={<Opportunities />} />
-            <Route path="crm/opportunities/new" element={<Opportunities />} />
-            <Route path="crm/contacts" element={<Contacts />} />
-            <Route path="crm/contacts/new" element={<Contacts />} />
-            <Route path="crm/activities" element={<Activities />} />
+            <Route element={<ModuleErrorBoundary moduleName="CRM"><Outlet /></ModuleErrorBoundary>}>
+              <Route path="crm" element={<CRMDashboard />} />
+              <Route path="crm/leads" element={<Leads />} />
+              <Route path="crm/leads/new" element={<Leads />} />
+              <Route path="crm/opportunities" element={<Opportunities />} />
+              <Route path="crm/opportunities/new" element={<Opportunities />} />
+              <Route path="crm/contacts" element={<Contacts />} />
+              <Route path="crm/contacts/new" element={<Contacts />} />
+              <Route path="crm/activities" element={<Activities />} />
+            </Route>
 
             {/* HR Module Routes */}
-            <Route path="hr" element={<HRDashboard />} />
-            <Route path="hr/employees" element={<EmployeeList />} />
-            <Route path="hr/employees/new" element={<EmployeeList />} />
-            <Route path="hr/attendance" element={<Attendance />} />
-            <Route path="hr/leaves" element={<Leaves />} />
-            <Route path="hr/payroll" element={<Payroll />} />
-            <Route path="hr/trainings" element={<Trainings />} />
-            <Route path="hr/performance" element={<Performance />} />
-            <Route path="hr/expenses" element={<Expenses />} />
-            <Route path="hr/announcements" element={<Announcements />} />
-            <Route path="hr/departments" element={<Departments />} />
+            <Route element={<ModuleErrorBoundary moduleName="HR"><Outlet /></ModuleErrorBoundary>}>
+              <Route path="hr" element={<HRDashboard />} />
+              <Route path="hr/employees" element={<EmployeeList />} />
+              <Route path="hr/employees/new" element={<EmployeeList />} />
+              <Route path="hr/attendance" element={<Attendance />} />
+              <Route path="hr/leaves" element={<Leaves />} />
+              <Route path="hr/payroll" element={<Payroll />} />
+              <Route path="hr/trainings" element={<Trainings />} />
+              <Route path="hr/performance" element={<Performance />} />
+              <Route path="hr/expenses" element={<Expenses />} />
+              <Route path="hr/announcements" element={<Announcements />} />
+              <Route path="hr/departments" element={<Departments />} />
+            </Route>
 
             <Route path="manufacturing" element={<Manufacturing />} />
             <Route path="manufacturing/bom" element={<BillOfMaterials />} />

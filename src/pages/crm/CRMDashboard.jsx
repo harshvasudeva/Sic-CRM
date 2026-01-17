@@ -15,10 +15,27 @@ function CRMDashboard() {
     const [pendingActivities, setPendingActivities] = useState([])
 
     useEffect(() => {
-        setStats(getCRMStats())
-        setRecentLeads(getLeads().slice(0, 5))
-        setTopOpportunities(getOpportunities().sort((a, b) => b.value - a.value).slice(0, 4))
-        setPendingActivities(getActivities({ completed: false }).slice(0, 5))
+        const fetchDashboardData = async () => {
+            try {
+                // If getCRMStats combines data, it must be awaited. 
+                // Alternatively, fetch individual lists and calculate stats locally if the API doesn't provide stats endpoint yet.
+                // Assuming crmStore will have an async getCRMStats
+                const statsData = await getCRMStats()
+                setStats(statsData)
+
+                const leadsData = await getLeads()
+                setRecentLeads(leadsData.slice(0, 5))
+
+                const oppsData = await getOpportunities()
+                setTopOpportunities(oppsData.sort((a, b) => b.value - a.value).slice(0, 4))
+
+                const activitiesData = await getActivities({ completed: false })
+                setPendingActivities(activitiesData.slice(0, 5))
+            } catch (error) {
+                console.error('Failed to load dashboard data', error)
+            }
+        }
+        fetchDashboardData()
     }, [])
 
     if (!stats) return <div>Loading...</div>

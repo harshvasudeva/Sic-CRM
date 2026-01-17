@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Plus, Filter, Edit, Trash2, ShoppingCart, CheckCircle, Truck, Clock, XCircle } from 'lucide-react'
 import { getSalesOrders, deleteSalesOrder, createSalesOrder, updateSalesOrder, confirmSalesOrder, deliverSalesOrder } from '../../stores/salesStore'
@@ -30,7 +30,7 @@ function SalesOrders() {
     const [filterCustomer, setFilterCustomer] = useState('')
 
     const [formData, setFormData] = useState({
-        customerId: '', notes: '', paymentTerms: 'Net 30', expectedDelivery: '', 
+        customerId: '', notes: '', paymentTerms: 'Net 30', expectedDelivery: '',
         shippingAddress: '', billingAddress: '', items: []
     })
 
@@ -42,12 +42,18 @@ function SalesOrders() {
         deliveryDate: '', notes: ''
     })
 
-    const loadData = () => {
+    const loadData = async () => {
         const filters = {}
         if (filterStatus) filters.status = filterStatus
         if (filterCustomer) filters.customerId = filterCustomer
         setOrders(getSalesOrders(filters))
-        setContacts(getContacts())
+        try {
+            const contactsData = await getContacts()
+            setContacts(Array.isArray(contactsData) ? contactsData : [])
+        } catch (e) {
+            console.warn('Failed to load contacts:', e)
+            setContacts([])
+        }
     }
 
     useEffect(() => { loadData() }, [filterStatus, filterCustomer])
@@ -160,7 +166,7 @@ function SalesOrders() {
 
     const resetFormData = () => {
         setFormData({
-            customerId: '', notes: '', paymentTerms: 'Net 30', expectedDelivery: '', 
+            customerId: '', notes: '', paymentTerms: 'Net 30', expectedDelivery: '',
             shippingAddress: '', billingAddress: '', items: []
         })
     }
@@ -182,10 +188,12 @@ function SalesOrders() {
             key: 'orderNumber', label: 'Order #',
             render: (value) => <span className="order-number">{value}</span>
         },
-        { key: 'customerName', label: 'Customer', render: (_, row) => {
-            const customer = getContacts().find(c => c.id === row.customerId)
-            return customer ? `${customer.firstName} ${customer.lastName}` : '-'
-        }},
+        {
+            key: 'customerName', label: 'Customer', render: (_, row) => {
+                const customer = contacts.find(c => c.id === row.customerId)
+                return customer ? `${customer.firstName} ${customer.lastName}` : '-'
+            }
+        },
         { key: 'total', label: 'Total', render: (v) => <span className="amount">${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)}</span> },
         {
             key: 'status', label: 'Status',

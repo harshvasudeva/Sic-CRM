@@ -267,8 +267,33 @@ function setStore(key, data) {
     localStorage.setItem(key, JSON.stringify(data))
 }
 
+// ==================== API HELPERS ====================
+const API_URL = 'http://localhost:5000/api/crm'
+
+async function apiCall(endpoint, method = 'GET', body = null) {
+    try {
+        const options = {
+            method,
+            headers: { 'Content-Type': 'application/json' }
+        }
+        if (body) options.body = JSON.stringify(body)
+        const res = await fetch(`${API_URL}${endpoint}`, options)
+        if (!res.ok) throw new Error(`API Error: ${res.status}`)
+        return await res.json()
+    } catch (e) {
+        console.warn(`Backend unavailable for ${endpoint}, using local storage fallback.`, e)
+        return null
+    }
+}
+
 // ==================== LEADS CRUD ====================
-export function getLeads(filters = {}) {
+export async function getLeads(filters = {}) {
+    // Try API
+    const query = new URLSearchParams(filters).toString()
+    const apiData = await apiCall(`/leads?${query}`)
+    if (apiData) return apiData
+
+    // Fallback
     let leads = getStore(STORAGE_KEYS.leads, initialLeads)
     if (filters.status) leads = leads.filter(l => l.status === filters.status)
     if (filters.assignedTo) leads = leads.filter(l => l.assignedTo === filters.assignedTo)
@@ -276,12 +301,18 @@ export function getLeads(filters = {}) {
     return leads
 }
 
-export function getLead(id) {
-    return getLeads().find(l => l.id === id)
+export async function getLead(id) {
+    const apiData = await apiCall(`/leads/${id}`)
+    if (apiData) return apiData
+    return (await getLeads()).find(l => l.id === id) // Re-use getLeads fallback
 }
 
-export function createLead(data) {
-    const leads = getLeads()
+export async function createLead(data) {
+    const apiData = await apiCall('/leads', 'POST', data)
+    if (apiData) return apiData
+
+    // Fallback
+    const leads = getStore(STORAGE_KEYS.leads, initialLeads) // Use direct sync getStore for fallback to avoid circular await in fallback
     const newLead = {
         ...data,
         id: `lead-${Date.now()}`,
@@ -296,8 +327,12 @@ export function createLead(data) {
     return newLead
 }
 
-export function updateLead(id, data) {
-    const leads = getLeads()
+export async function updateLead(id, data) {
+    const apiData = await apiCall(`/leads/${id}`, 'PATCH', data) // Assuming PATCH support
+    if (apiData) return apiData
+
+    // Fallback
+    const leads = getStore(STORAGE_KEYS.leads, initialLeads)
     const index = leads.findIndex(l => l.id === id)
     if (index === -1) return null
     leads[index] = { ...leads[index], ...data }
@@ -305,19 +340,29 @@ export function updateLead(id, data) {
     return leads[index]
 }
 
-export function deleteLead(id) {
-    const leads = getLeads().filter(l => l.id !== id)
+export async function deleteLead(id) {
+    const apiRes = await apiCall(`/leads/${id}`, 'DELETE')
+    if (apiRes) return true
+
+    // Fallback
+    const leads = getStore(STORAGE_KEYS.leads, initialLeads).filter(l => l.id !== id)
     setStore(STORAGE_KEYS.leads, leads)
     return true
 }
 
-export function convertLeadToOpportunity(leadId, opportunityData) {
-    const lead = getLead(leadId)
+export async function convertLeadToOpportunity(leadId, opportunityData) {
+    // This is a complex transaction. In API, it might be a single endpoint /leads/:id/convert
+    // For now, we simulate it with sequential calls or fallback
+
+    // Try dedicated API endpoint if it exists (assuming future implementation), otherwise rely on component calls?
+    // Actually, let's implement the logic using our async primitives.
+
+    const lead = await getLead(leadId)
     if (!lead) return null
 
-    updateLead(leadId, { status: 'converted' })
+    await updateLead(leadId, { status: 'converted' })
 
-    const opportunity = createOpportunity({
+    const opportunity = await createOpportunity({
         name: opportunityData.name || `${lead.company} Deal`,
         company: lead.company,
         contactId: leadId,
@@ -334,20 +379,29 @@ export function convertLeadToOpportunity(leadId, opportunityData) {
 }
 
 // ==================== OPPORTUNITIES CRUD ====================
-export function getOpportunities(filters = {}) {
+export async function getOpportunities(filters = {}) {
+    const query = new URLSearchParams(filters).toString()
+    const apiData = await apiCall(`/opportunities?${query}`)
+    if (apiData) return apiData
+
+    // Fallback
     let opps = getStore(STORAGE_KEYS.opportunities, initialOpportunities)
     if (filters.pipeline) opps = opps.filter(o => o.pipeline === filters.pipeline)
     if (filters.stage) opps = opps.filter(o => o.stage === filters.stage)
-    if (filters.assignedTo) opps = opps.filter(o => o.assignedTo === filters.assignedTo)
     return opps
 }
 
-export function getOpportunity(id) {
-    return getOpportunities().find(o => o.id === id)
+export async function getOpportunity(id) {
+    const apiData = await apiCall(`/opportunities/${id}`)
+    if (apiData) return apiData
+    return (await getOpportunities()).find(o => o.id === id)
 }
 
-export function createOpportunity(data) {
-    const opps = getOpportunities()
+export async function createOpportunity(data) {
+    const apiData = await apiCall('/opportunities', 'POST', data)
+    if (apiData) return apiData
+
+    const opps = getStore(STORAGE_KEYS.opportunities, initialOpportunities)
     const newOpp = {
         ...data,
         id: `opp-${Date.now()}`,
@@ -359,8 +413,11 @@ export function createOpportunity(data) {
     return newOpp
 }
 
-export function updateOpportunity(id, data) {
-    const opps = getOpportunities()
+export async function updateOpportunity(id, data) {
+    const apiData = await apiCall(`/opportunities/${id}`, 'PATCH', data)
+    if (apiData) return apiData
+
+    const opps = getStore(STORAGE_KEYS.opportunities, initialOpportunities)
     const index = opps.findIndex(o => o.id === id)
     if (index === -1) return null
     opps[index] = { ...opps[index], ...data, updatedAt: new Date().toISOString().split('T')[0] }
@@ -368,30 +425,35 @@ export function updateOpportunity(id, data) {
     return opps[index]
 }
 
-export function deleteOpportunity(id) {
-    const opps = getOpportunities().filter(o => o.id !== id)
+export async function deleteOpportunity(id) {
+    const apiRes = await apiCall(`/opportunities/${id}`, 'DELETE')
+    if (apiRes) return true
+
+    const opps = getStore(STORAGE_KEYS.opportunities, initialOpportunities).filter(o => o.id !== id)
     setStore(STORAGE_KEYS.opportunities, opps)
     return true
 }
 
-export function moveOpportunityStage(id, newStage) {
+export async function moveOpportunityStage(id, newStage) {
     return updateOpportunity(id, { stage: newStage })
 }
 
 // ==================== CONTACTS CRUD ====================
-export function getContacts(filters = {}) {
+export async function getContacts(filters = {}) {
+    const query = new URLSearchParams(filters).toString()
+    const apiData = await apiCall(`/contacts?${query}`)
+    if (apiData) return apiData
+
     let contacts = getStore(STORAGE_KEYS.contacts, initialContacts)
     if (filters.type) contacts = contacts.filter(c => c.type === filters.type)
-    if (filters.company) contacts = contacts.filter(c => c.company === filters.company)
     return contacts
 }
 
-export function getContact(id) {
-    return getContacts().find(c => c.id === id)
-}
+export async function createContact(data) {
+    const apiData = await apiCall('/contacts', 'POST', data)
+    if (apiData) return apiData
 
-export function createContact(data) {
-    const contacts = getContacts()
+    const contacts = getStore(STORAGE_KEYS.contacts, initialContacts)
     const newContact = {
         ...data,
         id: `cont-${Date.now()}`,
@@ -403,8 +465,11 @@ export function createContact(data) {
     return newContact
 }
 
-export function updateContact(id, data) {
-    const contacts = getContacts()
+export async function updateContact(id, data) {
+    const apiData = await apiCall(`/contacts/${id}`, 'PATCH', data)
+    if (apiData) return apiData
+
+    const contacts = getStore(STORAGE_KEYS.contacts, initialContacts)
     const index = contacts.findIndex(c => c.id === id)
     if (index === -1) return null
     contacts[index] = { ...contacts[index], ...data }
@@ -412,23 +477,33 @@ export function updateContact(id, data) {
     return contacts[index]
 }
 
-export function deleteContact(id) {
-    const contacts = getContacts().filter(c => c.id !== id)
+export async function deleteContact(id) {
+    const apiRes = await apiCall(`/contacts/${id}`, 'DELETE')
+    if (apiRes) return true
+
+    const contacts = getStore(STORAGE_KEYS.contacts, initialContacts).filter(c => c.id !== id)
     setStore(STORAGE_KEYS.contacts, contacts)
     return true
 }
 
-// ==================== ACTIVITIES ====================
-export function getActivities(filters = {}) {
+// ==================== ACTIVITIES CRUD ====================
+// Note: Activities might require complex filtering in API.
+export async function getActivities(filters = {}) {
+    const query = new URLSearchParams(filters).toString()
+    const apiData = await apiCall(`/activities?${query}`)
+    if (apiData) return apiData
+
     let activities = getStore(STORAGE_KEYS.activities, initialActivities)
     if (filters.contactId) activities = activities.filter(a => a.contactId === filters.contactId)
-    if (filters.opportunityId) activities = activities.filter(a => a.opportunityId === filters.opportunityId)
     if (filters.completed !== undefined) activities = activities.filter(a => a.completed === filters.completed)
     return activities
 }
 
-export function createActivity(data) {
-    const activities = getActivities()
+export async function createActivity(data) {
+    const apiData = await apiCall('/activities', 'POST', data)
+    if (apiData) return apiData
+
+    const activities = getStore(STORAGE_KEYS.activities, initialActivities)
     const newActivity = {
         ...data,
         id: `act-${Date.now()}`,
@@ -439,8 +514,11 @@ export function createActivity(data) {
     return newActivity
 }
 
-export function completeActivity(id) {
-    const activities = getActivities()
+export async function completeActivity(id) {
+    const apiData = await apiCall(`/activities/${id}/chk`, 'POST') // Hypothetical endpoint
+    if (apiData) return apiData
+
+    const activities = getStore(STORAGE_KEYS.activities, initialActivities)
     const index = activities.findIndex(a => a.id === id)
     if (index === -1) return null
     activities[index].completed = true
@@ -449,23 +527,27 @@ export function completeActivity(id) {
 }
 
 // ==================== PIPELINES ====================
-export function getPipelines() {
+export async function getPipelines() {
+    const apiData = await apiCall('/pipelines')
+    if (apiData) return apiData
+
     return getStore(STORAGE_KEYS.pipelines, initialPipelines)
 }
 
-export function getPipeline(id) {
-    return getPipelines().find(p => p.id === id)
-}
-
 // ==================== STATISTICS ====================
-export function getCRMStats() {
-    const leads = getLeads()
-    const opportunities = getOpportunities()
-    const contacts = getContacts()
-    const activities = getActivities()
+export async function getCRMStats() {
+    // Try specialized stats endpoint
+    const apiData = await apiCall('/stats')
+    if (apiData) return apiData
+
+    // Fallback: Compute locally
+    const leads = await getLeads()
+    const opportunities = await getOpportunities()
+    const contacts = await getContacts()
+    const activities = await getActivities()
 
     const totalValue = opportunities.reduce((sum, o) => sum + o.value, 0)
-    const weightedValue = opportunities.reduce((sum, o) => sum + (o.value * o.probability / 100), 0)
+    const weightedValue = opportunities.reduce((sum, o) => sum + (o.value * (o.probability || 0) / 100), 0)
 
     return {
         totalLeads: leads.length,

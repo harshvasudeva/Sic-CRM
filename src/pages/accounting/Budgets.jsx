@@ -1,95 +1,84 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Plus } from 'lucide-react'
+import { Plus, Edit, Trash2, TrendingUp, AlertCircle, CheckCircle } from 'lucide-react'
 import DataTable from '../../components/DataTable'
 import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormSelect } from '../../components/FormInput'
 import { useToast } from '../../components/Toast'
-import { getBudgets, createBudget, updateBudget, getChartOfAccounts } from '../../stores/accountingStore'
+import { getBudgets, createBudget, updateBudget, getBudgetVarianceReport } from '../../stores/accountingStore'
 import { formatCurrency } from '../../stores/settingsStore'
-
-// Helper function to calculate variance percentage
-const getVariancePercent = (budgeted, actual) => {
-    if (budgeted === 0) return 0
-    return Math.round(((budgeted - actual) / budgeted) * 100)
-}
 
 function Budgets() {
     const toast = useToast()
     const [budgets, setBudgets] = useState([])
     const [isModalOpen, setIsModalOpen] = useState(false)
-    const [editItem, setEditItem] = useState(null)
-    const [formData, setFormData] = useState({
-        fiscalYear: '', period: 'monthly', accountId: '', budgetedAmount: 0, actualAmount: 0, status: 'active'
-    })
+    const [editingBudget, setEditingBudget] = useState(null)
+    const [formData, setFormData] = useState({ name: '', category: '', amount: 0, period: 'yearly' })
 
     useEffect(() => {
         loadData()
     }, [])
 
     const loadData = () => {
-        setBudgets(getBudgets())
-    }
-
-    const handleAdd = () => {
-        setFormData({
-            fiscalYear: new Date().getFullYear().toString(),
-            period: 'monthly',
-            accountId: '',
-            budgetedAmount: 0,
-            actualAmount: 0,
-            status: 'active'
-        })
-        setEditItem(null)
-        setIsModalOpen(true)
-    }
-
-    const handleEdit = (item) => {
-        setFormData({ ...item })
-        setEditItem(item)
-        setIsModalOpen(true)
+        // Use the new Variance Report which includes actuals and variance logic
+        const data = getBudgetVarianceReport()
+        setBudgets(data)
     }
 
     const handleSave = () => {
-        if (editItem) {
-            updateBudget(editItem.id, formData)
-            toast.success('Budget updated')
+        if (editingBudget) {
+            updateBudget(editingBudget.id, formData)
+            toast.success('Budget Updated')
         } else {
             createBudget(formData)
-            toast.success('Budget created')
+            toast.success('Budget Created')
         }
         setIsModalOpen(false)
-        setEditItem(null)
+        setEditingBudget(null)
         loadData()
     }
 
+    const openModal = (budget = null) => {
+        if (budget) {
+            setEditingBudget(budget)
+            setFormData({ name: budget.name, category: budget.category, amount: budget.amount, period: budget.period })
+        } else {
+            setEditingBudget(null)
+            setFormData({ name: '', category: '', amount: 0, period: 'yearly' })
+        }
+        setIsModalOpen(true)
+    }
+
     const columns = [
-        { key: 'fiscalYear', label: 'Fiscal Year', render: (v) => <span className="fiscal-year">{v}</span> },
-        { key: 'period', label: 'Period', render: (v) => <span className="period-badge">{v}</span> },
+        { key: 'name', label: 'Budget Name', render: (v) => <span className="font-bold">{v}</span> },
+        { key: 'category', label: 'Category' },
+        { key: 'amount', label: 'Budgeted', render: (v) => <span>{formatCurrency(v)}</span> },
+        { key: 'actualAmount', label: 'Actual', render: (v) => <span className="font-mono">{formatCurrency(v)}</span> },
         {
-            key: 'accountId', label: 'Account', render: (v) => {
-                const account = getChartOfAccounts().find(a => a.id === v)
-                return account ? `${account.code} - ${account.name}` : '-'
-            }
-        },
-        { key: 'budgetedAmount', label: 'Budgeted', render: (v) => <span className="amount budgeted">{formatCurrency(v || 0)}</span> },
-        { key: 'actualAmount', label: 'Actual', render: (v) => <span className="amount actual">{formatCurrency(v || 0)}</span> },
-        {
-            key: 'variance', label: 'Variance', render: (_, row) => {
-                const variance = getVariancePercent(row.budgetedAmount, row.actualAmount)
-                return <span className={`variance ${variance >= 0 ? 'positive' : 'negative'}`}>{variance}%</span>
-            }
-        },
-        {
-            key: 'status', label: 'Status', render: (v) => (
-                <span className={`status-badge ${v}`}>{v}</span>
+            key: 'variance',
+            label: 'Variance',
+            render: (v) => (
+                <span className={v < 0 ? 'text-red' : 'text-green'}>
+                    {v < 0 ? '-' : '+'}{formatCurrency(Math.abs(v))}
+                </span>
             )
         },
         {
-            key: 'actions', label: 'Actions', render: (_, row) => (
-                <div className="action-buttons">
-                    <button className="btn-edit" onClick={() => handleEdit(row)}>Edit</button>
-                </div>
+            key: 'status',
+            label: 'Status',
+            render: (v) => (
+                <span className={`badge ${v === 'On Track' ? 'bg-green-soft text-green' : 'bg-red-soft text-red'}`}>
+                    {v === 'On Track' ? <CheckCircle size={12} /> : <AlertCircle size={12} />} {v}
+                </span>
+            )
+        },
+        {
+            key: 'actions',
+            label: '',
+            render: (_, row) => (
+                <button className="btn-icon" onClick={() => openModal(row)}>
+                    <Edit size={16} />
+                </button>
             )
         }
     ]
@@ -98,58 +87,48 @@ function Budgets() {
         <div className="page">
             <motion.div className="page-header" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
                 <div>
-                    <h1 className="page-title"><span className="gradient-text">Budget</span> Management</h1>
-                    <p className="page-description">
-                        Create and monitor budgets with variance tracking.
-                    </p>
+                    <h1 className="page-title"><span className="gradient-text">Budget</span> Variance</h1>
+                    <p className="page-description">Monitor spending against planned budgets.</p>
                 </div>
-                <button className="btn-primary" onClick={handleAdd}>
+                <button className="btn-primary" onClick={() => openModal()}>
                     <Plus size={20} /> Create Budget
                 </button>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-                <DataTable columns={columns} data={budgets} searchable exportable />
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                <DataTable columns={columns} data={budgets} />
             </motion.div>
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editItem ? 'Edit Budget' : 'Create Budget'} size="medium">
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingBudget ? 'Edit Budget' : 'Create Budget'}>
                 <div className="form-grid">
-                    <FormInput label="Fiscal Year *" type="number" placeholder="2024" value={formData.fiscalYear} onChange={(e) => setFormData({ ...formData, fiscalYear: e.target.value })} />
-                    <FormSelect label="Period *" options={[
-                        { value: 'monthly', label: 'Monthly' },
-                        { value: 'quarterly', label: 'Quarterly' },
-                        { value: 'annually', label: 'Annually' }
-                    ]} value={formData.period} onChange={(e) => setFormData({ ...formData, period: e.target.value })} />
+                    <FormInput label="Budget Name" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+                    <FormInput label="Category" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} placeholder="e.g., Travel" />
                 </div>
-                <FormSelect label="Account *" options={getChartOfAccounts().map(a => ({ value: a.id, label: `${a.code} - ${a.name}` }))} value={formData.accountId} onChange={(e) => setFormData({ ...formData, accountId: e.target.value })} />
                 <div className="form-grid">
-                    <FormInput label="Budgeted Amount *" type="number" placeholder="0" value={formData.budgetedAmount} onChange={(e) => setFormData({ ...formData, budgetedAmount: parseFloat(e.target.value) || 0 })} />
-                    <FormInput label="Actual Amount" type="number" placeholder="0" value={formData.actualAmount} onChange={(e) => setFormData({ ...formData, actualAmount: parseFloat(e.target.value) || 0 })} />
+                    <FormInput label="Amount" type="number" value={formData.amount} onChange={e => setFormData({ ...formData, amount: parseFloat(e.target.value) })} />
+                    <div className="form-group">
+                        <label>Period</label>
+                        <select className="form-select" value={formData.period} onChange={e => setFormData({ ...formData, period: e.target.value })}>
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="yearly">Yearly</option>
+                        </select>
+                    </div>
                 </div>
                 <ModalFooter>
                     <button className="btn-secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                    <button className="btn-primary" onClick={handleSave}>{editItem ? 'Update' : 'Create'} Budget</button>
+                    <button className="btn-primary" onClick={handleSave}>Save</button>
                 </ModalFooter>
             </Modal>
 
             <style>{`
-                .btn-primary { display: flex; align-items: center; gap: 8px; padding: 12px 20px; background: var(--accent-gradient); border-radius: var(--radius-md); color: white; border: none; cursor: pointer; font-weight: 600; }
-                .btn-secondary { padding: 12px 20px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-secondary); cursor: pointer; }
-                .fiscal-year { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--accent-primary); }
-                .period-badge { padding: 4px 10px; background: rgba(99, 102, 241, 0.15); color: #8b5cf6; border-radius: 12px; font-size: 0.75rem; text-transform: capitalize; }
-                .amount { font-weight: 600; }
-                .amount.budgeted { color: var(--text-primary); }
-                .amount.actual { color: var(--success); }
-                .variance { font-weight: 700; }
-                .variance.positive { color: var(--success); }
-                .variance.negative { color: var(--error); }
-                .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; text-transform: capitalize; }
-                .status-badge.active { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
-                .status-badge.inactive { background: rgba(156, 163, 175, 0.15); color: #9ca3af; }
-                .action-buttons { display: flex; gap: 8px; }
-                .btn-edit { padding: 8px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-secondary); cursor: pointer; font-size: 0.85rem; }
-                .btn-delete { padding: 8px 12px; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--error); border-radius: 8px; color: var(--error); cursor: pointer; font-size: 0.85rem; }
-                .btn-delete:hover { background: var(--error); color: white; }
+                .text-green { color: var(--success); }
+                .text-red { color: var(--error); }
+                .bg-green-soft { background: rgba(16, 185, 129, 0.1); }
+                .bg-red-soft { background: rgba(239, 68, 68, 0.1); }
+                .font-mono { font-family: 'JetBrains Mono', monospace; }
+                .font-bold { font-weight: 600; }
+                .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; }
             `}</style>
         </div>
     )

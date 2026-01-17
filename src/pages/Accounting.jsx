@@ -17,7 +17,12 @@ import {
     Users,
     DollarSign,
     AlertTriangle,
-    CheckCircle
+    CheckCircle,
+    Truck,
+    Package,
+    Landmark,
+    Zap,
+    Printer
 } from 'lucide-react'
 import { getAccountingStats } from '../stores/accountingStore'
 import { formatCurrency } from '../stores/settingsStore'
@@ -113,6 +118,54 @@ function Accounting() {
             description: 'Track spending by department or project',
             link: '/accounting/cost-centers',
             color: 'linear-gradient(135deg, #3b82f6, #60a5fa)'
+        },
+        {
+            id: 'purchase-orders',
+            title: 'Purchase Orders',
+            icon: Truck,
+            description: 'Manage procurement & GRN',
+            link: '/accounting/purchase-orders',
+            color: 'linear-gradient(135deg, #f97316, #fdba74)'
+        },
+        {
+            id: 'inventory',
+            title: 'Inventory',
+            icon: Package,
+            description: 'Stock valuation & journals',
+            link: '/accounting/inventory',
+            color: 'linear-gradient(135deg, #10b981, #059669)'
+        },
+        {
+            id: 'taxation',
+            title: 'Taxation (GST)',
+            icon: Landmark,
+            description: 'GSTR-1, GSTR-3B & Tax settings',
+            link: '/accounting/taxation',
+            color: 'linear-gradient(135deg, #8b5cf6, #7c3aed)'
+        },
+        {
+            id: 'reports',
+            title: 'Financial Reports',
+            icon: FileText,
+            description: 'Balance Sheet, P&L & Cash Flow',
+            link: '/accounting/reports',
+            color: 'linear-gradient(135deg, #f59e0b, #d97706)'
+        },
+        {
+            id: 'automation',
+            title: 'Automation & AI',
+            icon: Zap,
+            description: 'Recurring tasks & Anomaly Detection',
+            link: '/accounting/automation',
+            color: 'linear-gradient(135deg, #ec4899, #be185d)'
+        },
+        {
+            id: 'cheque',
+            title: 'Cheque Printing',
+            icon: Printer,
+            description: 'Print cheques for payments',
+            link: '/accounting/cheque-printing',
+            color: 'linear-gradient(135deg, #6366f1, #4f46e5)'
         }
     ]
 

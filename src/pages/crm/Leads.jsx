@@ -42,31 +42,42 @@ function Leads() {
         name: '', value: '', expectedClose: ''
     })
 
-    const loadData = () => {
+    const loadData = async () => {
         const filters = {}
         if (filterStatus) filters.status = filterStatus
         if (filterSource) filters.source = filterSource
-        setLeads(getLeads(filters))
+        // Assuming getLeads is async now or returns a promise
+        try {
+            const data = await getLeads(filters)
+            setLeads(data)
+        } catch (error) {
+            console.error(error)
+            toast.error('Failed to load leads')
+        }
     }
 
     useEffect(() => { loadData() }, [filterStatus, filterSource])
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!formData.name || !formData.email) {
             toast.error('Name and email are required')
             return
         }
-        if (editingLead) {
-            updateLead(editingLead.id, formData)
-            toast.success('Lead updated')
-        } else {
-            createLead(formData)
-            toast.success('Lead created')
+        try {
+            if (editingLead) {
+                await updateLead(editingLead.id, formData)
+                toast.success('Lead updated')
+            } else {
+                await createLead(formData)
+                toast.success('Lead created')
+            }
+            setIsModalOpen(false)
+            setEditingLead(null)
+            setFormData({ name: '', company: '', email: '', phone: '', source: 'website', notes: '', score: 50 })
+            loadData()
+        } catch (err) {
+            toast.error('Operation failed')
         }
-        setIsModalOpen(false)
-        setEditingLead(null)
-        setFormData({ name: '', company: '', email: '', phone: '', source: 'website', notes: '', score: 50 })
-        loadData()
     }
 
     const handleEdit = (lead) => {
@@ -83,23 +94,31 @@ function Leads() {
         setConvertData({ name: `${lead.company} Deal`, value: '', expectedClose: '' })
     }
 
-    const confirmConvert = () => {
+    const confirmConvert = async () => {
         if (!convertData.value) {
             toast.error('Deal value is required')
             return
         }
-        convertLeadToOpportunity(convertModal.id, convertData)
-        toast.success('Lead converted to opportunity')
-        setConvertModal(null)
-        loadData()
+        try {
+            await convertLeadToOpportunity(convertModal.id, convertData)
+            toast.success('Lead converted to opportunity')
+            setConvertModal(null)
+            loadData()
+        } catch (err) {
+            toast.error('Conversion failed')
+        }
     }
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (deleteConfirm) {
-            deleteLead(deleteConfirm.id)
-            toast.success('Lead deleted')
-            setDeleteConfirm(null)
-            loadData()
+            try {
+                await deleteLead(deleteConfirm.id)
+                toast.success('Lead deleted')
+                setDeleteConfirm(null)
+                loadData()
+            } catch (err) {
+                toast.error('Delete failed')
+            }
         }
     }
 

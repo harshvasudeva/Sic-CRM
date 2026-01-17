@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Plus, Filter, Edit, Trash2, FileText, Send, CheckCircle, AlertCircle, Download, CreditCard } from 'lucide-react'
 import { getInvoices, deleteInvoice, createInvoice, updateInvoice, sendInvoice, markInvoiceViewed, createInvoiceFromOrder, getSalesOrders } from '../../stores/salesStore'
@@ -31,7 +31,7 @@ function Invoices() {
     const [filterCustomer, setFilterCustomer] = useState('')
 
     const [formData, setFormData] = useState({
-        customerId: '', orderId: '', templateId: '', notes: '', terms: 'Net 30', 
+        customerId: '', orderId: '', templateId: '', notes: '', terms: 'Net 30',
         dueDate: '', type: 'standard', items: []
     })
 
@@ -43,13 +43,20 @@ function Invoices() {
         amount: 0, method: 'bank_transfer', reference: '', notes: ''
     })
 
-    const loadData = () => {
+    const loadData = async () => {
         const filters = {}
         if (filterStatus) filters.status = filterStatus
         if (filterCustomer) filters.customerId = filterCustomer
         setInvoices(getInvoices(filters))
         setOrders(getSalesOrders().filter(o => o.status !== 'cancelled'))
-        setContacts(getContacts())
+        // Handle async getContacts - ensure it returns an array
+        try {
+            const contactsData = await getContacts()
+            setContacts(Array.isArray(contactsData) ? contactsData : [])
+        } catch (e) {
+            console.warn('Failed to load contacts:', e)
+            setContacts([])
+        }
     }
 
     useEffect(() => { loadData() }, [filterStatus, filterCustomer])
@@ -194,7 +201,7 @@ function Invoices() {
 
     const resetFormData = () => {
         setFormData({
-            customerId: '', orderId: '', templateId: '', notes: '', terms: 'Net 30', 
+            customerId: '', orderId: '', templateId: '', notes: '', terms: 'Net 30',
             dueDate: '', type: 'standard', items: []
         })
     }
@@ -216,10 +223,12 @@ function Invoices() {
             key: 'invoiceNumber', label: 'Invoice #',
             render: (value) => <span className="invoice-number">{value}</span>
         },
-        { key: 'customerName', label: 'Customer', render: (_, row) => {
-            const customer = getContacts().find(c => c.id === row.customerId)
-            return customer ? `${customer.firstName} ${customer.lastName}` : '-'
-        }},
+        {
+            key: 'customerName', label: 'Customer', render: (_, row) => {
+                const customer = contacts.find(c => c.id === row.customerId)
+                return customer ? `${customer.firstName} ${customer.lastName}` : '-'
+            }
+        },
         { key: 'total', label: 'Total', render: (v) => <span className="amount">${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)}</span> },
         { key: 'paid', label: 'Paid', render: (v) => <span className="paid-amount">${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)}</span> },
         { key: 'balance', label: 'Balance', render: (v) => <span className={v > 0 ? 'balance-due' : 'balance-paid'}>${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)}</span> },

@@ -156,17 +156,333 @@ model Contact {
   updatedAt   DateTime @updatedAt
   
   deals       Deal[]
+  activities  Activity[]
 }
 
-// CRM: Deals
+// CRM: Deals (Opportunities)
 model Deal {
   id          String   @id @default(uuid())
   name        String
   value       Float
   stage       String
+  probability Int      @default(0)
   contactId   String?
   contact     Contact? @relation(fields: [contactId], references: [id])
   expectedCloseDate DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  
+  pipelineId  String?
+  pipeline    Pipeline? @relation(fields: [pipelineId], references: [id])
 }
+
+// CRM: Leads (distinct from Contacts in this system)
+model Lead {
+  id          String   @id @default(uuid())
+  name        String
+  company     String?
+  email       String?
+  phone       String?
+  source      String?
+  status      String   @default("new")
+  score       Int      @default(0)
+  assignedTo  String?
+  notes       String?
+  tags        String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  lastContact DateTime?
+}
+
+// CRM: Pipelines
+model Pipeline {
+  id          String   @id @default(uuid())
+  name        String
+  stages      String[]
+  deals       Deal[]
+}
+
+// CRM: Activities
+model Activity {
+  id          String   @id @default(uuid())
+  type        String   // call, email, meeting
+  subject     String
+  dueDate     DateTime?
+  status      String   @default("pending") // pending, completed
+  relatedTo   String?
+  notes       String?
+  
+  contactId   String?
+  contact     Contact? @relation(fields: [contactId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ==================== ENHANCED ACCOUNTING MODELS ====================
+
+// Credit Notes (Customer Returns/Adjustments)
+model CreditNote {
+  id                String   @id @default(uuid())
+  creditNoteNumber  String   @unique
+  customerId        String
+  invoiceId         String?  // Original invoice if applicable
+  issueDate         DateTime
+  reason            String
+  subtotal          Float
+  taxAmount         Float    @default(0)
+  totalAmount       Float
+  status            String   @default("draft") // draft, issued, applied, void
+  appliedAmount     Float    @default(0)
+  notes             String?
+  createdBy         String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  items             CreditNoteItem[]
+}
+
+model CreditNoteItem {
+  id              String     @id @default(uuid())
+  creditNoteId    String
+  creditNote      CreditNote @relation(fields: [creditNoteId], references: [id], onDelete: Cascade)
+  productId       String?
+  description     String
+  quantity        Float
+  unitPrice       Float
+  taxRate         Float      @default(0)
+  total           Float
+}
+
+// Debit Notes (Vendor Returns/Adjustments)
+model DebitNote {
+  id               String   @id @default(uuid())
+  debitNoteNumber  String   @unique
+  vendorId         String
+  billId           String?  // Original bill if applicable
+  issueDate        DateTime
+  reason           String
+  subtotal         Float
+  taxAmount        Float    @default(0)
+  totalAmount      Float
+  status           String   @default("draft") // draft, issued, applied, void
+  appliedAmount    Float    @default(0)
+  notes            String?
+  createdBy        String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  items            DebitNoteItem[]
+}
+
+model DebitNoteItem {
+  id            String    @id @default(uuid())
+  debitNoteId   String
+  debitNote     DebitNote @relation(fields: [debitNoteId], references: [id], onDelete: Cascade)
+  productId     String?
+  description   String
+  quantity      Float
+  unitPrice     Float
+  taxRate       Float     @default(0)
+  total         Float
+}
+
+// Bills (Vendor Invoices / Purchase Invoices)
+model Bill {
+  id              String   @id @default(uuid())
+  billNumber      String   @unique
+  vendorId        String
+  purchaseOrderId String?
+  grnId           String?
+  billDate        DateTime
+  dueDate         DateTime
+  subtotal        Float
+  taxAmount       Float    @default(0)
+  discountAmount  Float    @default(0)
+  totalAmount     Float
+  paidAmount      Float    @default(0)
+  balance         Float
+  status          String   @default("draft") // draft, pending, partial, paid, void
+  paymentTerms    String?
+  notes           String?
+  createdBy       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  items           BillItem[]
+  payments        BillPayment[]
+}
+
+model BillItem {
+  id          String  @id @default(uuid())
+  billId      String
+  bill        Bill    @relation(fields: [billId], references: [id], onDelete: Cascade)
+  productId   String?
+  description String
+  quantity    Float
+  unitPrice   Float
+  taxRate     Float   @default(0)
+  discount    Float   @default(0)
+  total       Float
+}
+
+// Payments Received (from Customers)
+model Payment {
+  id              String   @id @default(uuid())
+  paymentNumber   String   @unique
+  customerId      String
+  paymentDate     DateTime
+  amount          Float
+  paymentMode     String   // cash, bank_transfer, upi, card, cheque
+  referenceNumber String?
+  bankAccountId   String?
+  depositTo       String?  // Account ID where money is deposited
+  notes           String?
+  status          String   @default("received") // received, deposited, void
+  createdBy       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  applications    PaymentApplication[]
+}
+
+model PaymentApplication {
+  id          String  @id @default(uuid())
+  paymentId   String
+  payment     Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  invoiceId   String
+  amount      Float
+  appliedAt   DateTime @default(now())
+}
+
+// Payments Made (to Vendors)
+model BillPayment {
+  id              String   @id @default(uuid())
+  paymentNumber   String   @unique
+  vendorId        String
+  billId          String
+  bill            Bill     @relation(fields: [billId], references: [id])
+  paymentDate     DateTime
+  amount          Float
+  paymentMode     String
+  referenceNumber String?
+  bankAccountId   String?
+  paidFrom        String?  // Account ID where money is paid from
+  notes           String?
+  status          String   @default("paid") // paid, void
+  createdBy       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Receipts (Money Received - alternate to Payment for simpler tracking)
+model Receipt {
+  id              String   @id @default(uuid())
+  receiptNumber   String   @unique
+  receiptDate     DateTime
+  receivedFrom    String   // Customer name or ID
+  amount          Float
+  paymentMode     String
+  referenceNumber String?
+  bankAccountId   String?
+  accountId       String?  // Income/Revenue account
+  description     String?
+  status          String   @default("received")
+  createdBy       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Stock Journal (Inventory Adjustments)
+model StockJournal {
+  id              String   @id @default(uuid())
+  journalNumber   String   @unique
+  journalDate     DateTime
+  journalType     String   // adjustment, transfer, write_off, opening
+  warehouseFromId String?
+  warehouseToId   String?
+  reason          String
+  reference       String?
+  status          String   @default("draft") // draft, posted
+  totalValue      Float    @default(0)
+  createdBy       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  items           StockJournalItem[]
+}
+
+model StockJournalItem {
+  id              String       @id @default(uuid())
+  stockJournalId  String
+  stockJournal    StockJournal @relation(fields: [stockJournalId], references: [id], onDelete: Cascade)
+  productId       String
+  quantityIn      Float        @default(0)
+  quantityOut     Float        @default(0)
+  unitCost        Float
+  totalValue      Float
+  batchNumber     String?
+  serialNumbers   String[]
+  notes           String?
+}
+
+// Voucher Number Series (Auto-numbering like Tally)
+model VoucherNumber {
+  id          String   @id @default(uuid())
+  voucherType String   @unique // invoice, credit_note, debit_note, payment, receipt, journal, bill, purchase_order, grn
+  prefix      String
+  separator   String   @default("/")
+  fiscalYear  String   // e.g., "2025-26"
+  nextNumber  Int      @default(1)
+  format      String   @default("{prefix}{separator}{fiscalYear}{separator}{number}") // Template
+  padding     Int      @default(4) // Zero-padding for number
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([voucherType, fiscalYear])
+}
+
+// Webhooks (for external integrations like QuickBooks)
+model Webhook {
+  id          String   @id @default(uuid())
+  name        String
+  event       String   // invoice.created, payment.received, bill.created, etc.
+  targetUrl   String
+  secret      String   // For HMAC signature verification
+  headers     Json?    // Custom headers to send
+  isActive    Boolean  @default(true)
+  retryCount  Int      @default(3)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  logs        WebhookLog[]
+}
+
+model WebhookLog {
+  id          String   @id @default(uuid())
+  webhookId   String
+  webhook     Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  event       String
+  payload     Json
+  response    String?
+  statusCode  Int?
+  success     Boolean  @default(false)
+  errorMessage String?
+  sentAt      DateTime @default(now())
+  duration    Int?     // Response time in ms
+}
+
+// Audit Log (for compliance)
+model AuditLog {
+  id          String   @id @default(uuid())
+  action      String   // create, update, delete, post, void
+  entity      String   // invoice, bill, journal, etc.
+  entityId    String
+  userId      String?
+  userName    String?
+  changes     Json?    // Before/after values
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+}
+

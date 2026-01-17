@@ -12,6 +12,7 @@ require('dotenv').config();
 // Initialize DB Clients
 const prisma = new PrismaClient();
 
+// Existing routes
 const authRoutes = require('./routes/auth');
 const productsRoutes = require('./routes/products');
 const invoicesRoutes = require('./routes/invoices');
@@ -19,7 +20,15 @@ const customersRoutes = require('./routes/customers');
 const vendorsRoutes = require('./routes/vendors');
 const quotationsRoutes = require('./routes/quotations');
 const reportsRoutes = require('./routes/reports');
-const logsRoutes = require('./routes/logs'); // New logs route
+const logsRoutes = require('./routes/logs');
+const crmRoutes = require('./routes/crm');
+
+// New Accounting routes (QuickBooks/Zoho style)
+const accountsRoutes = require('./routes/accounts');
+const billsRoutes = require('./routes/bills');
+const paymentsRoutes = require('./routes/payments');
+const creditNotesRoutes = require('./routes/creditNotes');
+const debitNotesRoutes = require('./routes/debitNotes');
 
 const app = express();
 
@@ -53,15 +62,40 @@ app.use(async (req, res, next) => {
   next();
 });
 
-// Routes
+// ==================== API ROUTES ====================
+
+// Auth & Core
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productsRoutes);
-app.use('/api/invoices', invoicesRoutes);
 app.use('/api/customers', customersRoutes);
 app.use('/api/vendors', vendorsRoutes);
+
+// CRM
+app.use('/api/crm', crmRoutes);
+
+// Sales
+app.use('/api/invoices', invoicesRoutes);
 app.use('/api/quotations', quotationsRoutes);
+
+// Accounting (QuickBooks/Zoho style)
+app.use('/api/accounts', accountsRoutes);
+app.use('/api/bills', billsRoutes);
+app.use('/api/payments', paymentsRoutes);
+app.use('/api/credit-notes', creditNotesRoutes);
+app.use('/api/debit-notes', debitNotesRoutes);
+
+// Webhooks (QuickBooks-style)
+const webhooksRoutes = require('./routes/webhooks');
+app.use('/api/webhooks', webhooksRoutes);
+
+// Financial Reports (QuickBooks/Zoho style)
+const financialReportsRoutes = require('./routes/financialReports');
+app.use('/api/financial-reports', financialReportsRoutes);
+
+// Reports & Logs
 app.use('/api/reports', reportsRoutes);
 app.use('/api/logs', logsRoutes);
+
 
 app.get('/api/health', (req, res) => {
   res.json({

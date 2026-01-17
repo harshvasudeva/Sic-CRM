@@ -20,37 +20,47 @@ function Opportunities() {
         name: '', company: '', value: '', expectedClose: '', probability: 50, notes: ''
     })
 
-    const loadData = () => {
-        const pipes = getPipelines()
-        setPipelines(pipes)
-        if (!selectedPipeline && pipes.length > 0) setSelectedPipeline(pipes[0])
-        setOpportunities(getOpportunities(selectedPipeline ? { pipeline: selectedPipeline.id } : {}))
+    const loadData = async () => {
+        try {
+            const pipes = await getPipelines()
+            setPipelines(pipes)
+            if (!selectedPipeline && pipes.length > 0) setSelectedPipeline(pipes[0])
+
+            const opps = await getOpportunities(selectedPipeline ? { pipeline: selectedPipeline.id } : {})
+            setOpportunities(opps)
+        } catch (error) {
+            console.error('Failed to load opportunities', error)
+        }
     }
 
     useEffect(() => { loadData() }, [selectedPipeline])
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!formData.name || !formData.value) {
             toast.error('Name and value are required')
             return
         }
-        if (editingOpp) {
-            updateOpportunity(editingOpp.id, { ...formData, value: parseFloat(formData.value) })
-            toast.success('Opportunity updated')
-        } else {
-            createOpportunity({
-                ...formData,
-                value: parseFloat(formData.value),
-                pipeline: selectedPipeline.id,
-                stage: selectedPipeline.stages[0],
-                probability: parseInt(formData.probability)
-            })
-            toast.success('Opportunity created')
+        try {
+            if (editingOpp) {
+                await updateOpportunity(editingOpp.id, { ...formData, value: parseFloat(formData.value) })
+                toast.success('Opportunity updated')
+            } else {
+                await createOpportunity({
+                    ...formData,
+                    value: parseFloat(formData.value),
+                    pipeline: selectedPipeline.id,
+                    stage: selectedPipeline.stages[0],
+                    probability: parseInt(formData.probability)
+                })
+                toast.success('Opportunity created')
+            }
+            setIsModalOpen(false)
+            setEditingOpp(null)
+            setFormData({ name: '', company: '', value: '', expectedClose: '', probability: 50, notes: '' })
+            loadData()
+        } catch (err) {
+            toast.error('Operation failed')
         }
-        setIsModalOpen(false)
-        setEditingOpp(null)
-        setFormData({ name: '', company: '', value: '', expectedClose: '', probability: 50, notes: '' })
-        loadData()
     }
 
     const handleEdit = (opp) => {
@@ -62,22 +72,30 @@ function Opportunities() {
         setIsModalOpen(true)
     }
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (deleteConfirm) {
-            deleteOpportunity(deleteConfirm.id)
-            toast.success('Opportunity deleted')
-            setDeleteConfirm(null)
-            loadData()
+            try {
+                await deleteOpportunity(deleteConfirm.id)
+                toast.success('Opportunity deleted')
+                setDeleteConfirm(null)
+                loadData()
+            } catch (err) {
+                toast.error('Delete failed')
+            }
         }
     }
 
     const handleDragStart = (opp) => setDraggedOpp(opp)
     const handleDragOver = (e) => e.preventDefault()
-    const handleDrop = (stage) => {
+    const handleDrop = async (stage) => {
         if (draggedOpp && draggedOpp.stage !== stage) {
-            moveOpportunityStage(draggedOpp.id, stage)
-            toast.success(`Moved to ${stage}`)
-            loadData()
+            try {
+                await moveOpportunityStage(draggedOpp.id, stage)
+                toast.success(`Moved to ${stage}`)
+                loadData()
+            } catch (err) {
+                toast.error('Move failed')
+            }
         }
         setDraggedOpp(null)
     }

@@ -26,29 +26,38 @@ function Contacts() {
         firstName: '', lastName: '', email: '', phone: '', company: '', title: '', type: 'prospect', address: '', notes: ''
     })
 
-    const loadData = () => {
+    const loadData = async () => {
         const filters = filterType ? { type: filterType } : {}
-        setContacts(getContacts(filters))
+        try {
+            const data = await getContacts(filters)
+            setContacts(data)
+        } catch (error) {
+            console.error('Failed to load contacts', error)
+        }
     }
 
     useEffect(() => { loadData() }, [filterType])
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!formData.firstName || !formData.email) {
             toast.error('First name and email are required')
             return
         }
-        if (editingContact) {
-            updateContact(editingContact.id, formData)
-            toast.success('Contact updated')
-        } else {
-            createContact(formData)
-            toast.success('Contact created')
+        try {
+            if (editingContact) {
+                await updateContact(editingContact.id, formData)
+                toast.success('Contact updated')
+            } else {
+                await createContact(formData)
+                toast.success('Contact created')
+            }
+            setIsModalOpen(false)
+            setEditingContact(null)
+            setFormData({ firstName: '', lastName: '', email: '', phone: '', company: '', title: '', type: 'prospect', address: '', notes: '' })
+            loadData()
+        } catch (err) {
+            toast.error('Operation failed')
         }
-        setIsModalOpen(false)
-        setEditingContact(null)
-        setFormData({ firstName: '', lastName: '', email: '', phone: '', company: '', title: '', type: 'prospect', address: '', notes: '' })
-        loadData()
     }
 
     const handleEdit = (contact) => {
@@ -61,12 +70,16 @@ function Contacts() {
         setIsModalOpen(true)
     }
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (deleteConfirm) {
-            deleteContact(deleteConfirm.id)
-            toast.success('Contact deleted')
-            setDeleteConfirm(null)
-            loadData()
+            try {
+                await deleteContact(deleteConfirm.id)
+                toast.success('Contact deleted')
+                setDeleteConfirm(null)
+                loadData()
+            } catch (err) {
+                toast.error('Delete failed')
+            }
         }
     }
 
