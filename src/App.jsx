@@ -19,6 +19,7 @@ import PricingRules from './pages/sales/PricingRules'
 import SalesTargets from './pages/sales/SalesTargets'
 import QuotationTemplates from './pages/sales/QuotationTemplates'
 import InvoiceTemplates from './pages/sales/InvoiceTemplates'
+import DeliveryNotes from './pages/sales/DeliveryNotes'
 
 // Purchase Module
 import Vendors from './pages/purchase/Vendors'
@@ -56,6 +57,9 @@ import SerialNumbers from './pages/inventory/SerialNumbers'
 import StockGroups from './pages/inventory/StockGroups'
 import Units from './pages/inventory/Units'
 import StockJournal from './pages/inventory/StockJournal'
+import PhysicalStock from './pages/inventory/PhysicalStock'
+import RejectionsIn from './pages/inventory/RejectionsIn'
+import RejectionsOut from './pages/inventory/RejectionsOut'
 
 // HR Module
 import HRDashboard from './pages/hr/HRDashboard'
@@ -110,6 +114,7 @@ function App() {
               <Route path="sales/credit-notes" element={<CreditNotes />} />
               <Route path="sales/pricing" element={<PricingRules />} />
               <Route path="sales/targets" element={<SalesTargets />} />
+              <Route path="sales/delivery-notes" element={<DeliveryNotes />} />
             </Route>
 
             {/* Purchase Module Routes */}
@@ -159,6 +164,9 @@ function App() {
               <Route path="inventory/stock-groups" element={<StockGroups />} />
               <Route path="inventory/units" element={<Units />} />
               <Route path="inventory/stock-journal" element={<StockJournal />} />
+              <Route path="inventory/physical-stock" element={<PhysicalStock />} />
+              <Route path="inventory/rejections-in" element={<RejectionsIn />} />
+              <Route path="inventory/rejections-out" element={<RejectionsOut />} />
             </Route>
 
             <Route path="products" element={<ProductList />} />
