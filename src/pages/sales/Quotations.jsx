@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Plus, Filter, Edit, Trash2, FileText, Send, Eye, CheckCircle, Clock, Copy, Target } from 'lucide-react'
 import { getQuotations, deleteQuotation, createQuotation, updateQuotation, convertQuotationToOrder, createQuotationRevision, getQuotationTemplates } from '../../stores/salesStore'
@@ -60,6 +61,14 @@ function Quotations() {
     }
 
     useEffect(() => { loadData() }, [filterStatus, filterCustomer])
+
+    const location = useLocation()
+    useEffect(() => {
+        const params = new URLSearchParams(location.search)
+        if (params.get('action') === 'create') {
+            setIsModalOpen(true)
+        }
+    }, [location])
 
     const handleSubmit = () => {
         if (!formData.customerId) {

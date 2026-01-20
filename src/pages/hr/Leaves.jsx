@@ -41,12 +41,12 @@ function Leaves() {
         reason: ''
     })
 
-    const loadData = () => {
+    const loadData = async () => {
         const filters = {}
         if (filterStatus) filters.status = filterStatus
         if (filterEmployee) filters.employeeId = filterEmployee
-        setLeaves(getLeaves(filters))
-        setEmployees(getEmployees())
+        setLeaves(await getLeaves(filters))
+        setEmployees(await getEmployees())
     }
 
     useEffect(() => {
@@ -64,30 +64,30 @@ function Leaves() {
         return Math.ceil((e - s) / (1000 * 60 * 60 * 24)) + 1
     }
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!formData.employeeId || !formData.startDate || !formData.endDate) {
             toast.error('Please fill all required fields')
             return
         }
 
         const days = calculateDays(formData.startDate, formData.endDate)
-        applyLeave({ ...formData, days })
+        await applyLeave({ ...formData, days })
         toast.success('Leave request submitted')
         setIsModalOpen(false)
         setFormData({ employeeId: '', type: 'annual', startDate: '', endDate: '', reason: '' })
-        loadData()
+        await loadData()
     }
 
-    const handleApprove = (leaveId) => {
-        updateLeaveStatus(leaveId, 'approved', 'emp-004')
+    const handleApprove = async (leaveId) => {
+        await updateLeaveStatus(leaveId, 'approved', 'emp-004')
         toast.success('Leave approved')
-        loadData()
+        await loadData()
     }
 
-    const handleReject = (leaveId) => {
-        updateLeaveStatus(leaveId, 'rejected', 'emp-004')
+    const handleReject = async (leaveId) => {
+        await updateLeaveStatus(leaveId, 'rejected', 'emp-004')
         toast.warning('Leave rejected')
-        loadData()
+        await loadData()
     }
 
     const getEmployeeName = (id) => {

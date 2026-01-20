@@ -25,7 +25,6 @@ const vendorsRoutes = require('./routes/vendors');
 const quotationsRoutes = require('./routes/quotations');
 const reportsRoutes = require('./routes/reports');
 const logsRoutes = require('./routes/logs');
-const crmRoutes = require('./routes/crm');
 
 // New Accounting routes (QuickBooks/Zoho style)
 const accountsRoutes = require('./routes/accounts');
@@ -75,17 +74,19 @@ app.use('/api/customers', customersRoutes);
 app.use('/api/vendors', vendorsRoutes);
 
 // CRM
+// CRM
+const hrRoutes = require('./routes/hrRoutes');
+const crmRoutes = require('./routes/crmRoutes'); // Updated filename
+const searchRoutes = require('./routes/searchRoutes');
+
 app.use('/api/crm', crmRoutes);
+app.use('/api/hr', hrRoutes);
+app.use('/api/search', searchRoutes);
 
 // Sales
 app.use('/api/invoices', invoicesRoutes);
 app.use('/api/quotations', quotationsRoutes);
 
-// Accounting (QuickBooks/Zoho style)
-app.use('/api/accounts', accountsRoutes);
-app.use('/api/bills', billsRoutes);
-app.use('/api/payments', paymentsRoutes);
-app.use('/api/credit-notes', creditNotesRoutes);
 // Accounting (QuickBooks/Zoho style)
 app.use('/api/accounts', accountsRoutes);
 app.use('/api/bills', billsRoutes);

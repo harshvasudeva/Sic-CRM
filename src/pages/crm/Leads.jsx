@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Plus, Filter, Search, Edit, Trash2, Target, Phone, Mail, Star } from 'lucide-react'
 import { getLeads, deleteLead, createLead, updateLead, convertLeadToOpportunity } from '../../stores/crmStore'
@@ -57,6 +58,14 @@ function Leads() {
     }
 
     useEffect(() => { loadData() }, [filterStatus, filterSource])
+
+    const location = useLocation()
+    useEffect(() => {
+        const params = new URLSearchParams(location.search)
+        if (params.get('action') === 'create') {
+            setIsModalOpen(true)
+        }
+    }, [location])
 
     const handleSubmit = async () => {
         if (!formData.name || !formData.email) {

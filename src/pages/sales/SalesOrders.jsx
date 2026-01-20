@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Plus, Filter, Edit, Trash2, ShoppingCart, CheckCircle, Truck, Clock, XCircle } from 'lucide-react'
 import { getSalesOrders, deleteSalesOrder, createSalesOrder, updateSalesOrder, confirmSalesOrder, deliverSalesOrder } from '../../stores/salesStore'
@@ -58,6 +59,14 @@ function SalesOrders() {
     }
 
     useEffect(() => { loadData() }, [filterStatus, filterCustomer])
+
+    const location = useLocation()
+    useEffect(() => {
+        const params = new URLSearchParams(location.search)
+        if (params.get('action') === 'create') {
+            setIsModalOpen(true)
+        }
+    }, [location])
 
     const handleSubmit = () => {
         if (!formData.customerId) {

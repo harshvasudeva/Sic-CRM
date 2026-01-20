@@ -1,83 +1,90 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-    Plus,
-    X,
-    FileText,
-    Users,
-    Package,
-    ShoppingCart,
-    Receipt,
-    UserPlus
+  Plus,
+  X,
+  FileText,
+  Users,
+  Package,
+  ShoppingCart,
+  Receipt,
+  UserPlus
 } from 'lucide-react'
 
 const actions = [
-    { icon: FileText, label: 'New Quote', color: '#6366f1' },
-    { icon: ShoppingCart, label: 'New Order', color: '#3b82f6' },
-    { icon: Receipt, label: 'New Invoice', color: '#10b981' },
-    { icon: Package, label: 'Add Product', color: '#f59e0b' },
-    { icon: Users, label: 'New Lead', color: '#ec4899' },
-    { icon: UserPlus, label: 'Add Employee', color: '#8b5cf6' },
+  { icon: FileText, label: 'New Quote', color: '#6366f1', path: '/sales/quotations?action=create' },
+  { icon: ShoppingCart, label: 'New Order', color: '#3b82f6', path: '/sales/orders?action=create' },
+  { icon: Receipt, label: 'New Invoice', color: '#10b981', path: '/sales/invoices?action=create' },
+  { icon: Package, label: 'Add Product', color: '#f59e0b', path: '/products?action=create' },
+  { icon: Users, label: 'New Lead', color: '#ec4899', path: '/crm/leads?action=create' },
+  { icon: UserPlus, label: 'Add Employee', color: '#8b5cf6', path: '/hr/employees?action=create' },
 ]
 
 function QuickActions() {
-    const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
+  const navigate = useNavigate()
 
-    return (
-        <div className="quick-actions">
-            {/* Action Buttons */}
-            <AnimatePresence>
-                {isOpen && (
-                    <>
-                        {/* Backdrop */}
-                        <motion.div
-                            className="quick-actions-backdrop"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setIsOpen(false)}
-                        />
+  const handleActionClick = (path) => {
+    setIsOpen(false)
+    navigate(path)
+  }
 
-                        {/* Action Items */}
-                        <div className="quick-actions-menu">
-                            {actions.map((action, index) => (
-                                <motion.button
-                                    key={index}
-                                    className="quick-action-item"
-                                    initial={{ opacity: 0, y: 20, scale: 0.8 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    exit={{ opacity: 0, y: 20, scale: 0.8 }}
-                                    transition={{ delay: (actions.length - 1 - index) * 0.05 }}
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() => setIsOpen(false)}
-                                >
-                                    <span className="quick-action-label">{action.label}</span>
-                                    <div
-                                        className="quick-action-icon"
-                                        style={{ background: action.color }}
-                                    >
-                                        <action.icon size={20} />
-                                    </div>
-                                </motion.button>
-                            ))}
-                        </div>
-                    </>
-                )}
-            </AnimatePresence>
+  return (
+    <div className="quick-actions">
+      {/* Action Buttons */}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              className="quick-actions-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+            />
 
-            {/* FAB Button */}
-            <motion.button
-                className="fab-button"
-                onClick={() => setIsOpen(!isOpen)}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                animate={{ rotate: isOpen ? 45 : 0 }}
-            >
-                {isOpen ? <X size={24} /> : <Plus size={24} />}
-            </motion.button>
+            {/* Action Items */}
+            <div className="quick-actions-menu">
+              {actions.map((action, index) => (
+                <motion.button
+                  key={index}
+                  className="quick-action-item"
+                  initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 20, scale: 0.8 }}
+                  transition={{ delay: (actions.length - 1 - index) * 0.05 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleActionClick(action.path)}
+                >
+                  <span className="quick-action-label">{action.label}</span>
+                  <div
+                    className="quick-action-icon"
+                    style={{ background: action.color }}
+                  >
+                    <action.icon size={20} />
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          </>
+        )}
+      </AnimatePresence>
 
-            <style>{`
+      {/* FAB Button */}
+      <motion.button
+        className="fab-button"
+        onClick={() => setIsOpen(!isOpen)}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        animate={{ rotate: isOpen ? 45 : 0 }}
+      >
+        {isOpen ? <X size={24} /> : <Plus size={24} />}
+      </motion.button>
+
+      <style>{`
         .quick-actions {
           position: fixed;
           bottom: 32px;
@@ -154,8 +161,8 @@ function QuickActions() {
           }
         }
       `}</style>
-        </div>
-    )
+    </div>
+  )
 }
 
 export default QuickActions

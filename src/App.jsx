@@ -66,6 +66,10 @@ import RejectionsOut from './pages/inventory/RejectionsOut'
 // HR Module
 import HRDashboard from './pages/hr/HRDashboard'
 import EmployeeList from './pages/hr/EmployeeList'
+import RecruitmentBoard from './pages/hr/RecruitmentBoard'
+import AssetList from './pages/hr/AssetList'
+import TimeSheet from './pages/hr/TimeSheet'
+import OrgChart from './pages/hr/OrgChart'
 import Attendance from './pages/hr/Attendance'
 import Leaves from './pages/hr/Leaves'
 import Payroll from './pages/hr/Payroll'
@@ -215,6 +219,10 @@ function App() {
               <Route path="hr" element={<HRDashboard />} />
               <Route path="hr/employees" element={<EmployeeList />} />
               <Route path="hr/employees/new" element={<EmployeeList />} />
+              <Route path="hr/recruitment" element={<RecruitmentBoard />} />
+              <Route path="hr/assets" element={<AssetList />} />
+              <Route path="hr/timesheets" element={<TimeSheet />} />
+              <Route path="hr/org-chart" element={<OrgChart />} />
               <Route path="hr/attendance" element={<Attendance />} />
               <Route path="hr/leaves" element={<Leaves />} />
               <Route path="hr/payroll" element={<Payroll />} />

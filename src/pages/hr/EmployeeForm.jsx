@@ -155,10 +155,10 @@ function EmployeeForm({ employee, departments, onClose }) {
             }
 
             if (employee) {
-                updateEmployee(employee.id, data)
+                await updateEmployee(employee.id, data)
                 toast.success('Employee updated successfully')
             } else {
-                createEmployee(data)
+                await createEmployee(data)
                 toast.success('Employee added successfully')
             }
             onClose(true)

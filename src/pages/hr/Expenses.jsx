@@ -25,29 +25,29 @@ function Expenses() {
     const [filterStatus, setFilterStatus] = useState('')
     const [formData, setFormData] = useState({ employeeId: '', category: 'travel', amount: '', description: '', date: '' })
 
-    const loadData = () => {
-        setExpenses(getExpenses(filterStatus ? { status: filterStatus } : {}))
-        setEmployees(getEmployees())
+    const loadData = async () => {
+        setExpenses(await getExpenses(filterStatus ? { status: filterStatus } : {}))
+        setEmployees(await getEmployees())
     }
 
     useEffect(() => { loadData() }, [filterStatus])
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!formData.employeeId || !formData.amount) {
             toast.error('Please fill required fields')
             return
         }
-        submitExpense({ ...formData, amount: parseFloat(formData.amount) })
+        await submitExpense({ ...formData, amount: parseFloat(formData.amount) })
         toast.success('Expense submitted')
         setIsModalOpen(false)
         setFormData({ employeeId: '', category: 'travel', amount: '', description: '', date: '' })
-        loadData()
+        await loadData()
     }
 
-    const handleApprove = (id) => {
-        approveExpense(id, 'emp-005')
+    const handleApprove = async (id) => {
+        await approveExpense(id, 'emp-005')
         toast.success('Expense approved')
-        loadData()
+        await loadData()
     }
 
     const getEmployeeName = (id) => {

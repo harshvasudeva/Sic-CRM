@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Plus, Filter, Edit, Trash2, FileText, Send, CheckCircle, AlertCircle, Download, CreditCard } from 'lucide-react'
 import { getInvoices, deleteInvoice, createInvoice, updateInvoice, sendInvoice, markInvoiceViewed, createInvoiceFromOrder, getSalesOrders } from '../../stores/salesStore'
@@ -61,6 +62,14 @@ function Invoices() {
     }
 
     useEffect(() => { loadData() }, [filterStatus, filterCustomer])
+
+    const location = useLocation()
+    useEffect(() => {
+        const params = new URLSearchParams(location.search)
+        if (params.get('action') === 'create') {
+            setIsModalOpen(true)
+        }
+    }, [location])
 
     const handleSubmit = () => {
         if (!formData.customerId) {

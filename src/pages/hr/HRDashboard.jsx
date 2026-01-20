@@ -32,10 +32,15 @@ function HRDashboard() {
   const [employees, setEmployees] = useState([])
 
   useEffect(() => {
-    setStats(getHRStats())
-    setRecentLeaves(getLeaves({ status: 'pending' }).slice(0, 5))
-    setAnnouncements(getAnnouncements().filter(a => a.pinned || new Date(a.expiresAt) > new Date()).slice(0, 3))
-    setEmployees(getEmployees())
+    const load = async () => {
+      setStats(await getHRStats())
+      const leaves = await getLeaves({ status: 'pending' })
+      setRecentLeaves(leaves.slice(0, 5))
+      const anns = await getAnnouncements()
+      setAnnouncements(anns.filter(a => a.pinned || new Date(a.expiresAt) > new Date()).slice(0, 3))
+      setEmployees(await getEmployees())
+    }
+    load()
   }, [])
 
   if (!stats) return <div>Loading...</div>

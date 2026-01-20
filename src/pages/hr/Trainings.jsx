@@ -14,25 +14,28 @@ function Trainings() {
     const [formData, setFormData] = useState({ title: '', description: '', startDate: '', endDate: '', duration: '', mode: 'online', capacity: 20, category: 'technical' })
 
     useEffect(() => {
-        setTrainings(getTrainings())
-        setEmployees(getEmployees())
+        const load = async () => {
+            setTrainings(await getTrainings())
+            setEmployees(await getEmployees())
+        }
+        load()
     }, [])
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!formData.title || !formData.startDate) {
             toast.error('Please fill required fields')
             return
         }
-        createTraining(formData)
+        await createTraining(formData)
         toast.success('Training created')
         setIsModalOpen(false)
-        setTrainings(getTrainings())
+        setTrainings(await getTrainings())
     }
 
-    const handleEnroll = (trainingId, empId) => {
-        enrollInTraining(trainingId, empId)
+    const handleEnroll = async (trainingId, empId) => {
+        await enrollInTraining(trainingId, empId)
         toast.success('Enrolled successfully')
-        setTrainings(getTrainings())
+        setTrainings(await getTrainings())
     }
 
     const categories = [

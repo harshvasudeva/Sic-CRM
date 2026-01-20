@@ -14,19 +14,22 @@ function Departments() {
     const [formData, setFormData] = useState({ name: '', budget: '' })
 
     useEffect(() => {
-        setDepartments(getDepartments())
-        setEmployees(getEmployees())
+        const load = async () => {
+            setDepartments(await getDepartments())
+            setEmployees(await getEmployees())
+        }
+        load()
     }, [])
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!formData.name) {
             toast.error('Department name is required')
             return
         }
-        createDepartment({ ...formData, budget: parseFloat(formData.budget) || 0, employeeCount: 0 })
+        await createDepartment({ ...formData, budget: parseFloat(formData.budget) || 0, employeeCount: 0 })
         toast.success('Department created')
         setIsModalOpen(false)
-        setDepartments(getDepartments())
+        setDepartments(await getDepartments())
     }
 
     const getHeadName = (id) => {

@@ -12,17 +12,22 @@ function Announcements() {
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [formData, setFormData] = useState({ title: '', content: '', priority: 'medium', departments: ['all'], expiresAt: '', pinned: false })
 
-    useEffect(() => { setAnnouncements(getAnnouncements()) }, [])
+    useEffect(() => {
+        const load = async () => {
+            setAnnouncements(await getAnnouncements())
+        }
+        load()
+    }, [])
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!formData.title || !formData.content) {
             toast.error('Please fill required fields')
             return
         }
-        createAnnouncement({ ...formData, author: 'emp-004' })
+        await createAnnouncement({ ...formData, author: 'emp-004' })
         toast.success('Announcement posted')
         setIsModalOpen(false)
-        setAnnouncements(getAnnouncements())
+        setAnnouncements(await getAnnouncements())
     }
 
     const priorities = [

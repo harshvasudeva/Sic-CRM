@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
     Plus,
@@ -37,6 +38,14 @@ function ProductList() {
     useEffect(() => {
         loadProducts()
     }, [])
+
+    const location = useLocation()
+    useEffect(() => {
+        const params = new URLSearchParams(location.search)
+        if (params.get('action') === 'create') {
+            setIsModalOpen(true)
+        }
+    }, [location])
 
     const handleEdit = (product) => {
         setEditingProduct(product)

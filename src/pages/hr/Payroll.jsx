@@ -12,9 +12,10 @@ function Payroll() {
     const [employees, setEmployees] = useState([])
     const [period, setPeriod] = useState('2026-01')
 
-    const loadData = () => {
-        setPayroll(getPayroll({ period }))
-        setEmployees(getEmployees())
+    const loadData = async () => {
+        const filters = period ? { period } : {}
+        setPayroll(await getPayroll(filters))
+        setEmployees(await getEmployees())
     }
 
     useEffect(() => { loadData() }, [period])

@@ -22,30 +22,30 @@ function Attendance() {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
     const [selectedEmployee, setSelectedEmployee] = useState('')
 
-    const loadData = () => {
+    const loadData = async () => {
         const filters = {}
         if (selectedEmployee) filters.employeeId = selectedEmployee
         if (selectedDate) filters.date = selectedDate
 
-        const allAttendance = getAttendance(filters)
+        const allAttendance = await getAttendance(filters)
         setAttendance(allAttendance)
-        setEmployees(getEmployees())
+        setEmployees(await getEmployees())
     }
 
     useEffect(() => {
         loadData()
     }, [selectedDate, selectedEmployee])
 
-    const handleCheckIn = (employeeId) => {
-        checkIn(employeeId)
+    const handleCheckIn = async (employeeId) => {
+        await checkIn(employeeId)
         toast.success('Checked in successfully')
-        loadData()
+        await loadData()
     }
 
-    const handleCheckOut = (employeeId) => {
-        checkOut(employeeId)
+    const handleCheckOut = async (employeeId) => {
+        await checkOut(employeeId)
         toast.success('Checked out successfully')
-        loadData()
+        await loadData()
     }
 
     const getEmployeeName = (id) => {

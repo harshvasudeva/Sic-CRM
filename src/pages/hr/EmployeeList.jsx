@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
     Plus,
@@ -35,14 +35,22 @@ function EmployeeList() {
     const [filterType, setFilterType] = useState('')
     const [viewMode, setViewMode] = useState('table') // table | grid
 
-    const loadData = () => {
-        setEmployees(getEmployees())
-        setDepartments(getDepartments())
+    const loadData = async () => {
+        setEmployees(await getEmployees())
+        setDepartments(await getDepartments())
     }
 
     useEffect(() => {
         loadData()
     }, [])
+
+    const location = useLocation()
+    useEffect(() => {
+        const params = new URLSearchParams(location.search)
+        if (params.get('action') === 'create') {
+            setIsModalOpen(true)
+        }
+    }, [location])
 
     const handleEdit = (employee) => {
         setEditingEmployee(employee)

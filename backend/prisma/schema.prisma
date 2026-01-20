@@ -90,6 +90,8 @@ model Expense {
   user          User?    @relation(fields: [approvedBy], references: [id])
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  employeeId    String?
+  employee      Employee? @relation(fields: [employeeId], references: [id])
 }
 
 // Accounting: Fixed Assets
@@ -700,5 +702,293 @@ model VendorEvaluation {
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+// ==================== HR MODULE MODELS ====================
+
+model Department {
+  id            String     @id @default(uuid())
+  departmentName String    @unique
+  headId        String?    // Employee ID of the head
+  head          Employee?  @relation("DepartmentHead", fields: [headId], references: [id])
+  parentDepartmentId String?
+  parentDepartment Department? @relation("DepartmentHierarchy", fields: [parentDepartmentId], references: [id])
+  childDepartments Department[] @relation("DepartmentHierarchy")
+  
+  description   String?
+  budget        Float      @default(0)
+  currency      String     @default("USD")
+  
+  employees     Employee[] @relation("EmployeeDepartment")
+  
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Employee {
+  id              String   @id @default(uuid())
+  employeeId      String   @unique // Custom ID like EMP-2024-001
+  firstName       String
+  lastName        String
+  email           String   @unique
+  phone           String?
+  
+  // Job Details
+  departmentId    String?
+  department      Department? @relation("EmployeeDepartment", fields: [departmentId], references: [id])
+  position        String
+  employmentType  String   // full-time, part-time, contract, intern
+  status          String   @default("active") // active, on-leave, terminated, resigned
+  hireDate        DateTime
+  probationEndDate DateTime?
+  terminationDate DateTime?
+  
+  // Reporting Line
+  managerId       String?
+  manager         Employee? @relation("Manager", fields: [managerId], references: [id])
+  directReports   Employee[] @relation("Manager")
+  
+  // Compensation
+  salary          Float
+  currency        String   @default("USD")
+  bankAccount     String?
+  bankName        String?
+  taxId           String?
+  
+  // Personal Info
+  dateOfBirth     DateTime?
+  gender          String?
+  nationality     String?
+  address         String?
+  emergencyContact Json?   // { name, phone, relation }
+  
+  // Relations
+  departmentHeaded Department[] @relation("DepartmentHead")
+  attendance       Attendance[]
+  leaves           LeaveRequest[]
+  payrolls         Payroll[]
+  reviewsTo        PerformanceReview[] @relation("Reviewee")
+  reviewsFrom      PerformanceReview[] @relation("Reviewer")
+  expenses         Expense[]
+  
+  // Phase 1 Extensions
+  timeEntries      TimeEntry[]
+  assets           Asset[]
+  
+  // Auth Link (if they have login access)
+  userId           String?  @unique
+  // user          User?    @relation(fields: userId, references: id) // Uncomment if linking to User model directly
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  TrainingsEnrolled Training[]
+}
+
+model Attendance {
+  id          String   @id @default(uuid())
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  date        DateTime // Store date part mostly
+  checkIn     DateTime?
+  checkOut    DateTime?
+  status      String   @default("present") // present, absent, late, half-day, on-leave
+  workHours   Float    @default(0)
+  overtime    Float    @default(0)
+  notes       String?
+  ipAddress   String?  // For geofencing validation if needed
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([employeeId, date]) // One record per employee per day
+}
+
+model LeaveRequest {
+  id          String   @id @default(uuid())
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  leaveType   String   // annual, sick, casual, maternity, unpaid
+  startDate   DateTime
+  endDate     DateTime
+  totalDays   Float
+  reason      String?
+  status      String   @default("pending") // pending, approved, rejected
+  approvedBy  String?  // Employee ID or User ID
+  rejectionReason String?
+  documents   String[] // URLs to uploaded medical certs etc.
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Payroll {
+  id          String   @id @default(uuid())
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  period      String   // e.g., "2024-01" or "Jan 2024"
+  startPeriod DateTime
+  endPeriod   DateTime
+  
+  // Earnings
+  basicSalary Float
+  allowances  Json?    // { hra: 1000, transport: 500 }
+  overtimePay Float    @default(0)
+  bonus       Float    @default(0)
+  grossSalary Float
+  
+  // Deductions
+  tax         Float    @default(0)
+  insurance   Float    @default(0)
+  pf          Float    @default(0) // Provident Fund
+  loanRepayment Float  @default(0)
+  totalDeductions Float
+  
+  netSalary   Float
+  status      String   @default("draft") // draft, generated, paid
+  paymentDate DateTime?
+  paymentMethod String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([employeeId, period])
+}
+
+model PerformanceReview {
+  id          String   @id @default(uuid())
+  revieweeId  String
+  reviewee    Employee @relation("Reviewee", fields: [revieweeId], references: [id])
+  reviewerId  String
+  reviewer    Employee @relation("Reviewer", fields: [reviewerId], references: [id])
+  
+  period      String   // e.g., "Q4 2023", "2024 Annual"
+  reviewDate  DateTime
+  
+  ratings     Json     // { productivity: 5, communication: 4, ... }
+  goals       Json     // [{ goal: "...", status: "achieved" }]
+  feedback    String?
+  overallScore Float
+  status      String   @default("draft") // draft, shared, acknowledged, final
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Training {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  trainer     String?
+  type        String   // internal, external, online
+  startDate   DateTime
+  endDate     DateTime
+  durationHours Float
+  cost        Float    @default(0)
+  status      String   @default("scheduled") // scheduled, in-progress, completed, cancelled
+  
+  attendees   Employee[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Announcement {
+  id          String   @id @default(uuid())
+  title       String
+  content     String
+  authorId    String?  // UserId
+  targetDepartments String[] // Array of Dept IDs or "ALL"
+  priority    String   @default("normal") // low, normal, high, critical
+  isActive    Boolean  @default(true)
+  validUntil  DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Modify Expense model to link to Employee optionally
+// Note: Expense is defined earlier, we can't easily modify it in append mode without re-defining.
+// For now, we will assume the relation can be added via a separate migration or manual edit if needed, 
+// but since we are appending, we can't modify the existing Expense block above.
+// However, we added `expenses Expense[]` to Employee model, which requires `employeeId` on Expense.
+// ==================== PHASE 1: HR & CRM EXTENSIONS ====================
+
+model TimeEntry {
+  id          String   @id @default(uuid())
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  projectId   String?  // Can link to a Project model later
+  description String?
+  startTime   DateTime
+  endTime     DateTime?
+  duration    Int?     // In minutes
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model JobPosting {
+  id          String   @id @default(uuid())
+  title       String
+  department  String
+  type        String   // Full-time, Part-time
+  location    String   // Remote, On-site
+  description String
+  requirements String?
+  status      String   @default("open") // open, closed, draft
+  
+  candidates  Candidate[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Candidate {
+  id          String   @id @default(uuid())
+  name        String
+  email       String
+  phone       String?
+  resumeUrl   String?
+  status      String   @default("applied") // applied, screening, interview, offer, hired, rejected
+  
+  jobPostingId String?
+  jobPosting   JobPosting? @relation(fields: [jobPostingId], references: [id])
+  
+  rating      Int?
+  notes       String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Asset {
+  id           String   @id @default(uuid())
+  assetNumber  String   @unique
+  name         String
+  type         String   // Laptop, Monitor, Phone, Furniture
+  serialNumber String?
+  purchaseDate DateTime?
+  purchasePrice Float?
+  value        Float?
+  status       String   @default("in-stock") // in-stock, assigned, repair, retired
+  
+  assignedTo   String?
+  employee     Employee? @relation(fields: [assignedTo], references: [id])
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model SalesScript {
+  id          String   @id @default(uuid())
+  title       String
+  stage       String   // prospecting, discovery, closing, objection
+  content     String   // Script body with placeholders
+  tags        String[]
+  
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 

@@ -20,16 +20,18 @@ import { useState } from 'react'
 import HelpModal from './HelpModal'
 
 const navItems = [
-    { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/sales', icon: ShoppingCart, label: 'Sales' },
-    { path: '/products', icon: Package, label: 'Products' },
-    { path: '/purchase', icon: Truck, label: 'Purchase' },
-    { path: '/accounting', icon: Calculator, label: 'Accounting' },
-    { path: '/inventory', icon: Package, label: 'Inventory' },
-    { path: '/manufacturing', icon: Factory, label: 'Manufacturing' },
-    { path: '/specialized', icon: Sparkles, label: 'Specialized' },
-    { path: '/reports', icon: BarChart3, label: 'Reports' },
-    { path: '/settings', icon: Settings, label: 'Settings' }
+  { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { path: '/sales', icon: ShoppingCart, label: 'Sales' },
+  { path: '/products', icon: Package, label: 'Products' },
+  { path: '/purchase', icon: Truck, label: 'Purchase' },
+  { path: '/accounting', icon: Calculator, label: 'Accounting' },
+  { path: '/inventory', icon: Package, label: 'Inventory' },
+  { path: '/hr', icon: Users, label: 'HR' },
+  { path: '/crm', icon: UserCircle, label: 'CRM' },
+  { path: '/manufacturing', icon: Factory, label: 'Manufacturing' },
+  { path: '/specialized', icon: Sparkles, label: 'Specialized' },
+  { path: '/reports', icon: BarChart3, label: 'Reports' },
+  { path: '/settings', icon: Settings, label: 'Settings' }
 ]
 
 function Sidebar() {

@@ -68,6 +68,7 @@ function CommandPalette({ isOpen, onClose, onSelect }) {
     const [searchTerm, setSearchTerm] = useState('')
     const [selectedIndex, setSelectedIndex] = useState(0)
     const [activeTab, setActiveTab] = useState('vouchers')
+    const [backendResults, setBackendResults] = useState([])
 
     const tabs = [
         { id: 'vouchers', name: 'Vouchers', icon: FileText },
@@ -87,26 +88,38 @@ function CommandPalette({ isOpen, onClose, onSelect }) {
         system: SYSTEM_ACTIONS,
     }
 
-    const currentActions = allActions[activeTab] || []
+    // Backend search
+    useEffect(() => {
+        if (searchTerm.length < 2) {
+            setBackendResults([])
+            return
+        }
+        const timer = setTimeout(async () => {
+            try {
+                const res = await fetch(`http://localhost:5000/api/search?q=${searchTerm}`)
+                const data = await res.json()
+                setBackendResults(data.map(item => ({
+                    id: `bs-${item.link}`,
+                    name: item.title,
+                    icon: Search,
+                    route: item.link,
+                    color: 'bg-indigo-600',
+                    shortcut: item.type
+                })))
+            } catch (e) {
+                console.error(e)
+            }
+        }, 300)
+        return () => clearTimeout(timer)
+    }, [searchTerm])
+
+    const currentActions = [...(allActions[activeTab] || []), ...backendResults]
 
     const filteredActions = currentActions.filter(action =>
         !searchTerm ||
         action.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         action.id.toLowerCase().includes(searchTerm.toLowerCase())
     )
-
-    useEffect(() => {
-        if (isOpen) {
-            document.addEventListener('keydown', handleKeyDown)
-        }
-        return () => {
-            document.removeEventListener('keydown', handleKeyDown)
-        }
-    }, [isOpen, filteredActions, searchTerm])
-
-    useEffect(() => {
-        setSelectedIndex(0)
-    }, [activeTab, searchTerm])
 
     const handleKeyDown = useCallback((e) => {
         if (!isOpen) return
@@ -135,6 +148,19 @@ function CommandPalette({ isOpen, onClose, onSelect }) {
             setActiveTab(tabs[nextIndex].id)
         }
     }, [isOpen, filteredActions, selectedIndex, activeTab, onClose])
+
+    useEffect(() => {
+        if (isOpen) {
+            document.addEventListener('keydown', handleKeyDown)
+        }
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown)
+        }
+    }, [isOpen, handleKeyDown])
+
+    useEffect(() => {
+        setSelectedIndex(0)
+    }, [activeTab, searchTerm])
 
     const handleSelect = (action) => {
         if (action.action) {
@@ -215,8 +241,8 @@ function CommandPalette({ isOpen, onClose, onSelect }) {
                                     key={action.id}
                                     onClick={() => handleSelect(action)}
                                     className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${index === selectedIndex
-                                        ? 'bg-blue-600'
-                                        : 'bg-gray-800 hover:bg-gray-750'
+                                            ? 'bg-blue-600'
+                                            : 'bg-gray-800 hover:bg-gray-750'
                                         }`}
                                 >
                                     {renderActionIcon(action)}

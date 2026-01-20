@@ -8,6 +8,8 @@ import { ShortcutHelp } from './ShortcutHelp'
 import OnboardingTour from './OnboardingTour'
 import Calculator from './Calculator'
 import { useGlobalTallyShortcuts } from '../hooks/useTallyShortcuts'
+import TimeTracker from './hr/TimeTracker'
+import SalesScripts from './crm/SalesScripts'
 
 function Layout() {
     const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
@@ -132,6 +134,9 @@ function Layout() {
             <ShortcutHelp isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
 
             <Calculator isOpen={calculatorOpen} onClose={() => setCalculatorOpen(false)} />
+
+            <TimeTracker />
+            <SalesScripts />
 
             <OnboardingTour
                 isOpen={onboardingOpen}

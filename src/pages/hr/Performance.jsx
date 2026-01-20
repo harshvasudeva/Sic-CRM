@@ -8,8 +8,11 @@ function Performance() {
     const [employees, setEmployees] = useState([])
 
     useEffect(() => {
-        setReviews(getPerformanceReviews())
-        setEmployees(getEmployees())
+        const load = async () => {
+            setReviews(await getPerformanceReviews())
+            setEmployees(await getEmployees())
+        }
+        load()
     }, [])
 
     const getEmployee = (id) => employees.find(e => e.id === id)
