@@ -30,20 +30,37 @@ function HRDashboard() {
   const [recentLeaves, setRecentLeaves] = useState([])
   const [announcements, setAnnouncements] = useState([])
   const [employees, setEmployees] = useState([])
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     const load = async () => {
-      setStats(await getHRStats())
-      const leaves = await getLeaves({ status: 'pending' })
-      setRecentLeaves(leaves.slice(0, 5))
-      const anns = await getAnnouncements()
-      setAnnouncements(anns.filter(a => a.pinned || new Date(a.expiresAt) > new Date()).slice(0, 3))
-      setEmployees(await getEmployees())
+      try {
+        const statsData = await getHRStats()
+        setStats(statsData || { departmentDistribution: {} })
+
+        const leaves = await getLeaves({ status: 'pending' })
+        setRecentLeaves(Array.isArray(leaves) ? leaves.slice(0, 5) : [])
+
+        const anns = await getAnnouncements()
+        const validAnns = Array.isArray(anns) ? anns : []
+        setAnnouncements(validAnns.filter(a => a?.pinned || (a?.expiresAt && new Date(a.expiresAt) > new Date())).slice(0, 3))
+
+        const emps = await getEmployees()
+        setEmployees(Array.isArray(emps) ? emps : [])
+      } catch (err) {
+        console.error('HRDashboard load error:', err)
+        setError(err.message)
+        // Set safe defaults
+        setStats({ totalEmployees: 0, activeEmployees: 0, onLeave: 0, newHires: 0, departments: 0, pendingLeaves: 0, averageTenure: 0, todayAttendance: 0, departmentDistribution: {} })
+      }
     }
     load()
   }, [])
 
-  if (!stats) return <div>Loading...</div>
+  if (!stats) return <div className="p-6">Loading HR Dashboard...</div>
+
+  // Safe access to departmentDistribution
+  const deptDistribution = stats?.departmentDistribution || {}
 
   const statCards = [
     { icon: Users, label: 'Total Employees', value: stats.totalEmployees, color: 'blue', link: '/hr/employees' },
@@ -204,7 +221,7 @@ function HRDashboard() {
           <h3><Building2 size={18} /> Department Distribution</h3>
         </div>
         <div className="dept-distribution">
-          {Object.entries(stats.departmentDistribution).map(([dept, count]) => (
+          {Object.entries(deptDistribution).map(([dept, count]) => (
             <div key={dept} className="dept-bar">
               <div className="dept-info">
                 <span className="dept-name">{dept}</span>

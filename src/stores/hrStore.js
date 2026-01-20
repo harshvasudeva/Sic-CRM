@@ -139,4 +139,64 @@ export async function getPerformanceReviews() { return [] }
 export async function getExpenses() { return [] }
 export async function submitExpense(data) { return data }
 export async function approveExpense(id) { return { id, status: 'approved' } }
-export async function getHRStats() { return {} }
+
+// Safe defaults for HR Stats
+export async function getHRStats() {
+    try {
+        const [employees, departments, leaves, attendance] = await Promise.all([
+            getEmployees(),
+            getDepartments(),
+            getLeaves(),
+            getAttendance()
+        ])
+
+        const empList = Array.isArray(employees) ? employees : []
+        const deptList = Array.isArray(departments) ? departments : []
+        const leaveList = Array.isArray(leaves) ? leaves : []
+        const attendanceList = Array.isArray(attendance) ? attendance : []
+
+        // Build department distribution safely
+        const departmentDistribution = {}
+        empList.forEach(emp => {
+            const deptName = emp.department?.departmentName || 'Unassigned'
+            departmentDistribution[deptName] = (departmentDistribution[deptName] || 0) + 1
+        })
+
+        return {
+            totalEmployees: empList.length,
+            activeEmployees: empList.filter(e => e.status === 'active').length,
+            onLeave: leaveList.filter(l => l.status === 'approved').length,
+            newHires: empList.filter(e => {
+                const hired = new Date(e.hireDate)
+                const now = new Date()
+                return hired.getMonth() === now.getMonth() && hired.getFullYear() === now.getFullYear()
+            }).length,
+            departments: deptList.length,
+            pendingLeaves: leaveList.filter(l => l.status === 'pending').length,
+            averageTenure: empList.length > 0 ? Math.round(empList.reduce((acc, e) => {
+                const years = (new Date() - new Date(e.hireDate)) / (365.25 * 24 * 60 * 60 * 1000)
+                return acc + years
+            }, 0) / empList.length) : 0,
+            todayAttendance: attendanceList.filter(a => {
+                const today = new Date().toISOString().split('T')[0]
+                return a.date === today && a.checkIn
+            }).length,
+            departmentDistribution
+        }
+    } catch (err) {
+        console.error('Error computing HR stats:', err)
+        // Return safe defaults on error
+        return {
+            totalEmployees: 0,
+            activeEmployees: 0,
+            onLeave: 0,
+            newHires: 0,
+            departments: 0,
+            pendingLeaves: 0,
+            averageTenure: 0,
+            todayAttendance: 0,
+            departmentDistribution: {}
+        }
+    }
+}
+
