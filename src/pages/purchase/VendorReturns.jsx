@@ -5,7 +5,7 @@ import DataTable from '../../components/DataTable'
 import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
 import { useToast } from '../../components/Toast'
-import { getVendors } from '../../stores/purchaseStore'
+import { getVendors, getVendorReturns, createVendorReturn, updateVendorReturn, deleteVendorReturn, getGRNs } from '../../stores/purchaseStore'
 import { formatCurrency } from '../../stores/settingsStore'
 
 function VendorReturns() {
@@ -22,12 +22,7 @@ function VendorReturns() {
     }, [])
 
     const loadData = () => {
-        const stored = localStorage.getItem('erp_vendorReturns')
-        setReturns(stored ? JSON.parse(stored) : [])
-    }
-
-    const saveData = () => {
-        localStorage.setItem('erp_vendorReturns', JSON.stringify(returns))
+        setReturns(getVendorReturns())
     }
 
     const handleAdd = () => {
@@ -55,30 +50,22 @@ function VendorReturns() {
     }
 
     const handleSave = () => {
-        const newReturn = {
-            ...formData,
-            id: editItem?.id || `ret-${Date.now()}`,
-            createdAt: editItem?.createdAt || new Date().toISOString().split('T')[0]
-        }
-
         if (editItem) {
-            setReturns(returns.map(r => r.id === editItem.id ? newReturn : r))
+            updateVendorReturn(editItem.id, formData)
             toast.success('Return updated')
         } else {
-            setReturns([...returns, newReturn])
+            createVendorReturn(formData)
             toast.success('Return created')
         }
         setIsModalOpen(false)
         setEditItem(null)
-        saveData()
         loadData()
     }
 
     const handleDelete = (id) => {
         if (confirm('Are you sure?')) {
-            setReturns(returns.filter(r => r.id !== id))
+            deleteVendorReturn(id)
             toast.success('Return deleted')
-            saveData()
             loadData()
         }
     }
@@ -87,8 +74,8 @@ function VendorReturns() {
         { key: 'returnNumber', label: 'Return #', render: (v) => <span className="return-number">{v}</span> },
         { key: 'returnDate', label: 'Return Date', render: (v) => <span>{new Date(v).toLocaleDateString()}</span> },
         {
-            key: 'vendorId', label: 'Vendor', render: (v) => {
-                const vendor = getVendors().find(v => v.id === v)
+            key: 'vendorId', label: 'Vendor', render: (vendorId) => {
+                const vendor = getVendors().find(v => v.id === vendorId)
                 return vendor ? vendor.name : '-'
             }
         },

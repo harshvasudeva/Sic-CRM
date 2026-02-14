@@ -5,7 +5,7 @@ import DataTable from '../../components/DataTable'
 import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
 import { useToast } from '../../components/Toast'
-import { getVendorEvaluations, createVendorEvaluation, updateVendorEvaluation, getVendors } from '../../stores/purchaseStore'
+import { getVendorEvaluations, createVendorEvaluation, updateVendorEvaluation, deleteVendorEvaluation, getVendors } from '../../stores/purchaseStore'
 
 function VendorEvaluations() {
     const toast = useToast()
@@ -64,9 +64,7 @@ function VendorEvaluations() {
 
     const handleDelete = (id) => {
         if (confirm('Are you sure?')) {
-            const stored = localStorage.getItem('erp_vendorEvaluations')
-            const evaluations = stored ? JSON.parse(stored) : []
-            localStorage.setItem('erp_vendorEvaluations', JSON.stringify(evaluations.filter(e => e.id !== id)))
+            deleteVendorEvaluation(id)
             toast.success('Evaluation deleted')
             loadData()
         }
@@ -81,8 +79,8 @@ function VendorEvaluations() {
 
     const columns = [
         { key: 'evaluationDate', label: 'Date', render: (v) => <span>{new Date(v).toLocaleDateString()}</span> },
-        { key: 'vendorId', label: 'Vendor', render: (v) => {
-            const vendor = getVendors().find(v => v.id === v)
+        { key: 'vendorId', label: 'Vendor', render: (vendorId) => {
+            const vendor = getVendors().find(v => v.id === vendorId)
             return vendor ? vendor.name : '-'
         }},
         { key: 'qualityScore', label: 'Quality', render: (v) => <span className={`score-badge ${getScoreColor(v)}`}>{v}/10</span> },

@@ -86,6 +86,16 @@ import Opportunities from './pages/crm/Opportunities'
 import Contacts from './pages/crm/Contacts'
 import Activities from './pages/crm/Activities'
 
+// Influencer Module
+import InfluencerDashboard from './pages/influencer/InfluencerDashboard'
+import CreatorDatabase from './pages/influencer/CreatorDatabase'
+import CampaignDashboard from './pages/influencer/CampaignDashboard'
+import CampaignGenerator from './pages/influencer/CampaignGenerator'
+import OutreachDashboard from './pages/influencer/OutreachDashboard'
+import SalesCRM from './pages/influencer/SalesCRM'
+import ContentScheduling from './pages/influencer/ContentScheduling'
+import PaymentInvoicing from './pages/influencer/PaymentInvoicing'
+
 import Manufacturing from './pages/Manufacturing'
 import BillOfMaterials from './pages/manufacturing/BillOfMaterials'
 import WorkCenters from './pages/manufacturing/WorkCenters'
@@ -212,6 +222,18 @@ function App() {
               <Route path="crm/contacts" element={<Contacts />} />
               <Route path="crm/contacts/new" element={<Contacts />} />
               <Route path="crm/activities" element={<Activities />} />
+            </Route>
+
+            {/* Influencer Module Routes */}
+            <Route element={<ModuleErrorBoundary moduleName="Influencer"><Outlet /></ModuleErrorBoundary>}>
+              <Route path="influencer" element={<InfluencerDashboard />} />
+              <Route path="influencer/creators" element={<CreatorDatabase />} />
+              <Route path="influencer/campaigns" element={<CampaignDashboard />} />
+              <Route path="influencer/generator" element={<CampaignGenerator />} />
+              <Route path="influencer/outreach" element={<OutreachDashboard />} />
+              <Route path="influencer/sales" element={<SalesCRM />} />
+              <Route path="influencer/content" element={<ContentScheduling />} />
+              <Route path="influencer/invoices" element={<PaymentInvoicing />} />
             </Route>
 
             {/* HR Module Routes */}

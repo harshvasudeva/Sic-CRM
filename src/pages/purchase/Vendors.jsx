@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Search, Filter, MoreVertical, FileText, Trash2, Edit2, Download, Upload } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Plus, Search, Filter, MoreVertical, FileText, Trash2, Edit2, Download, Upload, Star } from 'lucide-react'
 import PageHelp from '../../components/PageHelp'
-import { getVendors, deleteVendor } from '../../stores/purchaseStore'
+import { getVendors, createVendor, updateVendor, deleteVendor } from '../../stores/purchaseStore'
 import DataTable from '../../components/DataTable'
 import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
@@ -114,14 +115,14 @@ function Vendors() {
                 </div>
             )
         },
-        { key: 'creditLimit', label: 'Credit Limit', render: (v) => <span className="amount">${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v)}</span> },
+        { key: 'creditLimit', label: 'Credit Limit', render: (v) => <span className="amount">₹{Number(v || 0).toLocaleString('en-IN')}</span> },
         { key: 'status', label: 'Status', render: (v) => <span className={`status-badge ${v}`}>{v}</span> },
         { key: 'createdAt', label: 'Created' },
         {
             key: 'actions', label: '', sortable: false,
             render: (_, row) => (
                 <div className="action-buttons">
-                    <button className="action-btn edit" onClick={() => handleEdit(row)}><Edit size={16} /></button>
+                    <button className="action-btn edit" onClick={() => handleEdit(row)}><Edit2 size={16} /></button>
                     <button className="action-btn delete" onClick={() => setDeleteConfirm(row)}><Trash2 size={16} /></button>
                 </div>
             )

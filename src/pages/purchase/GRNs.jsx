@@ -71,12 +71,12 @@ function GRNs() {
         { key: 'grnNumber', label: 'GRN Number', render: (v) => <span className="grn-number">{v}</span> },
         { key: 'grnDate', label: 'GRN Date', render: (v) => <span>{new Date(v).toLocaleDateString()}</span> },
         { key: 'poNumber', label: 'PO Number', render: (v) => <span className="po-number">{v}</span> },
-        { key: 'vendorId', label: 'Vendor', render: (v) => {
-            const vendor = getVendors().find(v => v.id === v)
+        { key: 'vendorId', label: 'Vendor', render: (vendorId) => {
+            const vendor = getVendors().find(v => v.id === vendorId)
             return vendor ? vendor.name : '-'
         }},
         { key: 'totalQty', label: 'Total Qty', render: (v) => <span className="qty">{v} units</span> },
-        { key: 'totalAmount', label: 'Amount', render: (v) => <span className="amount">${v.toLocaleString()}</span> },
+        { key: 'totalAmount', label: 'Amount', render: (v) => <span className="amount">₹{(v || 0).toLocaleString('en-IN')}</span> },
         { key: 'status', label: 'Status', render: (v) => (
             <span className={`status-badge ${v}`}>
                 {v.charAt(0).toUpperCase() + v.slice(1)}

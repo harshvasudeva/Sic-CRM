@@ -10,7 +10,11 @@ import {
     ArrowDownUp,
     Settings,
     ClipboardCheck,
-    Cloud
+    Cloud,
+    Users,
+    RotateCcw,
+    Star,
+    PackageCheck
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import WorkflowDiagram from '../components/WorkflowDiagram'
@@ -54,46 +58,146 @@ function Purchase() {
                 <WorkflowDiagram steps={purchaseWorkflow} />
             </motion.div>
 
+            {/* Quick Access */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+                <h3 style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>Quick Access</h3>
+                <div className="purchase-cards-grid">
+                    <Link to="/purchase/vendors" className="purchase-card">
+                        <div className="purchase-card-icon" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+                            <Users size={24} />
+                        </div>
+                        <div className="purchase-card-content">
+                            <h4 className="purchase-card-title">Vendors</h4>
+                            <p className="purchase-card-subtitle">Manage supplier directory</p>
+                        </div>
+                    </Link>
+
+                    <Link to="/purchase/requisitions" className="purchase-card">
+                        <div className="purchase-card-icon" style={{ background: 'linear-gradient(135deg, #f59e0b, #fb923c)' }}>
+                            <ClipboardCheck size={24} />
+                        </div>
+                        <div className="purchase-card-content">
+                            <h4 className="purchase-card-title">Requisitions</h4>
+                            <p className="purchase-card-subtitle">Request approvals for purchases</p>
+                        </div>
+                    </Link>
+
+                    <Link to="/purchase/rfqs" className="purchase-card">
+                        <div className="purchase-card-icon" style={{ background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)' }}>
+                            <FileText size={24} />
+                        </div>
+                        <div className="purchase-card-content">
+                            <h4 className="purchase-card-title">RFQs</h4>
+                            <p className="purchase-card-subtitle">Request for quotations</p>
+                        </div>
+                    </Link>
+
+                    <Link to="/purchase/orders" className="purchase-card">
+                        <div className="purchase-card-icon" style={{ background: 'linear-gradient(135deg, #10b981, #34d399)' }}>
+                            <ShoppingCart size={24} />
+                        </div>
+                        <div className="purchase-card-content">
+                            <h4 className="purchase-card-title">Purchase Orders</h4>
+                            <p className="purchase-card-subtitle">Create and track POs</p>
+                        </div>
+                    </Link>
+
+                    <Link to="/purchase/grns" className="purchase-card">
+                        <div className="purchase-card-icon" style={{ background: 'linear-gradient(135deg, #06b6d4, #22d3ee)' }}>
+                            <PackageCheck size={24} />
+                        </div>
+                        <div className="purchase-card-content">
+                            <h4 className="purchase-card-title">Goods Receipts</h4>
+                            <p className="purchase-card-subtitle">GRN & delivery tracking</p>
+                        </div>
+                    </Link>
+
+                    <Link to="/purchase/supplier-invoices" className="purchase-card">
+                        <div className="purchase-card-icon" style={{ background: 'linear-gradient(135deg, #ef4444, #f87171)' }}>
+                            <Receipt size={24} />
+                        </div>
+                        <div className="purchase-card-content">
+                            <h4 className="purchase-card-title">Supplier Invoices</h4>
+                            <p className="purchase-card-subtitle">Bills & 3-way matching</p>
+                        </div>
+                    </Link>
+
+                    <Link to="/purchase/returns" className="purchase-card">
+                        <div className="purchase-card-icon" style={{ background: 'linear-gradient(135deg, #f97316, #fb923c)' }}>
+                            <RotateCcw size={24} />
+                        </div>
+                        <div className="purchase-card-content">
+                            <h4 className="purchase-card-title">Vendor Returns</h4>
+                            <p className="purchase-card-subtitle">Returns and refunds</p>
+                        </div>
+                    </Link>
+
+                    <Link to="/purchase/evaluations" className="purchase-card">
+                        <div className="purchase-card-icon" style={{ background: 'linear-gradient(135deg, #eab308, #facc15)' }}>
+                            <Star size={24} />
+                        </div>
+                        <div className="purchase-card-content">
+                            <h4 className="purchase-card-title">Vendor Evaluations</h4>
+                            <p className="purchase-card-subtitle">Rate & review suppliers</p>
+                        </div>
+                    </Link>
+
+                    <Link to="/purchase/subscriptions" className="purchase-card">
+                        <div className="purchase-card-icon" style={{ background: 'linear-gradient(135deg, #8b5cf6, #d946ef)' }}>
+                            <Cloud size={24} />
+                        </div>
+                        <div className="purchase-card-content">
+                            <h4 className="purchase-card-title">Subscriptions</h4>
+                            <p className="purchase-card-subtitle">SaaS & recurring costs</p>
+                        </div>
+                    </Link>
+                </div>
+            </motion.div>
+
             {/* Key Features */}
             <FeatureSection icon={Settings} title="Key Features" delay={0.3}>
                 <div className="grid-2">
-                    <motion.div className="card" whileHover={{ scale: 1.02 }}>
-                        <div className="card-header">
-                            <div className="card-icon" style={{ background: 'linear-gradient(135deg, #10b981, #34d399)' }}>
-                                <ClipboardCheck size={24} />
+                    <Link to="/purchase/supplier-invoices" style={{ textDecoration: 'none', color: 'inherit' }}>
+                        <motion.div className="card" whileHover={{ scale: 1.02 }} style={{ cursor: 'pointer' }}>
+                            <div className="card-header">
+                                <div className="card-icon" style={{ background: 'linear-gradient(135deg, #10b981, #34d399)' }}>
+                                    <ClipboardCheck size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="card-title">Bill Matching</h3>
+                                    <p className="card-subtitle">Verify vendor invoices</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="card-title">Bill Matching</h3>
-                                <p className="card-subtitle">Verify vendor invoices</p>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '16px' }}>
+                                Automatically match vendor bills against purchase orders and receipts to ensure accuracy before payment.
+                            </p>
+                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                <span className="badge success">Auto-matching</span>
+                                <span className="badge">Discrepancy Alerts</span>
                             </div>
-                        </div>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '16px' }}>
-                            Automatically match vendor bills against purchase orders and receipts to ensure accuracy before payment.
-                        </p>
-                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            <span className="badge success">Auto-matching</span>
-                            <span className="badge">Discrepancy Alerts</span>
-                        </div>
-                    </motion.div>
+                        </motion.div>
+                    </Link>
 
-                    <motion.div className="card" whileHover={{ scale: 1.02 }}>
-                        <div className="card-header">
-                            <div className="card-icon" style={{ background: 'linear-gradient(135deg, #3b82f6, #06b6d4)' }}>
-                                <ArrowDownUp size={24} />
+                    <Link to="/purchase/supplier-invoices" style={{ textDecoration: 'none', color: 'inherit' }}>
+                        <motion.div className="card" whileHover={{ scale: 1.02 }} style={{ cursor: 'pointer' }}>
+                            <div className="card-header">
+                                <div className="card-icon" style={{ background: 'linear-gradient(135deg, #3b82f6, #06b6d4)' }}>
+                                    <ArrowDownUp size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="card-title">Three-Way Matching</h3>
+                                    <p className="card-subtitle">Complete verification</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="card-title">Three-Way Matching</h3>
-                                <p className="card-subtitle">Complete verification</p>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '16px' }}>
+                                Match PO, receipt, and vendor bill to ensure you only pay for what was ordered and received.
+                            </p>
+                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                <span className="badge info">PO Verification</span>
+                                <span className="badge warning">Receipt Check</span>
                             </div>
-                        </div>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '16px' }}>
-                            Match PO, receipt, and vendor bill to ensure you only pay for what was ordered and received.
-                        </p>
-                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            <span className="badge info">PO Verification</span>
-                            <span className="badge warning">Receipt Check</span>
-                        </div>
-                    </motion.div>
+                        </motion.div>
+                    </Link>
                 </div>
             </FeatureSection>
 
@@ -201,24 +305,26 @@ function Purchase() {
                         </motion.div>
                     </Link>
 
-                    <motion.div className="card" whileHover={{ scale: 1.02 }}>
-                        <div className="card-header">
-                            <div className="card-icon" style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)' }}>
-                                <ClipboardCheck size={24} />
+                    <Link to="/purchase/evaluations" style={{ textDecoration: 'none', color: 'inherit' }}>
+                        <motion.div className="card" whileHover={{ scale: 1.02 }} style={{ cursor: 'pointer' }}>
+                            <div className="card-header">
+                                <div className="card-icon" style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)' }}>
+                                    <Star size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="card-title">Vendor Performance</h3>
+                                    <p className="card-subtitle">Track vendor quality scores</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="card-title">Service Entry Sheets</h3>
-                                <p className="card-subtitle">Track intangible deliverables</p>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '16px' }}>
+                                Evaluate vendors on quality, delivery, pricing, and service to make informed procurement decisions.
+                            </p>
+                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                <span className="badge warning">Scorecards</span>
+                                <span className="badge warning">Performance History</span>
                             </div>
-                        </div>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '16px' }}>
-                            Verify completion of consulting hours, milestones, or project phases before approving payments.
-                        </p>
-                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            <span className="badge warning">Milestone Check</span>
-                            <span className="badge warning">Timesheets</span>
-                        </div>
-                    </motion.div>
+                        </motion.div>
+                    </Link>
                 </div>
             </FeatureSection>
 
@@ -230,12 +336,63 @@ function Purchase() {
                     { keys: ['G', 'P'], action: 'Go to Purchase Orders' }
                 ]}
                 walkthroughSteps={[
+                    { title: 'Quick Access', description: 'Click any card to navigate to that section.' },
                     { title: 'Workflow Diagram', description: 'Visualizes the flow from RFQ to Payment.' },
                     { title: 'Key Features', description: 'Highlights important capabilities like 3-Way Matching.' },
                     { title: 'Logistics', description: 'Learn about Drop Shipping and Delivery options.' }
                 ]}
                 videoUrl="#"
             />
+
+            <style>{`
+                .purchase-cards-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                    gap: 16px;
+                    margin-bottom: 32px;
+                }
+                .purchase-card {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    padding: 20px;
+                    background: var(--bg-card);
+                    border: 1px solid var(--border-color);
+                    border-radius: var(--radius-md);
+                    text-decoration: none;
+                    color: inherit;
+                    transition: all 0.2s ease;
+                }
+                .purchase-card:hover {
+                    transform: translateY(-2px);
+                    border-color: var(--accent-primary);
+                    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
+                }
+                .purchase-card-icon {
+                    width: 56px;
+                    height: 56px;
+                    border-radius: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    flex-shrink: 0;
+                }
+                .purchase-card-content {
+                    flex: 1;
+                }
+                .purchase-card-title {
+                    margin: 0 0 4px 0;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    color: var(--text-primary);
+                }
+                .purchase-card-subtitle {
+                    margin: 0;
+                    font-size: 0.85rem;
+                    color: var(--text-muted);
+                }
+            `}</style>
         </div>
     )
 }

@@ -93,8 +93,8 @@ function PurchaseRequisitions() {
             )
         },
         {
-            key: 'vendorId', label: 'Vendor', render: (v) => {
-                const vendor = getVendors().find(v => v.id === v)
+            key: 'vendorId', label: 'Vendor', render: (vendorId) => {
+                const vendor = getVendors().find(v => v.id === vendorId)
                 return vendor ? vendor.name : '-'
             }
         },

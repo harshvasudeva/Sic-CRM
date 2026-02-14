@@ -14,7 +14,8 @@ import {
   X,
   HelpCircle,
   Settings,
-  BarChart3
+  BarChart3,
+  Megaphone
 } from 'lucide-react'
 import { useState } from 'react'
 import HelpModal from './HelpModal'
@@ -28,6 +29,7 @@ const navItems = [
   { path: '/inventory', icon: Package, label: 'Inventory' },
   { path: '/hr', icon: Users, label: 'HR' },
   { path: '/crm', icon: UserCircle, label: 'CRM' },
+  { path: '/influencer', icon: Megaphone, label: 'Influencer' },
   { path: '/manufacturing', icon: Factory, label: 'Manufacturing' },
   { path: '/specialized', icon: Sparkles, label: 'Specialized' },
   { path: '/reports', icon: BarChart3, label: 'Reports' },

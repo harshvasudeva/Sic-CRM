@@ -77,8 +77,8 @@ function SupplierInvoices() {
         { key: 'invoiceDate', label: 'Invoice Date', render: (v) => <span>{new Date(v).toLocaleDateString()}</span> },
         { key: 'dueDate', label: 'Due Date', render: (v) => <span>{new Date(v).toLocaleDateString()}</span> },
         {
-            key: 'vendorId', label: 'Vendor', render: (v) => {
-                const vendor = getVendors().find(v => v.id === v)
+            key: 'vendorId', label: 'Vendor', render: (vendorId) => {
+                const vendor = getVendors().find(v => v.id === vendorId)
                 return vendor ? vendor.name : '-'
             }
         },
