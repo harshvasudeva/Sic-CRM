@@ -7,24 +7,36 @@ import CommandPalette from './CommandPalette'
 import { ShortcutHelp } from './ShortcutHelp'
 import OnboardingTour from './OnboardingTour'
 import Calculator from './Calculator'
+import Breadcrumbs from './Breadcrumbs'
 import { useGlobalTallyShortcuts } from '../hooks/useTallyShortcuts'
+import { useTheme } from '../hooks/useTheme'
 import TimeTracker from './hr/TimeTracker'
 import SalesScripts from './crm/SalesScripts'
+import { applyTheme, getSettings } from '../stores/settingsStore'
+import { usePageTitle } from '../hooks/usePageTitle'
+import OfflineBanner from './OfflineBanner'
 
 function Layout() {
+    usePageTitle()
     const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
     const [onboardingOpen, setOnboardingOpen] = useState(false)
     const [helpOpen, setHelpOpen] = useState(false)
     const [calculatorOpen, setCalculatorOpen] = useState(false)
+    const [focusMode, setFocusMode] = useState(false)
+    const { theme } = useTheme()
 
     // Enable all Tally shortcuts globally (F-keys + sequences like DAL, DAS, etc.)
     useGlobalTallyShortcuts()
+
+    // Apply theme on mount
+    useEffect(() => {
+        applyTheme()
+    }, [theme])
 
     // Check if first visit for onboarding
     useEffect(() => {
         const onboardingStatus = localStorage.getItem('sic-crm-onboarding')
         if (!onboardingStatus) {
-            // Show onboarding after a short delay
             setTimeout(() => setOnboardingOpen(true), 1000)
         }
     }, [])
@@ -32,8 +44,7 @@ function Layout() {
     // Global keyboard shortcuts
     useEffect(() => {
         const handleKeyDown = (e) => {
-            // Don't trigger when typing in inputs
-            const isInput = ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName) ||
+            const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName) ||
                 document.activeElement.isContentEditable
 
             // Ctrl+K or Cmd+K to open command palette
@@ -71,6 +82,13 @@ function Layout() {
                 return
             }
 
+            // Ctrl+B: Focus mode (collapse sidebar)
+            if ((e.ctrlKey || e.metaKey) && e.key === 'b' && !isInput) {
+                e.preventDefault()
+                setFocusMode(f => !f)
+                return
+            }
+
             // ? to open help (when not in input)
             if (e.key === '?' && !isInput) {
                 e.preventDefault()
@@ -82,7 +100,6 @@ function Layout() {
         return () => window.removeEventListener('keydown', handleKeyDown)
     }, [])
 
-    // Show export toast notification
     const showExportToast = () => {
         const toast = document.createElement('div')
         toast.innerHTML = `
@@ -101,7 +118,7 @@ function Layout() {
                 z-index: 10000;
                 animation: slideUp 0.3s ease;
             ">
-                📤 Export feature - Use the Export button on each page
+                Export feature - Use the Export button on each page
             </div>
             <style>
                 @keyframes slideUp {
@@ -115,10 +132,13 @@ function Layout() {
     }
 
     return (
-        <div className="app-layout">
-            <Sidebar onHelpOpen={() => setHelpOpen(true)} />
+        <div className={`app-layout ${focusMode ? 'focus-mode' : ''}`}>
+            <Sidebar onHelpOpen={() => setHelpOpen(true)} collapsed={focusMode} onToggle={() => setFocusMode(f => !f)} />
             <main className="main-content">
-                <Header />
+                <Header onToggleFocus={() => setFocusMode(f => !f)} focusMode={focusMode} />
+                <div style={{ padding: '0 24px' }}>
+                    <Breadcrumbs />
+                </div>
                 <Outlet />
             </main>
 
@@ -137,6 +157,7 @@ function Layout() {
 
             <TimeTracker />
             <SalesScripts />
+            <OfflineBanner />
 
             <OnboardingTour
                 isOpen={onboardingOpen}
@@ -148,4 +169,3 @@ function Layout() {
 }
 
 export default Layout
-

@@ -19,7 +19,12 @@ const defaultSettings = {
     baseCurrency: 'USD',
     locale: 'en-IN',
     dateFormat: 'DD/MM/YYYY',
-    theme: 'dark',
+    theme: 'dark',         // 'dark' | 'light' | 'system'
+    density: 'comfortable', // 'compact' | 'comfortable' | 'spacious'
+    defaultLandingPage: '/', // user-configurable landing page
+    focusMode: false,
+    showRelativeDates: true,
+    sidebarCollapsedGroups: [], // collapsed nav groups
     companyName: 'Sic CRM',
 
     // Phase 1: Accounting Compliance
@@ -194,6 +199,155 @@ export function resetShortcuts() {
     return defaultShortcuts
 }
 
+// ============= Theme Management =============
+export function getEffectiveTheme() {
+    const settings = getSettings()
+    if (settings.theme === 'system') {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    }
+    return settings.theme || 'dark'
+}
+
+export function applyTheme() {
+    const theme = getEffectiveTheme()
+    const settings = getSettings()
+    document.documentElement.setAttribute('data-theme', theme)
+    document.documentElement.setAttribute('data-density', settings.density || 'comfortable')
+    // Update browser tab title dynamically
+    const pageName = document.title.split(' - ')[0] || 'Dashboard'
+    document.title = `${pageName} - ${settings.companyName || 'Sic CRM'}`
+}
+
+export function toggleTheme() {
+    const settings = getSettings()
+    const newTheme = settings.theme === 'dark' ? 'light' : 'dark'
+    updateSettings({ theme: newTheme })
+    applyTheme()
+    return newTheme
+}
+
+export function setDensity(density) {
+    updateSettings({ density })
+    document.documentElement.setAttribute('data-density', density)
+}
+
+// ============= Recent Items =============
+const RECENT_KEY = 'sic-crm-recent-items'
+const MAX_RECENT = 10
+
+export function getRecentItems() {
+    try {
+        return JSON.parse(localStorage.getItem(RECENT_KEY)) || []
+    } catch { return [] }
+}
+
+export function addRecentItem(item) {
+    // item: { id, title, path, type, subtitle }
+    const recent = getRecentItems().filter(r => r.path !== item.path)
+    recent.unshift({ ...item, visitedAt: Date.now() })
+    localStorage.setItem(RECENT_KEY, JSON.stringify(recent.slice(0, MAX_RECENT)))
+}
+
+// ============= Saved Filters =============
+const FILTERS_KEY = 'sic-crm-saved-filters'
+
+export function getSavedFilters(module) {
+    try {
+        const all = JSON.parse(localStorage.getItem(FILTERS_KEY)) || {}
+        return module ? (all[module] || []) : all
+    } catch { return module ? [] : {} }
+}
+
+export function saveFilter(module, filter) {
+    // filter: { id, name, criteria }
+    const all = getSavedFilters()
+    if (!all[module]) all[module] = []
+    all[module] = all[module].filter(f => f.id !== filter.id)
+    all[module].push({ ...filter, id: filter.id || `filter-${Date.now()}` })
+    localStorage.setItem(FILTERS_KEY, JSON.stringify(all))
+}
+
+export function deleteFilter(module, filterId) {
+    const all = getSavedFilters()
+    if (all[module]) {
+        all[module] = all[module].filter(f => f.id !== filterId)
+        localStorage.setItem(FILTERS_KEY, JSON.stringify(all))
+    }
+}
+
+// ============= Auto-Save Drafts =============
+const DRAFTS_KEY = 'sic-crm-drafts'
+
+export function saveDraft(formId, data) {
+    try {
+        const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY)) || {}
+        drafts[formId] = { data, savedAt: Date.now() }
+        localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts))
+    } catch { /* ignore */ }
+}
+
+export function getDraft(formId) {
+    try {
+        const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY)) || {}
+        return drafts[formId] || null
+    } catch { return null }
+}
+
+export function clearDraft(formId) {
+    try {
+        const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY)) || {}
+        delete drafts[formId]
+        localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts))
+    } catch { /* ignore */ }
+}
+
+// ============= Audit Log =============
+const AUDIT_KEY = 'sic-crm-audit-log'
+const MAX_AUDIT = 500
+
+export function addAuditEntry(entry) {
+    // entry: { action, module, recordId, changes, user }
+    try {
+        const log = JSON.parse(localStorage.getItem(AUDIT_KEY)) || []
+        log.unshift({
+            ...entry,
+            id: `audit-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            user: entry.user || 'Admin'
+        })
+        localStorage.setItem(AUDIT_KEY, JSON.stringify(log.slice(0, MAX_AUDIT)))
+    } catch { /* ignore */ }
+}
+
+export function getAuditLog(filters = {}) {
+    try {
+        let log = JSON.parse(localStorage.getItem(AUDIT_KEY)) || []
+        if (filters.module) log = log.filter(e => e.module === filters.module)
+        if (filters.recordId) log = log.filter(e => e.recordId === filters.recordId)
+        if (filters.action) log = log.filter(e => e.action === filters.action)
+        return log
+    } catch { return [] }
+}
+
+// ============= Relative Date Formatter =============
+export function formatRelativeDate(dateStr) {
+    const settings = getSettings()
+    if (!settings.showRelativeDates) return dateStr
+    const date = new Date(dateStr)
+    const now = new Date()
+    const diffMs = now - date
+    const diffSec = Math.floor(diffMs / 1000)
+    const diffMin = Math.floor(diffSec / 60)
+    const diffHr = Math.floor(diffMin / 60)
+    const diffDay = Math.floor(diffHr / 24)
+
+    if (diffSec < 60) return 'just now'
+    if (diffMin < 60) return `${diffMin}m ago`
+    if (diffHr < 24) return `${diffHr}h ago`
+    if (diffDay < 7) return `${diffDay}d ago`
+    return dateStr
+}
+
 export default {
     getSettings,
     updateSettings,
@@ -204,6 +358,21 @@ export default {
     getShortcuts,
     saveShortcuts,
     resetShortcuts,
+    getEffectiveTheme,
+    applyTheme,
+    toggleTheme,
+    setDensity,
+    getRecentItems,
+    addRecentItem,
+    getSavedFilters,
+    saveFilter,
+    deleteFilter,
+    saveDraft,
+    getDraft,
+    clearDraft,
+    addAuditEntry,
+    getAuditLog,
+    formatRelativeDate,
     CURRENCIES
 }
 

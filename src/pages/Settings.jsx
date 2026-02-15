@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { getSettings, setCurrency, CURRENCIES, getShortcuts } from '../stores/settingsStore'
+import { getSettings, setCurrency, updateSettings, CURRENCIES, getShortcuts } from '../stores/settingsStore'
+import {
+    getSupportedCurrencies, refreshRates, getBaseCurrency, getDisplayCurrency,
+    setDisplayCurrency as setStoreDC, convertCurrency, formatCurrency as formatCurrStore,
+    getLastRateUpdate, getExchangeRate
+} from '../stores/currencyStore'
 import {
     Settings as SettingsIcon,
     Moon,
@@ -13,27 +18,53 @@ import {
     Mail,
     Save,
     Check,
-    Keyboard
+    Keyboard,
+    RefreshCw,
+    ArrowRightLeft,
+    Banknote,
+    ShieldCheck
 } from 'lucide-react'
 
 function Settings() {
     const settings = getSettings()
-    const [currency, setLocalCurrency] = useState(settings.currency || 'USD')
+    const [currency, setLocalCurrency] = useState(settings.currency || 'INR')
+    const [displayCurrency, setLocalDisplayCurrency] = useState(getDisplayCurrency())
     const [notifications, setNotifications] = useState({
         email: true,
         push: true,
         updates: false
     })
     const [saved, setSaved] = useState(false)
+    const [refreshing, setRefreshing] = useState(false)
+    const [lastUpdate, setLastUpdate] = useState(getLastRateUpdate())
+    const [previewAmount, setPreviewAmount] = useState(5000)
+    const [approvalThreshold, setApprovalThreshold] = useState(settings.approvalThreshold || 5000)
+    const [approvalEnabled, setApprovalEnabled] = useState(settings.approvalEnabled !== false)
+
+    const supportedCurrencies = getSupportedCurrencies()
+
+    const handleRefreshRates = async () => {
+        setRefreshing(true)
+        await refreshRates()
+        setLastUpdate(getLastRateUpdate())
+        setRefreshing(false)
+    }
 
     const handleSave = async () => {
         setSaved(true)
         await setCurrency(currency)
+        setStoreDC(displayCurrency)
+        updateSettings({
+            approvalThreshold,
+            approvalEnabled
+        })
         setTimeout(() => setSaved(false), 2000)
-
-        // Simple way to ensure all components re-render with new currency format
         setTimeout(() => window.location.reload(), 500)
     }
+
+    // Compute live conversion preview
+    const conversionRate = getExchangeRate(currency, displayCurrency)
+    const convertedPreview = convertCurrency(previewAmount, currency, displayCurrency)
 
     return (
         <div className="page">
@@ -164,6 +195,162 @@ function Settings() {
                     </div>
                 </motion.section>
 
+                {/* Currency & Conversion - NEW SECTION */}
+                <motion.section
+                    className="settings-section settings-section-full"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.25 }}
+                >
+                    <div className="settings-section-header">
+                        <div className="settings-section-icon" style={{ background: 'linear-gradient(135deg, #f59e0b, #fb923c)' }}>
+                            <Banknote size={20} />
+                        </div>
+                        <h2>Currency & Conversion</h2>
+                        <button
+                            className="settings-btn-outline"
+                            style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}
+                            onClick={handleRefreshRates}
+                            disabled={refreshing}
+                        >
+                            <RefreshCw size={14} className={refreshing ? 'spin' : ''} />
+                            {refreshing ? 'Updating...' : 'Refresh Rates'}
+                        </button>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                        {/* Left: Currency selectors */}
+                        <div className="settings-form">
+                            <div className="form-group">
+                                <label>Base Currency (Accounting)</label>
+                                <select
+                                    className="form-input"
+                                    value={currency}
+                                    onChange={(e) => setLocalCurrency(e.target.value)}
+                                >
+                                    {Object.values(CURRENCIES).map(c => (
+                                        <option key={c.code} value={c.code}>
+                                            {c.code} ({c.symbol}) - {c.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                    Primary currency for all transactions and reports
+                                </span>
+                            </div>
+
+                            <div className="form-group">
+                                <label>Display Currency (Secondary)</label>
+                                <select
+                                    className="form-input"
+                                    value={displayCurrency}
+                                    onChange={(e) => setLocalDisplayCurrency(e.target.value)}
+                                >
+                                    {Object.values(CURRENCIES).map(c => (
+                                        <option key={c.code} value={c.code}>
+                                            {c.code} ({c.symbol}) - {c.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                    Amounts will show conversion in this currency
+                                </span>
+                            </div>
+
+                            {lastUpdate && (
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <Globe size={12} />
+                                    Rates last updated: {new Date(lastUpdate).toLocaleString()}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Right: Live conversion preview */}
+                        <div>
+                            <div style={{
+                                background: 'var(--bg-tertiary)',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: 'var(--radius-md)',
+                                padding: 20,
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                                    <ArrowRightLeft size={16} />
+                                    <span>Live Conversion Preview</span>
+                                </div>
+
+                                <div className="form-group" style={{ marginBottom: 16 }}>
+                                    <label style={{ fontSize: '0.8rem' }}>Amount in {currency}</label>
+                                    <input
+                                        type="number"
+                                        className="form-input"
+                                        value={previewAmount}
+                                        onChange={(e) => setPreviewAmount(Number(e.target.value) || 0)}
+                                        style={{ fontSize: '1.2rem', fontWeight: 600 }}
+                                    />
+                                </div>
+
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: 12,
+                                    padding: '16px 0',
+                                }}>
+                                    <div style={{ textAlign: 'center' }}>
+                                        <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                            {formatCurrStore(previewAmount, currency)}
+                                        </div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>{currency}</div>
+                                    </div>
+
+                                    <ArrowRightLeft size={20} style={{ color: 'var(--accent-primary)' }} />
+
+                                    <div style={{ textAlign: 'center' }}>
+                                        <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--accent-primary)' }}>
+                                            {currency !== displayCurrency
+                                                ? formatCurrStore(convertedPreview, displayCurrency)
+                                                : formatCurrStore(previewAmount, displayCurrency)}
+                                        </div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>{displayCurrency}</div>
+                                    </div>
+                                </div>
+
+                                {currency !== displayCurrency && (
+                                    <div style={{
+                                        textAlign: 'center',
+                                        padding: '8px 12px',
+                                        background: 'rgba(99, 102, 241, 0.1)',
+                                        borderRadius: 'var(--radius-sm)',
+                                        fontSize: '0.8rem',
+                                        color: 'var(--accent-primary)',
+                                    }}>
+                                        1 {currency} = {conversionRate.toFixed(4)} {displayCurrency}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Quick rate table */}
+                            <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+                                {supportedCurrencies.filter(c => c.code !== currency).slice(0, 6).map(c => (
+                                    <div key={c.code} style={{
+                                        padding: '8px 10px',
+                                        background: 'var(--bg-tertiary)',
+                                        border: '1px solid var(--border-color)',
+                                        borderRadius: 'var(--radius-sm)',
+                                        fontSize: '0.75rem',
+                                        textAlign: 'center',
+                                    }}>
+                                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{c.symbol} {c.code}</div>
+                                        <div style={{ color: 'var(--text-muted)', marginTop: 2 }}>
+                                            {getExchangeRate(currency, c.code).toFixed(4)}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </motion.section>
+
                 {/* Account */}
                 <motion.section
                     className="settings-section"
@@ -187,23 +374,6 @@ function Settings() {
                             <label>Email Address</label>
                             <input type="email" defaultValue="admin@siccrm.com" className="form-input" />
                         </div>
-
-                        {/* Added Currency Selector */}
-                        <div className="form-group">
-                            <label>Currency (Real-time)</label>
-                            <select
-                                className="form-input"
-                                value={currency}
-                                onChange={(e) => setLocalCurrency(e.target.value)}
-                            >
-                                {Object.values(CURRENCIES).map(c => (
-                                    <option key={c.code} value={c.code}>
-                                        {c.code} ({c.symbol}) - {c.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
                         <div className="form-group">
                             <label>Language</label>
                             <select className="form-input">
@@ -211,6 +381,7 @@ function Settings() {
                                 <option>Spanish</option>
                                 <option>French</option>
                                 <option>German</option>
+                                <option>Hindi</option>
                             </select>
                         </div>
                         <div className="form-group">
@@ -223,6 +394,112 @@ function Settings() {
                             </select>
                         </div>
                     </div>
+                </motion.section>
+
+                {/* Approval Workflows - NEW SECTION */}
+                <motion.section
+                    className="settings-section"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.35 }}
+                >
+                    <div className="settings-section-header">
+                        <div className="settings-section-icon" style={{ background: 'linear-gradient(135deg, #10b981, #34d399)' }}>
+                            <ShieldCheck size={20} />
+                        </div>
+                        <h2>Approval Workflows</h2>
+                    </div>
+
+                    <div className="settings-item">
+                        <div className="settings-item-info">
+                            <ShieldCheck size={18} />
+                            <div>
+                                <h4>Require Approval for Large POs</h4>
+                                <p>POs exceeding the threshold need manager approval</p>
+                            </div>
+                        </div>
+                        <label className="toggle">
+                            <input
+                                type="checkbox"
+                                checked={approvalEnabled}
+                                onChange={(e) => setApprovalEnabled(e.target.checked)}
+                            />
+                            <span className="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    {approvalEnabled && (
+                        <div style={{ padding: '0 16px 16px' }}>
+                            <div className="form-group">
+                                <label>Approval Threshold ({CURRENCIES[currency]?.symbol || currency})</label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    <input
+                                        type="number"
+                                        className="form-input"
+                                        value={approvalThreshold}
+                                        onChange={(e) => setApprovalThreshold(Number(e.target.value) || 0)}
+                                        style={{ flex: 1 }}
+                                    />
+                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                                        {formatCurrStore(approvalThreshold, currency)}
+                                    </span>
+                                </div>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                    Purchase Orders above this amount require approval before processing
+                                </span>
+                            </div>
+
+                            {currency !== displayCurrency && displayCurrency !== currency && (
+                                <div style={{
+                                    marginTop: 8,
+                                    padding: '8px 12px',
+                                    background: 'rgba(16, 185, 129, 0.1)',
+                                    borderRadius: 'var(--radius-sm)',
+                                    fontSize: '0.8rem',
+                                    color: '#10b981',
+                                }}>
+                                    Equivalent: {formatCurrStore(convertCurrency(approvalThreshold, currency, displayCurrency), displayCurrency)}
+                                </div>
+                            )}
+
+                            <div style={{
+                                marginTop: 16,
+                                padding: 12,
+                                background: 'var(--bg-tertiary)',
+                                borderRadius: 'var(--radius-md)',
+                                border: '1px solid var(--border-color)',
+                            }}>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 500 }}>
+                                    Approval Chain
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8rem' }}>
+                                    <span style={{
+                                        padding: '4px 10px',
+                                        background: 'rgba(99, 102, 241, 0.15)',
+                                        borderRadius: 12,
+                                        color: 'var(--accent-primary)',
+                                        fontWeight: 500,
+                                    }}>Requester</span>
+                                    <span style={{ color: 'var(--text-muted)' }}>-{'>'}</span>
+                                    <span style={{
+                                        padding: '4px 10px',
+                                        background: 'rgba(245, 158, 11, 0.15)',
+                                        borderRadius: 12,
+                                        color: '#f59e0b',
+                                        fontWeight: 500,
+                                    }}>Manager</span>
+                                    <span style={{ color: 'var(--text-muted)' }}>-{'>'}</span>
+                                    <span style={{
+                                        padding: '4px 10px',
+                                        background: 'rgba(16, 185, 129, 0.15)',
+                                        borderRadius: 12,
+                                        color: '#10b981',
+                                        fontWeight: 500,
+                                    }}>Finance Head</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </motion.section>
 
                 {/* Security */}
@@ -296,7 +573,7 @@ function Settings() {
                     </div>
 
                     <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-                        <h4 style={{ fontSize: '0.9rem', marginBottom: '8px', color: 'var(--accent-primary)' }}>💡 Quick Tip</h4>
+                        <h4 style={{ fontSize: '0.9rem', marginBottom: '8px', color: 'var(--accent-primary)' }}>Quick Tip</h4>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                             F-key shortcuts are also available: <strong>F5</strong> (Expenses), <strong>F6</strong> (Bank), <strong>F7</strong> (Journal)
                         </p>
@@ -499,11 +776,17 @@ function Settings() {
           color: var(--text-secondary);
           font-size: 0.85rem;
           transition: all 0.2s;
+          cursor: pointer;
         }
 
         .settings-btn-outline:hover {
           border-color: var(--accent-primary);
           color: var(--accent-primary);
+        }
+
+        .settings-btn-outline:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
         }
 
         .settings-save {
@@ -522,6 +805,8 @@ function Settings() {
           font-size: 0.95rem;
           font-weight: 500;
           transition: all 0.2s;
+          cursor: pointer;
+          border: none;
         }
 
         .save-btn:hover {
@@ -590,6 +875,15 @@ function Settings() {
         .shortcut-desc {
           font-size: 0.85rem;
           color: var(--text-muted);
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        .spin {
+          animation: spin 1s linear infinite;
         }
 
         @media (max-width: 600px) {

@@ -1,0 +1,36 @@
+{
+  "name": "Sic CRM - Enterprise Resource Planning",
+  "short_name": "Sic CRM",
+  "description": "Comprehensive ERP solution for Sales, Products, Purchase, Accounting, CRM, HR, and Manufacturing",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f12",
+  "theme_color": "#6366f1",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/",
+      "description": "Go to Dashboard"
+    },
+    {
+      "name": "New Quotation",
+      "url": "/sales/quotations",
+      "description": "Create a new quotation"
+    },
+    {
+      "name": "Contacts",
+      "url": "/crm/contacts",
+      "description": "View contacts"
+    }
+  ]
+}

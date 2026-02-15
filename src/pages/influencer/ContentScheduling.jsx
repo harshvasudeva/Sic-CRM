@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     Calendar, Plus, X, Clock, CheckCircle, Edit2, Trash2,
-    Instagram, Youtube, FileText, Eye, AlertCircle
+    Instagram, Youtube, FileText, Eye, AlertCircle, ShieldCheck, AlertTriangle
 } from 'lucide-react'
 import {
     getContentSchedule, createContentScheduleItem, updateContentScheduleItem,
     deleteContentScheduleItem, getCampaigns, getCreators
 } from '../../stores/influencerStore'
+import { checkContentCompliance, getAvailableCompetitorBrands } from '../../utils/complianceChecker'
 
 function ContentScheduling() {
     const [schedule, setSchedule] = useState([])
@@ -17,6 +18,23 @@ function ContentScheduling() {
     const [showForm, setShowForm] = useState(false)
     const [editItem, setEditItem] = useState(null)
     const [viewMode, setViewMode] = useState('list')
+    const [complianceResults, setComplianceResults] = useState({})
+
+    function runComplianceCheck(item) {
+        const campaign = campaigns.find(c => c.id === item.campaignId)
+        const brandName = campaign?.brand || ''
+        const result = checkContentCompliance(item, brandName)
+        setComplianceResults(prev => ({ ...prev, [item.id]: result }))
+    }
+
+    function runAllComplianceChecks() {
+        const results = {}
+        schedule.forEach(item => {
+            const campaign = campaigns.find(c => c.id === item.campaignId)
+            results[item.id] = checkContentCompliance(item, campaign?.brand || '')
+        })
+        setComplianceResults(results)
+    }
 
     const [form, setForm] = useState({
         campaignId: '', creatorId: '', creatorName: '', contentType: 'Reel',
@@ -76,9 +94,14 @@ function ContentScheduling() {
                     <h1 className="page-title"><span className="gradient-text">Content</span> Schedule</h1>
                     <p className="page-description">{schedule.length} content pieces • Plan and track creator content delivery</p>
                 </div>
-                <button className="btn-primary" onClick={() => { setEditItem(null); setForm({ campaignId: '', creatorId: '', creatorName: '', contentType: 'Reel', platform: 'Instagram', scheduledDate: '', scheduledTime: '12:00', status: 'Draft', caption: '', hashtags: '', notes: '' }); setShowForm(true) }}>
-                    <Plus size={18} /> Schedule Content
-                </button>
+                <div style={{ display: 'flex', gap: 10 }}>
+                    <button className="btn-secondary" onClick={runAllComplianceChecks} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <ShieldCheck size={16} /> Compliance Check
+                    </button>
+                    <button className="btn-primary" onClick={() => { setEditItem(null); setForm({ campaignId: '', creatorId: '', creatorName: '', contentType: 'Reel', platform: 'Instagram', scheduledDate: '', scheduledTime: '12:00', status: 'Draft', caption: '', hashtags: '', notes: '' }); setShowForm(true) }}>
+                        <Plus size={18} /> Schedule Content
+                    </button>
+                </div>
             </motion.div>
 
             <div className="camp-filters">
@@ -119,7 +142,25 @@ function ContentScheduling() {
                                             {item.caption && <p className="cs-item-caption">{item.caption}</p>}
                                             {item.hashtags && <div className="cs-item-tags">{item.hashtags}</div>}
                                             {item.notes && <div className="cs-item-notes">{item.notes}</div>}
+                                            {complianceResults[item.id] && (
+                                                <div className={`cs-compliance ${complianceResults[item.id].passed ? 'passed' : 'failed'}`}>
+                                                    <div className="cs-compliance-header">
+                                                        {complianceResults[item.id].passed
+                                                            ? <><ShieldCheck size={14} /> Compliance: Passed ({complianceResults[item.id].score}/100)</>
+                                                            : <><AlertTriangle size={14} /> Compliance: Issues Found ({complianceResults[item.id].score}/100)</>
+                                                        }
+                                                    </div>
+                                                    {complianceResults[item.id].issues.map((issue, ii) => (
+                                                        <div key={ii} className={`cs-compliance-issue severity-${issue.severity}`}>
+                                                            <span>{issue.icon}</span> <span>{issue.message}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                             <div className="cs-item-actions">
+                                                <button onClick={() => runComplianceCheck(item)} title="Check Compliance" style={{ color: '#10b981' }}>
+                                                    <ShieldCheck size={14} />
+                                                </button>
                                                 <select value={item.status}
                                                     onChange={e => handleStatusUpdate(item.id, e.target.value)}
                                                     className="out-status-select"
@@ -228,6 +269,17 @@ function ContentScheduling() {
                 }
                 .cs-item-actions button:hover { background: rgba(99,102,241,0.15); color: var(--accent-primary); }
                 .cs-item-actions button.danger:hover { background: rgba(239,68,68,0.15); color: #ef4444; }
+
+                .cs-compliance { margin-bottom: 10px; padding: 10px; border-radius: 10px; font-size: 0.8rem; }
+                .cs-compliance.passed { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); }
+                .cs-compliance.failed { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); }
+                .cs-compliance-header { display: flex; align-items: center; gap: 6px; font-weight: 600; margin-bottom: 6px; }
+                .cs-compliance.passed .cs-compliance-header { color: #10b981; }
+                .cs-compliance.failed .cs-compliance-header { color: #ef4444; }
+                .cs-compliance-issue { display: flex; align-items: center; gap: 6px; padding: 3px 0; color: var(--text-secondary); font-size: 0.75rem; }
+                .cs-compliance-issue.severity-high { color: #ef4444; }
+                .cs-compliance-issue.severity-medium { color: #f59e0b; }
+                .cs-compliance-issue.severity-low { color: var(--text-muted); }
             `}</style>
         </div>
     )

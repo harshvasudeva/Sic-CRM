@@ -44,6 +44,10 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Rate limiting
+const { apiLimiter } = require('./middleware/rateLimit');
+app.use('/api/', apiLimiter);
+
 // Request Logging to ScyllaDB (Async - fire and forget)
 app.use(async (req, res, next) => {
   const start = Date.now();
@@ -87,6 +91,14 @@ app.use('/api/search', searchRoutes);
 app.use('/api/invoices', invoicesRoutes);
 app.use('/api/quotations', quotationsRoutes);
 
+// Sales Orders
+const salesOrdersRoutes = require('./routes/salesOrders');
+app.use('/api/sales-orders', salesOrdersRoutes);
+
+// Dashboard Stats
+const dashboardStatsRoutes = require('./routes/dashboardStats');
+app.use('/api/stats', dashboardStatsRoutes);
+
 // Accounting (QuickBooks/Zoho style)
 app.use('/api/accounts', accountsRoutes);
 app.use('/api/bills', billsRoutes);
@@ -115,12 +127,17 @@ app.use('/api/logs', logsRoutes);
 const setupRoutes = require('./routes/setupRoutes');
 app.use('/api/setup', setupRoutes);
 
+// Health check routes
+const healthRoutes = require('./routes/health');
+app.use('/api/health', healthRoutes);
+
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
     message: 'Sic CRM API is running',
+    uptime: process.uptime(),
     db: {
-      postgres: 'connected', // Prisma doesn't hold open connection, assumed OK if app running
+      postgres: 'connected',
       scylla: scyllaClient.connected ? 'connected' : 'disconnected'
     }
   });

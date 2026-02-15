@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Filter, Edit, Trash2, ShoppingBag, Check, FileText, AlertCircle, PackageCheck } from 'lucide-react'
+import { Plus, Filter, Edit, Trash2, ShoppingBag, Check, FileText, AlertCircle, PackageCheck, ShieldAlert } from 'lucide-react'
 import { getPurchaseOrders, deletePurchaseOrder, createPurchaseOrder, updatePurchaseOrder, issuePurchaseOrder, receivePurchaseOrder, getVendors } from '../../stores/purchaseStore'
 import { receiveStockFromPO, getInventoryProducts } from '../../stores/inventoryStore'
 import { formatCurrency } from '../../stores/settingsStore'
+import { formatWithConversion, getBaseCurrency } from '../../stores/currencyStore'
+import { requiresApproval, getApprovalForDocument, APPROVAL_STATUSES } from '../../stores/approvalStore'
+import { ApprovalStatusBadge } from '../../components/ApprovalBadge'
+import ApprovalPanel from '../../components/ApprovalBadge'
 import DataTable from '../../components/DataTable'
 import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
@@ -11,6 +15,7 @@ import { useToast } from '../../components/Toast'
 
 const statuses = [
     { value: 'draft', label: 'Draft' },
+    { value: 'pending_approval', label: 'Pending Approval' },
     { value: 'issued', label: 'Issued' },
     { value: 'confirmed', label: 'Confirmed' },
     { value: 'shipped', label: 'Shipped' },
@@ -32,8 +37,9 @@ function PurchaseOrders() {
 
     const [formData, setFormData] = useState({
         vendorId: '', orderNumber: '', orderDate: '', expectedDelivery: '',
-        items: [], shippingCost: 0, currency: 'USD', paymentTerms: '', notes: ''
+        items: [], shippingCost: 0, currency: getBaseCurrency(), paymentTerms: '', notes: ''
     })
+    const [approvalModalOrder, setApprovalModalOrder] = useState(null)
 
     const [itemData, setItemData] = useState({
         productId: '', name: '', description: '', quantity: 1, unitPrice: 0, discount: 0, tax: 0
@@ -126,7 +132,7 @@ function PurchaseOrders() {
     const resetFormData = () => {
         setFormData({
             vendorId: '', orderNumber: '', orderDate: '', expectedDelivery: '',
-            items: [], shippingCost: 0, currency: 'USD', paymentTerms: '', notes: ''
+            items: [], shippingCost: 0, currency: getBaseCurrency(), paymentTerms: '', notes: ''
         })
     }
 
@@ -147,26 +153,59 @@ function PurchaseOrders() {
                 return vendor ? vendor.name : '-'
             }
         },
-        { key: 'total', label: 'Total', render: (v) => <span className="amount">{formatCurrency(v)}</span> },
+        {
+            key: 'total', label: 'Total', render: (v, row) => (
+                <div>
+                    <span className="amount">{formatCurrency(v)}</span>
+                    {row.currency && row.currency !== getBaseCurrency() && (
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                            {formatWithConversion(v, row.currency)}
+                        </div>
+                    )}
+                </div>
+            )
+        },
         { key: 'expectedDelivery', label: 'Expected' },
-        { key: 'status', label: 'Status', render: (v) => <span className={`status-badge ${v}`}>{v}</span> },
+        {
+            key: 'status', label: 'Status', render: (v, row) => (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <span className={`status-badge ${v}`}>{v}</span>
+                    {requiresApproval(row.total, row.currency) && (
+                        <ApprovalStatusBadge documentId={row.id} documentType="purchase_order" />
+                    )}
+                </div>
+            )
+        },
         { key: 'createdAt', label: 'Created' },
         {
             key: 'actions', label: '', sortable: false,
-            render: (_, row) => (
-                <div className="action-buttons">
-                    {row.status === 'draft' && (
-                        <button className="action-btn issue" onClick={() => handleIssue(row)} title="Issue PO"><FileText size={16} /></button>
-                    )}
-                    {row.status === 'issued' && (
-                        <button className="action-btn receive" onClick={() => handleReceive(row)} title="Receive Items"><PackageCheck size={16} /></button>
-                    )}
-                    {!['received', 'cancelled'].includes(row.status) && (
-                        <button className="action-btn edit" onClick={() => handleEdit(row)}><Edit size={16} /></button>
-                    )}
-                    <button className="action-btn delete" onClick={() => setDeleteConfirm(row)}><Trash2 size={16} /></button>
-                </div>
-            )
+            render: (_, row) => {
+                const needsApproval = requiresApproval(row.total, row.currency)
+                const approval = needsApproval ? getApprovalForDocument(row.id, 'purchase_order') : null
+                const isApproved = approval?.status === APPROVAL_STATUSES.APPROVED
+                const canIssue = row.status === 'draft' && (!needsApproval || isApproved)
+
+                return (
+                    <div className="action-buttons">
+                        {row.status === 'draft' && needsApproval && !isApproved && (
+                            <button className="action-btn" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}
+                                onClick={() => setApprovalModalOrder(row)} title="Approval Required">
+                                <ShieldAlert size={16} />
+                            </button>
+                        )}
+                        {canIssue && (
+                            <button className="action-btn issue" onClick={() => handleIssue(row)} title="Issue PO"><FileText size={16} /></button>
+                        )}
+                        {row.status === 'issued' && (
+                            <button className="action-btn receive" onClick={() => handleReceive(row)} title="Receive Items"><PackageCheck size={16} /></button>
+                        )}
+                        {!['received', 'cancelled'].includes(row.status) && (
+                            <button className="action-btn edit" onClick={() => handleEdit(row)}><Edit size={16} /></button>
+                        )}
+                        <button className="action-btn delete" onClick={() => setDeleteConfirm(row)}><Trash2 size={16} /></button>
+                    </div>
+                )
+            }
         }
     ]
 
@@ -304,6 +343,52 @@ function PurchaseOrders() {
                 </ModalFooter>
             </Modal>
 
+            {/* Approval Modal */}
+            <Modal isOpen={!!approvalModalOrder} onClose={() => setApprovalModalOrder(null)} title="Purchase Order Approval" size="medium">
+                {approvalModalOrder && (
+                    <div>
+                        <div style={{ marginBottom: 16 }}>
+                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 4 }}>PO Number</div>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>{approvalModalOrder.orderNumber}</div>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                            <div>
+                                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 4 }}>Amount</div>
+                                <div style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--success)' }}>
+                                    {formatCurrency(approvalModalOrder.total)}
+                                </div>
+                                {approvalModalOrder.currency && approvalModalOrder.currency !== getBaseCurrency() && (
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                        {formatWithConversion(approvalModalOrder.total, approvalModalOrder.currency)}
+                                    </div>
+                                )}
+                            </div>
+                            <div>
+                                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 4 }}>Currency</div>
+                                <div style={{ fontSize: '1.1rem', fontWeight: 500 }}>{approvalModalOrder.currency || getBaseCurrency()}</div>
+                            </div>
+                        </div>
+                        <ApprovalPanel
+                            documentId={approvalModalOrder.id}
+                            documentType="purchase_order"
+                            amount={approvalModalOrder.total}
+                            currency={approvalModalOrder.currency || getBaseCurrency()}
+                            onStatusChange={(status) => {
+                                if (status === 'approved') {
+                                    toast.success('Purchase order approved')
+                                } else if (status === 'rejected') {
+                                    toast.error('Purchase order rejected')
+                                }
+                                loadData()
+                            }}
+                        />
+                    </div>
+                )}
+                <ModalFooter>
+                    <button className="btn-secondary" onClick={() => setApprovalModalOrder(null)}>Close</button>
+                </ModalFooter>
+            </Modal>
+
             <style>{`
                 .btn-primary { display: flex; align-items: center; gap: 8px; padding: 12px 20px; background: var(--accent-gradient); border-radius: var(--radius-md); color: white; }
                 .btn-secondary { padding: 12px 20px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-secondary); }
@@ -323,6 +408,7 @@ function PurchaseOrders() {
                 .status-badge.shipped { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
                 .status-badge.received { background: rgba(16, 185, 129, 0.15); color: var(--success); }
                 .status-badge.cancelled { background: rgba(239, 68, 68, 0.15); color: var(--error); }
+                .status-badge.pending_approval { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
                 .items-section { margin-top: 20px; }
                 .items-section h3 { margin-bottom: 12px; color: var(--text-primary); font-size: 0.9rem; }
                 .items-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }

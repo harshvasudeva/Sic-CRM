@@ -12,21 +12,70 @@ import {
   Check,
   AlertCircle,
   Package,
-  DollarSign
+  DollarSign,
+  Sun,
+  Moon,
+  Maximize2,
+  Minimize2,
+  Clock,
+  LayoutGrid
 } from 'lucide-react'
+import RecentItems from './RecentItems'
+import { useTheme } from '../hooks/useTheme'
+import { getSettings, updateSettings, addRecentItem } from '../stores/settingsStore'
 
 const breadcrumbLabels = {
   '/': 'Dashboard',
   '/sales': 'Sales',
+  '/sales/quotations': 'Quotations',
+  '/sales/orders': 'Orders',
+  '/sales/invoices': 'Invoices',
+  '/sales/credit-notes': 'Credit Notes',
+  '/sales/pricing': 'Pricing',
+  '/sales/targets': 'Targets',
+  '/sales/delivery-notes': 'Delivery Notes',
   '/products': 'Products',
+  '/products/price-lists': 'Price Lists',
   '/purchase': 'Purchase',
+  '/purchase/vendors': 'Vendors',
+  '/purchase/orders': 'Orders',
+  '/purchase/requisitions': 'Requisitions',
+  '/purchase/rfqs': 'RFQs',
+  '/purchase/grns': 'GRNs',
+  '/purchase/supplier-invoices': 'Supplier Invoices',
   '/accounting': 'Accounting',
+  '/accounting/journal-entries': 'Journal Entries',
+  '/accounting/general-ledger': 'General Ledger',
+  '/accounting/bank': 'Bank Accounts',
+  '/accounting/expenses': 'Expenses',
+  '/accounting/budgets': 'Budgets',
+  '/accounting/receivable': 'Receivable',
+  '/accounting/payable': 'Payable',
+  '/accounting/chart-of-accounts': 'Chart of Accounts',
+  '/accounting/reports': 'Reports',
+  '/accounting/assets': 'Fixed Assets',
+  '/accounting/taxation': 'Taxation',
+  '/inventory': 'Inventory',
+  '/inventory/movements': 'Movements',
+  '/inventory/transfers': 'Transfers',
+  '/inventory/warehouses': 'Warehouses',
   '/crm': 'CRM',
+  '/crm/leads': 'Leads',
+  '/crm/opportunities': 'Opportunities',
+  '/crm/contacts': 'Contacts',
+  '/crm/activities': 'Activities',
   '/hr': 'HR & Employees',
+  '/hr/employees': 'Employees',
+  '/hr/recruitment': 'Recruitment',
+  '/hr/timesheets': 'Timesheets',
+  '/hr/attendance': 'Attendance',
+  '/hr/leaves': 'Leaves',
+  '/hr/payroll': 'Payroll',
   '/manufacturing': 'Manufacturing',
   '/specialized': 'Specialized',
   '/reports': 'Reports',
-  '/settings': 'Settings'
+  '/settings': 'Settings',
+  '/influencer': 'Influencer'
 }
 
 const notifications = [
@@ -39,10 +88,12 @@ const notifications = [
 function Header() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { theme, toggleTheme } = useTheme()
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [notifOpen, setNotifOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [focusMode, setFocusMode] = useState(() => getSettings().focusMode || false)
   const searchRef = useRef(null)
   const notifRef = useRef(null)
   const userRef = useRef(null)
@@ -50,12 +101,8 @@ function Header() {
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (notifRef.current && !notifRef.current.contains(e.target)) {
-        setNotifOpen(false)
-      }
-      if (userRef.current && !userRef.current.contains(e.target)) {
-        setUserMenuOpen(false)
-      }
+      if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false)
+      if (userRef.current && !userRef.current.contains(e.target)) setUserMenuOpen(false)
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
@@ -63,22 +110,63 @@ function Header() {
 
   // Focus search when opened
   useEffect(() => {
-    if (searchOpen && searchRef.current) {
-      searchRef.current.focus()
-    }
+    if (searchOpen && searchRef.current) searchRef.current.focus()
   }, [searchOpen])
 
-  const currentPage = breadcrumbLabels[location.pathname] || 'Page'
+  // Track page visits for recent items
+  useEffect(() => {
+    const label = breadcrumbLabels[location.pathname]
+    if (label && location.pathname !== '/') {
+      addRecentItem({
+        title: label,
+        path: location.pathname,
+        type: 'page',
+        subtitle: location.pathname
+      })
+    }
+    // Dynamic browser tab title
+    const settings = getSettings()
+    document.title = `${label || 'Page'} - ${settings.companyName || 'Sic CRM'}`
+  }, [location.pathname])
+
+  // Smart breadcrumbs - build full path
+  const buildBreadcrumbs = () => {
+    const parts = location.pathname.split('/').filter(Boolean)
+    const crumbs = [{ label: 'Home', path: '/' }]
+    let currentPath = ''
+    for (const part of parts) {
+      currentPath += `/${part}`
+      const label = breadcrumbLabels[currentPath] || part.charAt(0).toUpperCase() + part.slice(1).replace(/-/g, ' ')
+      crumbs.push({ label, path: currentPath })
+    }
+    return crumbs
+  }
+
+  const breadcrumbs = buildBreadcrumbs()
+
+  const handleFocusToggle = () => {
+    const next = !focusMode
+    setFocusMode(next)
+    updateSettings({ focusMode: next })
+    document.body.classList.toggle('focus-mode', next)
+  }
 
   return (
     <header className="header">
-      {/* Breadcrumbs */}
+      {/* Smart Breadcrumbs */}
       <div className="breadcrumbs">
-        <span className="breadcrumb-item" onClick={() => navigate('/')}>
-          Home
-        </span>
-        <ChevronRight size={14} className="breadcrumb-sep" />
-        <span className="breadcrumb-current">{currentPage}</span>
+        {breadcrumbs.map((crumb, idx) => (
+          <span key={crumb.path} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {idx > 0 && <ChevronRight size={14} className="breadcrumb-sep" />}
+            {idx < breadcrumbs.length - 1 ? (
+              <span className="breadcrumb-item" onClick={() => navigate(crumb.path)}>
+                {crumb.label}
+              </span>
+            ) : (
+              <span className="breadcrumb-current">{crumb.label}</span>
+            )}
+          </span>
+        ))}
       </div>
 
       {/* Right Side */}
@@ -97,7 +185,7 @@ function Header() {
                 <input
                   ref={searchRef}
                   type="text"
-                  placeholder="Search..."
+                  placeholder="Search... (Ctrl+K)"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="search-input"
@@ -109,11 +197,32 @@ function Header() {
             )}
           </AnimatePresence>
           {!searchOpen && (
-            <button className="header-btn" onClick={() => setSearchOpen(true)}>
+            <button className="header-btn" onClick={() => setSearchOpen(true)} title="Search (/)">
               <Search size={20} />
             </button>
           )}
         </div>
+
+        {/* Recent Items */}
+        <RecentItems />
+
+        {/* Focus Mode */}
+        <button
+          className={`header-btn ${focusMode ? 'active' : ''}`}
+          onClick={handleFocusToggle}
+          title="Focus Mode (collapse sidebar & header)"
+        >
+          {focusMode ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+        </button>
+
+        {/* Theme Toggle */}
+        <button
+          className="header-btn"
+          onClick={toggleTheme}
+          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        >
+          {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
 
         {/* Notifications */}
         <div className="notif-wrapper" ref={notifRef}>
@@ -218,7 +327,8 @@ function Header() {
         .breadcrumbs {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 4px;
+          flex-wrap: wrap;
         }
 
         .breadcrumb-item {
@@ -245,7 +355,7 @@ function Header() {
         .header-actions {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 8px;
         }
 
         .header-btn {
@@ -302,14 +412,16 @@ function Header() {
         .search-input {
           flex: 1;
           padding: 10px 0;
-          background: transparent;
-          border: none;
-          color: var(--text-primary);
+          background: transparent !important;
+          border: none !important;
+          color: var(--text-primary) !important;
           font-size: 0.9rem;
+          box-shadow: none !important;
         }
 
         .search-input:focus {
           outline: none;
+          box-shadow: none !important;
         }
 
         .search-input::placeholder {

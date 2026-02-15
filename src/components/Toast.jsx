@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, X, AlertCircle, Info } from 'lucide-react'
+import { Check, X, AlertCircle, Info, Undo2 } from 'lucide-react'
 
 const ToastContext = createContext(null)
 
@@ -14,9 +14,9 @@ const toastTypes = {
 export function ToastProvider({ children }) {
     const [toasts, setToasts] = useState([])
 
-    const addToast = useCallback((message, type = 'info', duration = 4000) => {
-        const id = Date.now()
-        setToasts(prev => [...prev, { id, message, type }])
+    const addToast = useCallback((message, type = 'info', duration = 4000, options = {}) => {
+        const id = Date.now() + Math.random()
+        setToasts(prev => [...prev, { id, message, type, ...options }])
 
         if (duration > 0) {
             setTimeout(() => {
@@ -32,10 +32,12 @@ export function ToastProvider({ children }) {
     }, [])
 
     const toast = {
-        success: (msg, duration) => addToast(msg, 'success', duration),
-        error: (msg, duration) => addToast(msg, 'error', duration),
-        warning: (msg, duration) => addToast(msg, 'warning', duration),
-        info: (msg, duration) => addToast(msg, 'info', duration),
+        success: (msg, duration, options) => addToast(msg, 'success', duration, options),
+        error: (msg, duration, options) => addToast(msg, 'error', duration, options),
+        warning: (msg, duration, options) => addToast(msg, 'warning', duration, options),
+        info: (msg, duration, options) => addToast(msg, 'info', duration, options),
+        // Toast with undo - shows an Undo button for 5 seconds
+        undo: (msg, undoFn, duration = 5000) => addToast(msg, 'info', duration, { undoFn }),
         remove: removeToast
     }
 
@@ -60,6 +62,15 @@ export function ToastProvider({ children }) {
                                     <Icon size={18} />
                                 </div>
                                 <span className="toast-message">{t.message}</span>
+                                {t.undoFn && (
+                                    <button
+                                        className="toast-undo"
+                                        onClick={() => { t.undoFn(); removeToast(t.id) }}
+                                    >
+                                        <Undo2 size={14} />
+                                        Undo
+                                    </button>
+                                )}
                                 <button className="toast-close" onClick={() => removeToast(t.id)}>
                                     <X size={16} />
                                 </button>
@@ -92,7 +103,7 @@ export function ToastProvider({ children }) {
           box-shadow: var(--shadow-lg);
           pointer-events: auto;
           min-width: 300px;
-          max-width: 400px;
+          max-width: 420px;
         }
 
         .toast-icon {
@@ -103,6 +114,26 @@ export function ToastProvider({ children }) {
           flex: 1;
           font-size: 0.9rem;
           color: var(--text-primary);
+        }
+
+        .toast-undo {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          padding: 4px 10px;
+          background: rgba(99, 102, 241, 0.2);
+          border: 1px solid rgba(99, 102, 241, 0.3);
+          border-radius: 6px;
+          color: var(--accent-primary);
+          font-size: 0.8rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.15s;
+          flex-shrink: 0;
+        }
+
+        .toast-undo:hover {
+          background: rgba(99, 102, 241, 0.3);
         }
 
         .toast-close {

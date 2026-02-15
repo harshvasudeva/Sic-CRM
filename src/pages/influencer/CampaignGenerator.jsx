@@ -4,7 +4,7 @@ import {
     Zap, Copy, Mail, MessageSquare, IndianRupee, Users, Target,
     FileText, ChevronRight, Sparkles, CheckCircle, BarChart3
 } from 'lucide-react'
-import { generateCampaignIdea } from '../../stores/influencerStore'
+import { generateCampaignIdea, getBriefTemplates, applyBriefTemplate } from '../../stores/influencerStore'
 
 function CampaignGenerator() {
     const [input, setInput] = useState({
@@ -12,6 +12,20 @@ function CampaignGenerator() {
     })
     const [result, setResult] = useState(null)
     const [copied, setCopied] = useState('')
+    const [briefTemplates] = useState(getBriefTemplates())
+    const [selectedTemplate, setSelectedTemplate] = useState('')
+    const [appliedBrief, setAppliedBrief] = useState(null)
+
+    function handleTemplateSelect(templateId) {
+        setSelectedTemplate(templateId)
+        if (templateId) {
+            const brief = applyBriefTemplate(templateId, input.brandName)
+            setAppliedBrief(brief)
+            if (brief) setInput(i => ({ ...i, objective: brief.objective }))
+        } else {
+            setAppliedBrief(null)
+        }
+    }
 
     function handleGenerate(e) {
         e.preventDefault()
@@ -81,6 +95,25 @@ function CampaignGenerator() {
                                 <option>Instagram</option><option>YouTube</option><option>Both</option>
                             </select>
                         </div>
+                        <div className="inf-form-group">
+                            <label>Brief Template</label>
+                            <select value={selectedTemplate} onChange={e => handleTemplateSelect(e.target.value)}>
+                                <option value="">Custom (No Template)</option>
+                                {briefTemplates.map(t => <option key={t.id} value={t.id}>{t.icon} {t.name}</option>)}
+                            </select>
+                        </div>
+
+                        {appliedBrief && (
+                            <div className="gen-brief-preview">
+                                <div className="gen-brief-title">Template Brief</div>
+                                <p className="gen-brief-text">{appliedBrief.brief}</p>
+                                <div className="gen-brief-meta">
+                                    <span>Deliverables: {appliedBrief.deliverables.join(', ')}</span>
+                                    <span>Duration: {appliedBrief.duration}</span>
+                                </div>
+                            </div>
+                        )}
+
                         <button type="submit" className="gen-submit-btn">
                             <Sparkles size={18} /> Generate Campaign Idea
                         </button>
@@ -283,6 +316,14 @@ function CampaignGenerator() {
                     line-height: 1.6; white-space: pre-wrap; font-family: inherit; margin-top: 8px;
                 }
                 .gen-wa { background: rgba(37,211,102,0.05); border-color: rgba(37,211,102,0.15); }
+
+                .gen-brief-preview {
+                    background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2);
+                    border-radius: 12px; padding: 14px; margin-top: 4px;
+                }
+                .gen-brief-title { font-size: 0.75rem; font-weight: 600; color: var(--accent-primary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+                .gen-brief-text { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; margin-bottom: 8px; }
+                .gen-brief-meta { display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; color: var(--text-muted); }
 
                 @media (max-width: 900px) { .gen-layout { grid-template-columns: 1fr; } .gen-input-panel { position: static; } }
             `}</style>

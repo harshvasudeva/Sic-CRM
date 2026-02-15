@@ -1,131 +1,152 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Routes, Route, Outlet, Navigate } from 'react-router-dom'
 import { ToastProvider } from './components/Toast'
 import ErrorBoundary from './components/ErrorBoundary'
 import ModuleErrorBoundary from './components/ModuleErrorBoundary'
 import Layout from './components/Layout'
-import Dashboard from './pages/Dashboard'
-import Sales from './pages/Sales'
-import ProductList from './pages/products/ProductList'
-import PriceLists from './pages/products/PriceLists'
-import Purchase from './pages/Purchase'
-import Accounting from './pages/Accounting'
+import LoadingSkeleton from './components/LoadingSkeleton'
 
-// Sales Module
-import Quotations from './pages/sales/Quotations'
-import SalesOrders from './pages/sales/SalesOrders'
-import Invoices from './pages/sales/Invoices'
-import CreditNotes from './pages/sales/CreditNotes'
-import PricingRules from './pages/sales/PricingRules'
-import SalesTargets from './pages/sales/SalesTargets'
-import QuotationTemplates from './pages/sales/QuotationTemplates'
-import InvoiceTemplates from './pages/sales/InvoiceTemplates'
-import DeliveryNotes from './pages/sales/DeliveryNotes'
-
-// Purchase Module
-import Vendors from './pages/purchase/Vendors'
-import PurchaseOrders from './pages/purchase/PurchaseOrders'
-import PurchaseRequisitions from './pages/purchase/PurchaseRequisitions'
-import RFQs from './pages/purchase/RFQs'
-import GRNs from './pages/purchase/GRNs'
-import SupplierInvoices from './pages/purchase/SupplierInvoices'
-import VendorReturns from './pages/purchase/VendorReturns'
-import VendorEvaluations from './pages/purchase/VendorEvaluations'
-import Subscriptions from './pages/purchase/Subscriptions'
-
-// Accounting Module
-import JournalEntries from './pages/accounting/JournalEntries'
-import GeneralLedger from './pages/accounting/GeneralLedger'
-import BankAccounts from './pages/accounting/BankAccounts'
-import AccountingExpenses from './pages/accounting/Expenses'
-import Budgets from './pages/accounting/Budgets'
-import AccountsReceivable from './pages/accounting/AccountsReceivable'
-import AccountsPayable from './pages/accounting/AccountsPayable'
-import ChartOfAccounts from './pages/accounting/ChartOfAccounts'
-import FinancialReports from './pages/accounting/FinancialReports'
-import FixedAssets from './pages/accounting/FixedAssets'
-import CostCenters from './pages/accounting/CostCenters'
-import Taxation from './pages/accounting/Taxation'
-import Automation from './pages/accounting/Automation'
-import ChequePrinting from './pages/accounting/ChequePrinting'
-import DebitNotes from './pages/accounting/DebitNotes'
-
-// Inventory Module
-import Inventory from './pages/inventory/Inventory'
-import StockMovements from './pages/inventory/StockMovements'
-import StockTransfers from './pages/inventory/StockTransfers'
-import Warehouses from './pages/inventory/Warehouses'
-import SerialNumbers from './pages/inventory/SerialNumbers'
-import StockGroups from './pages/inventory/StockGroups'
-import Units from './pages/inventory/Units'
-import StockJournal from './pages/inventory/StockJournal'
-import PhysicalStock from './pages/inventory/PhysicalStock'
-import RejectionsIn from './pages/inventory/RejectionsIn'
-import RejectionsOut from './pages/inventory/RejectionsOut'
-
-// HR Module
-import HRDashboard from './pages/hr/HRDashboard'
-import EmployeeList from './pages/hr/EmployeeList'
-import RecruitmentBoard from './pages/hr/RecruitmentBoard'
-import AssetList from './pages/hr/AssetList'
-import TimeSheet from './pages/hr/TimeSheet'
-import OrgChart from './pages/hr/OrgChart'
-import Attendance from './pages/hr/Attendance'
-import Leaves from './pages/hr/Leaves'
-import Payroll from './pages/hr/Payroll'
-import Trainings from './pages/hr/Trainings'
-import Performance from './pages/hr/Performance'
-import Expenses from './pages/hr/Expenses'
-import Announcements from './pages/hr/Announcements'
-import Departments from './pages/hr/Departments'
-
-// CRM Module
-import CRMDashboard from './pages/crm/CRMDashboard'
-import Leads from './pages/crm/Leads'
-import Opportunities from './pages/crm/Opportunities'
-import Contacts from './pages/crm/Contacts'
-import Activities from './pages/crm/Activities'
-
-// Influencer Module
-import InfluencerDashboard from './pages/influencer/InfluencerDashboard'
-import CreatorDatabase from './pages/influencer/CreatorDatabase'
-import CampaignDashboard from './pages/influencer/CampaignDashboard'
-import CampaignGenerator from './pages/influencer/CampaignGenerator'
-import OutreachDashboard from './pages/influencer/OutreachDashboard'
-import SalesCRM from './pages/influencer/SalesCRM'
-import ContentScheduling from './pages/influencer/ContentScheduling'
-import PaymentInvoicing from './pages/influencer/PaymentInvoicing'
-
-import Manufacturing from './pages/Manufacturing'
-import BillOfMaterials from './pages/manufacturing/BillOfMaterials'
-import WorkCenters from './pages/manufacturing/WorkCenters'
-import ProductionOrders from './pages/manufacturing/ProductionOrders'
-import Specialized from './pages/Specialized'
-import PointOfSale from './pages/specialized/PointOfSale'
-import Discuss from './pages/specialized/Discuss'
-import Rentals from './pages/specialized/Rentals'
-import WebsiteBuilder from './pages/specialized/WebsiteBuilder'
-import Settings from './pages/Settings'
-import Reports from './pages/Reports'
-import TallyHelp from './pages/TallyHelp'
-import NotFound from './pages/NotFound'
-
-// Setup
+// Setup (eagerly loaded)
 import Setup from './pages/Setup'
 
+// Dashboard (eagerly loaded - landing page)
+import Dashboard from './pages/Dashboard'
+
+// Lazy-loaded modules
+const Sales = React.lazy(() => import('./pages/Sales'))
+const ProductList = React.lazy(() => import('./pages/products/ProductList'))
+const PriceLists = React.lazy(() => import('./pages/products/PriceLists'))
+const Purchase = React.lazy(() => import('./pages/Purchase'))
+const Accounting = React.lazy(() => import('./pages/Accounting'))
+
+// Sales Module
+const Quotations = React.lazy(() => import('./pages/sales/Quotations'))
+const SalesOrders = React.lazy(() => import('./pages/sales/SalesOrders'))
+const Invoices = React.lazy(() => import('./pages/sales/Invoices'))
+const CreditNotes = React.lazy(() => import('./pages/sales/CreditNotes'))
+const PricingRules = React.lazy(() => import('./pages/sales/PricingRules'))
+const SalesTargets = React.lazy(() => import('./pages/sales/SalesTargets'))
+const QuotationTemplates = React.lazy(() => import('./pages/sales/QuotationTemplates'))
+const InvoiceTemplates = React.lazy(() => import('./pages/sales/InvoiceTemplates'))
+const DeliveryNotes = React.lazy(() => import('./pages/sales/DeliveryNotes'))
+
+// Purchase Module
+const Vendors = React.lazy(() => import('./pages/purchase/Vendors'))
+const PurchaseOrders = React.lazy(() => import('./pages/purchase/PurchaseOrders'))
+const PurchaseRequisitions = React.lazy(() => import('./pages/purchase/PurchaseRequisitions'))
+const RFQs = React.lazy(() => import('./pages/purchase/RFQs'))
+const GRNs = React.lazy(() => import('./pages/purchase/GRNs'))
+const SupplierInvoices = React.lazy(() => import('./pages/purchase/SupplierInvoices'))
+const VendorReturns = React.lazy(() => import('./pages/purchase/VendorReturns'))
+const VendorEvaluations = React.lazy(() => import('./pages/purchase/VendorEvaluations'))
+const Subscriptions = React.lazy(() => import('./pages/purchase/Subscriptions'))
+
+// Accounting Module
+const JournalEntries = React.lazy(() => import('./pages/accounting/JournalEntries'))
+const GeneralLedger = React.lazy(() => import('./pages/accounting/GeneralLedger'))
+const BankAccounts = React.lazy(() => import('./pages/accounting/BankAccounts'))
+const AccountingExpenses = React.lazy(() => import('./pages/accounting/Expenses'))
+const Budgets = React.lazy(() => import('./pages/accounting/Budgets'))
+const AccountsReceivable = React.lazy(() => import('./pages/accounting/AccountsReceivable'))
+const AccountsPayable = React.lazy(() => import('./pages/accounting/AccountsPayable'))
+const ChartOfAccounts = React.lazy(() => import('./pages/accounting/ChartOfAccounts'))
+const FinancialReports = React.lazy(() => import('./pages/accounting/FinancialReports'))
+const FixedAssets = React.lazy(() => import('./pages/accounting/FixedAssets'))
+const CostCenters = React.lazy(() => import('./pages/accounting/CostCenters'))
+const Taxation = React.lazy(() => import('./pages/accounting/Taxation'))
+const Automation = React.lazy(() => import('./pages/accounting/Automation'))
+const ChequePrinting = React.lazy(() => import('./pages/accounting/ChequePrinting'))
+const DebitNotes = React.lazy(() => import('./pages/accounting/DebitNotes'))
+
+// Inventory Module
+const Inventory = React.lazy(() => import('./pages/inventory/Inventory'))
+const StockMovements = React.lazy(() => import('./pages/inventory/StockMovements'))
+const StockTransfers = React.lazy(() => import('./pages/inventory/StockTransfers'))
+const Warehouses = React.lazy(() => import('./pages/inventory/Warehouses'))
+const SerialNumbers = React.lazy(() => import('./pages/inventory/SerialNumbers'))
+const StockGroups = React.lazy(() => import('./pages/inventory/StockGroups'))
+const Units = React.lazy(() => import('./pages/inventory/Units'))
+const StockJournal = React.lazy(() => import('./pages/inventory/StockJournal'))
+const PhysicalStock = React.lazy(() => import('./pages/inventory/PhysicalStock'))
+const RejectionsIn = React.lazy(() => import('./pages/inventory/RejectionsIn'))
+const RejectionsOut = React.lazy(() => import('./pages/inventory/RejectionsOut'))
+
+// HR Module
+const HRDashboard = React.lazy(() => import('./pages/hr/HRDashboard'))
+const EmployeeList = React.lazy(() => import('./pages/hr/EmployeeList'))
+const RecruitmentBoard = React.lazy(() => import('./pages/hr/RecruitmentBoard'))
+const AssetList = React.lazy(() => import('./pages/hr/AssetList'))
+const TimeSheet = React.lazy(() => import('./pages/hr/TimeSheet'))
+const OrgChart = React.lazy(() => import('./pages/hr/OrgChart'))
+const Attendance = React.lazy(() => import('./pages/hr/Attendance'))
+const Leaves = React.lazy(() => import('./pages/hr/Leaves'))
+const Payroll = React.lazy(() => import('./pages/hr/Payroll'))
+const Trainings = React.lazy(() => import('./pages/hr/Trainings'))
+const Performance = React.lazy(() => import('./pages/hr/Performance'))
+const Expenses = React.lazy(() => import('./pages/hr/Expenses'))
+const Announcements = React.lazy(() => import('./pages/hr/Announcements'))
+const Departments = React.lazy(() => import('./pages/hr/Departments'))
+
+// CRM Module
+const CRMDashboard = React.lazy(() => import('./pages/crm/CRMDashboard'))
+const Leads = React.lazy(() => import('./pages/crm/Leads'))
+const Opportunities = React.lazy(() => import('./pages/crm/Opportunities'))
+const Contacts = React.lazy(() => import('./pages/crm/Contacts'))
+const Activities = React.lazy(() => import('./pages/crm/Activities'))
+
+// Influencer Module
+const InfluencerDashboard = React.lazy(() => import('./pages/influencer/InfluencerDashboard'))
+const CreatorDatabase = React.lazy(() => import('./pages/influencer/CreatorDatabase'))
+const CampaignDashboard = React.lazy(() => import('./pages/influencer/CampaignDashboard'))
+const CampaignGenerator = React.lazy(() => import('./pages/influencer/CampaignGenerator'))
+const OutreachDashboard = React.lazy(() => import('./pages/influencer/OutreachDashboard'))
+const SalesCRM = React.lazy(() => import('./pages/influencer/SalesCRM'))
+const ContentScheduling = React.lazy(() => import('./pages/influencer/ContentScheduling'))
+const PaymentInvoicing = React.lazy(() => import('./pages/influencer/PaymentInvoicing'))
+const CreatorAnalytics = React.lazy(() => import('./pages/influencer/CreatorAnalytics'))
+const CampaignComparison = React.lazy(() => import('./pages/influencer/CampaignComparison'))
+
+// Manufacturing Module
+const Manufacturing = React.lazy(() => import('./pages/Manufacturing'))
+const BillOfMaterials = React.lazy(() => import('./pages/manufacturing/BillOfMaterials'))
+const WorkCenters = React.lazy(() => import('./pages/manufacturing/WorkCenters'))
+const ProductionOrders = React.lazy(() => import('./pages/manufacturing/ProductionOrders'))
+
+// Specialized Module
+const Specialized = React.lazy(() => import('./pages/Specialized'))
+const PointOfSale = React.lazy(() => import('./pages/specialized/PointOfSale'))
+const Discuss = React.lazy(() => import('./pages/specialized/Discuss'))
+const Rentals = React.lazy(() => import('./pages/specialized/Rentals'))
+const WebsiteBuilder = React.lazy(() => import('./pages/specialized/WebsiteBuilder'))
+
+// Other
+const Settings = React.lazy(() => import('./pages/Settings'))
+const Reports = React.lazy(() => import('./pages/Reports'))
+const TallyHelp = React.lazy(() => import('./pages/TallyHelp'))
+const NotFound = React.lazy(() => import('./pages/NotFound'))
+
+// Loading fallback for lazy-loaded routes
+function PageLoader() {
+  return (
+    <div style={{ padding: '40px 24px' }}>
+      <LoadingSkeleton variant="title" width="30%" />
+      <div style={{ marginTop: 24 }}>
+        <LoadingSkeleton count={6} />
+      </div>
+    </div>
+  )
+}
+
 function App() {
-  const [isConfigured, setIsConfigured] = React.useState(true); // Optimistic default
+  const [isConfigured, setIsConfigured] = React.useState(true);
 
   React.useEffect(() => {
-    // Check if DB is configured
     fetch('http://localhost:5000/api/setup/status')
       .then(res => res.json())
       .then(data => {
         if (!data.configured) setIsConfigured(false);
       })
       .catch(() => {
-        // Assume failure means not configured or down, safe to show setup or error
-        // For now, let's just log it
         console.log('Setup check failed');
       });
   }, []);
@@ -133,149 +154,153 @@ function App() {
   return (
     <ErrorBoundary>
       <ToastProvider>
-        <Routes>
-          <Route path="/setup" element={<Setup />} />
-          <Route path="/" element={!isConfigured ? <Navigate to="/setup" /> : <Layout />}>
-            <Route index element={<Dashboard />} />
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/setup" element={<Setup />} />
+            <Route path="/" element={!isConfigured ? <Navigate to="/setup" /> : <Layout />}>
+              <Route index element={<Dashboard />} />
 
+              {/* Sales Module Routes */}
+              <Route element={<ModuleErrorBoundary moduleName="Sales"><Outlet /></ModuleErrorBoundary>}>
+                <Route path="sales" element={<Suspense fallback={<PageLoader />}><Sales /></Suspense>} />
+                <Route path="sales/quotations" element={<Suspense fallback={<PageLoader />}><Quotations /></Suspense>} />
+                <Route path="sales/quotations/templates" element={<Suspense fallback={<PageLoader />}><QuotationTemplates /></Suspense>} />
+                <Route path="sales/orders" element={<Suspense fallback={<PageLoader />}><SalesOrders /></Suspense>} />
+                <Route path="sales/invoices" element={<Suspense fallback={<PageLoader />}><Invoices /></Suspense>} />
+                <Route path="sales/invoices/templates" element={<Suspense fallback={<PageLoader />}><InvoiceTemplates /></Suspense>} />
+                <Route path="sales/credit-notes" element={<Suspense fallback={<PageLoader />}><CreditNotes /></Suspense>} />
+                <Route path="sales/pricing" element={<Suspense fallback={<PageLoader />}><PricingRules /></Suspense>} />
+                <Route path="sales/targets" element={<Suspense fallback={<PageLoader />}><SalesTargets /></Suspense>} />
+                <Route path="sales/delivery-notes" element={<Suspense fallback={<PageLoader />}><DeliveryNotes /></Suspense>} />
+              </Route>
 
-            {/* Sales Module Routes */}
-            <Route element={<ModuleErrorBoundary moduleName="Sales"><Outlet /></ModuleErrorBoundary>}>
-              <Route path="sales" element={<Sales />} />
-              <Route path="sales/quotations" element={<Quotations />} />
-              <Route path="sales/quotations/templates" element={<QuotationTemplates />} />
-              <Route path="sales/orders" element={<SalesOrders />} />
-              <Route path="sales/invoices" element={<Invoices />} />
-              <Route path="sales/invoices/templates" element={<InvoiceTemplates />} />
-              <Route path="sales/credit-notes" element={<CreditNotes />} />
-              <Route path="sales/pricing" element={<PricingRules />} />
-              <Route path="sales/targets" element={<SalesTargets />} />
-              <Route path="sales/delivery-notes" element={<DeliveryNotes />} />
+              {/* Purchase Module Routes */}
+              <Route element={<ModuleErrorBoundary moduleName="Purchase"><Outlet /></ModuleErrorBoundary>}>
+                <Route path="purchase" element={<Suspense fallback={<PageLoader />}><Purchase /></Suspense>} />
+                <Route path="purchase/vendors" element={<Suspense fallback={<PageLoader />}><Vendors /></Suspense>} />
+                <Route path="purchase/orders" element={<Suspense fallback={<PageLoader />}><PurchaseOrders /></Suspense>} />
+                <Route path="purchase/requisitions" element={<Suspense fallback={<PageLoader />}><PurchaseRequisitions /></Suspense>} />
+                <Route path="purchase/rfqs" element={<Suspense fallback={<PageLoader />}><RFQs /></Suspense>} />
+                <Route path="purchase/grns" element={<Suspense fallback={<PageLoader />}><GRNs /></Suspense>} />
+                <Route path="purchase/supplier-invoices" element={<Suspense fallback={<PageLoader />}><SupplierInvoices /></Suspense>} />
+                <Route path="purchase/returns" element={<Suspense fallback={<PageLoader />}><VendorReturns /></Suspense>} />
+                <Route path="purchase/evaluations" element={<Suspense fallback={<PageLoader />}><VendorEvaluations /></Suspense>} />
+                <Route path="purchase/subscriptions" element={<Suspense fallback={<PageLoader />}><Subscriptions /></Suspense>} />
+              </Route>
+
+              {/* Accounting Module Routes */}
+              <Route element={<ModuleErrorBoundary moduleName="Accounting"><Outlet /></ModuleErrorBoundary>}>
+                <Route path="accounting" element={<Suspense fallback={<PageLoader />}><Accounting /></Suspense>} />
+                <Route path="accounting/journal" element={<Suspense fallback={<PageLoader />}><JournalEntries /></Suspense>} />
+                <Route path="accounting/journal-entries" element={<Suspense fallback={<PageLoader />}><JournalEntries /></Suspense>} />
+                <Route path="accounting/general-ledger" element={<Suspense fallback={<PageLoader />}><GeneralLedger /></Suspense>} />
+                <Route path="accounting/ledger" element={<Suspense fallback={<PageLoader />}><GeneralLedger /></Suspense>} />
+                <Route path="accounting/bank" element={<Suspense fallback={<PageLoader />}><BankAccounts /></Suspense>} />
+                <Route path="accounting/bank-accounts" element={<Suspense fallback={<PageLoader />}><BankAccounts /></Suspense>} />
+                <Route path="accounting/expenses" element={<Suspense fallback={<PageLoader />}><AccountingExpenses /></Suspense>} />
+                <Route path="accounting/budgets" element={<Suspense fallback={<PageLoader />}><Budgets /></Suspense>} />
+                <Route path="accounting/receivable" element={<Suspense fallback={<PageLoader />}><AccountsReceivable /></Suspense>} />
+                <Route path="accounting/receivables" element={<Suspense fallback={<PageLoader />}><AccountsReceivable /></Suspense>} />
+                <Route path="accounting/payable" element={<Suspense fallback={<PageLoader />}><AccountsPayable /></Suspense>} />
+                <Route path="accounting/payables" element={<Suspense fallback={<PageLoader />}><AccountsPayable /></Suspense>} />
+                <Route path="accounting/chart" element={<Suspense fallback={<PageLoader />}><ChartOfAccounts /></Suspense>} />
+                <Route path="accounting/chart-of-accounts" element={<Suspense fallback={<PageLoader />}><ChartOfAccounts /></Suspense>} />
+                <Route path="accounting/reports" element={<Suspense fallback={<PageLoader />}><FinancialReports /></Suspense>} />
+                <Route path="accounting/assets" element={<Suspense fallback={<PageLoader />}><FixedAssets /></Suspense>} />
+                <Route path="accounting/cost-centers" element={<Suspense fallback={<PageLoader />}><CostCenters /></Suspense>} />
+                <Route path="accounting/taxation" element={<Suspense fallback={<PageLoader />}><Taxation /></Suspense>} />
+                <Route path="accounting/automation" element={<Suspense fallback={<PageLoader />}><Automation /></Suspense>} />
+                <Route path="accounting/cheque-printing" element={<Suspense fallback={<PageLoader />}><ChequePrinting /></Suspense>} />
+                <Route path="accounting/debit-notes" element={<Suspense fallback={<PageLoader />}><DebitNotes /></Suspense>} />
+              </Route>
+
+              {/* Inventory Module Routes */}
+              <Route element={<ModuleErrorBoundary moduleName="Inventory"><Outlet /></ModuleErrorBoundary>}>
+                <Route path="inventory" element={<Suspense fallback={<PageLoader />}><Inventory /></Suspense>} />
+                <Route path="inventory/movements" element={<Suspense fallback={<PageLoader />}><StockMovements /></Suspense>} />
+                <Route path="inventory/transfers" element={<Suspense fallback={<PageLoader />}><StockTransfers /></Suspense>} />
+                <Route path="inventory/warehouses" element={<Suspense fallback={<PageLoader />}><Warehouses /></Suspense>} />
+                <Route path="inventory/serial-numbers" element={<Suspense fallback={<PageLoader />}><SerialNumbers /></Suspense>} />
+                <Route path="inventory/stock-groups" element={<Suspense fallback={<PageLoader />}><StockGroups /></Suspense>} />
+                <Route path="inventory/units" element={<Suspense fallback={<PageLoader />}><Units /></Suspense>} />
+                <Route path="inventory/stock-journal" element={<Suspense fallback={<PageLoader />}><StockJournal /></Suspense>} />
+                <Route path="inventory/physical-stock" element={<Suspense fallback={<PageLoader />}><PhysicalStock /></Suspense>} />
+                <Route path="inventory/rejections-in" element={<Suspense fallback={<PageLoader />}><RejectionsIn /></Suspense>} />
+                <Route path="inventory/rejections-out" element={<Suspense fallback={<PageLoader />}><RejectionsOut /></Suspense>} />
+              </Route>
+
+              <Route element={<ModuleErrorBoundary moduleName="Products"><Outlet /></ModuleErrorBoundary>}>
+                <Route path="products" element={<Suspense fallback={<PageLoader />}><ProductList /></Suspense>} />
+                <Route path="products/price-lists" element={<Suspense fallback={<PageLoader />}><PriceLists /></Suspense>} />
+              </Route>
+
+              {/* CRM Module Routes */}
+              <Route element={<ModuleErrorBoundary moduleName="CRM"><Outlet /></ModuleErrorBoundary>}>
+                <Route path="crm" element={<Suspense fallback={<PageLoader />}><CRMDashboard /></Suspense>} />
+                <Route path="crm/leads" element={<Suspense fallback={<PageLoader />}><Leads /></Suspense>} />
+                <Route path="crm/leads/new" element={<Suspense fallback={<PageLoader />}><Leads /></Suspense>} />
+                <Route path="crm/opportunities" element={<Suspense fallback={<PageLoader />}><Opportunities /></Suspense>} />
+                <Route path="crm/opportunities/new" element={<Suspense fallback={<PageLoader />}><Opportunities /></Suspense>} />
+                <Route path="crm/contacts" element={<Suspense fallback={<PageLoader />}><Contacts /></Suspense>} />
+                <Route path="crm/contacts/new" element={<Suspense fallback={<PageLoader />}><Contacts /></Suspense>} />
+                <Route path="crm/activities" element={<Suspense fallback={<PageLoader />}><Activities /></Suspense>} />
+              </Route>
+
+              {/* Influencer Module Routes */}
+              <Route element={<ModuleErrorBoundary moduleName="Influencer"><Outlet /></ModuleErrorBoundary>}>
+                <Route path="influencer" element={<Suspense fallback={<PageLoader />}><InfluencerDashboard /></Suspense>} />
+                <Route path="influencer/creators" element={<Suspense fallback={<PageLoader />}><CreatorDatabase /></Suspense>} />
+                <Route path="influencer/campaigns" element={<Suspense fallback={<PageLoader />}><CampaignDashboard /></Suspense>} />
+                <Route path="influencer/generator" element={<Suspense fallback={<PageLoader />}><CampaignGenerator /></Suspense>} />
+                <Route path="influencer/outreach" element={<Suspense fallback={<PageLoader />}><OutreachDashboard /></Suspense>} />
+                <Route path="influencer/sales" element={<Suspense fallback={<PageLoader />}><SalesCRM /></Suspense>} />
+                <Route path="influencer/content" element={<Suspense fallback={<PageLoader />}><ContentScheduling /></Suspense>} />
+                <Route path="influencer/invoices" element={<Suspense fallback={<PageLoader />}><PaymentInvoicing /></Suspense>} />
+                <Route path="influencer/analytics" element={<Suspense fallback={<PageLoader />}><CreatorAnalytics /></Suspense>} />
+                <Route path="influencer/comparison" element={<Suspense fallback={<PageLoader />}><CampaignComparison /></Suspense>} />
+              </Route>
+
+              {/* HR Module Routes */}
+              <Route element={<ModuleErrorBoundary moduleName="HR"><Outlet /></ModuleErrorBoundary>}>
+                <Route path="hr" element={<Suspense fallback={<PageLoader />}><HRDashboard /></Suspense>} />
+                <Route path="hr/employees" element={<Suspense fallback={<PageLoader />}><EmployeeList /></Suspense>} />
+                <Route path="hr/employees/new" element={<Suspense fallback={<PageLoader />}><EmployeeList /></Suspense>} />
+                <Route path="hr/recruitment" element={<Suspense fallback={<PageLoader />}><RecruitmentBoard /></Suspense>} />
+                <Route path="hr/assets" element={<Suspense fallback={<PageLoader />}><AssetList /></Suspense>} />
+                <Route path="hr/timesheets" element={<Suspense fallback={<PageLoader />}><TimeSheet /></Suspense>} />
+                <Route path="hr/org-chart" element={<Suspense fallback={<PageLoader />}><OrgChart /></Suspense>} />
+                <Route path="hr/attendance" element={<Suspense fallback={<PageLoader />}><Attendance /></Suspense>} />
+                <Route path="hr/leaves" element={<Suspense fallback={<PageLoader />}><Leaves /></Suspense>} />
+                <Route path="hr/payroll" element={<Suspense fallback={<PageLoader />}><Payroll /></Suspense>} />
+                <Route path="hr/trainings" element={<Suspense fallback={<PageLoader />}><Trainings /></Suspense>} />
+                <Route path="hr/performance" element={<Suspense fallback={<PageLoader />}><Performance /></Suspense>} />
+                <Route path="hr/expenses" element={<Suspense fallback={<PageLoader />}><Expenses /></Suspense>} />
+                <Route path="hr/announcements" element={<Suspense fallback={<PageLoader />}><Announcements /></Suspense>} />
+                <Route path="hr/departments" element={<Suspense fallback={<PageLoader />}><Departments /></Suspense>} />
+              </Route>
+
+              <Route element={<ModuleErrorBoundary moduleName="Manufacturing"><Outlet /></ModuleErrorBoundary>}>
+                <Route path="manufacturing" element={<Suspense fallback={<PageLoader />}><Manufacturing /></Suspense>} />
+                <Route path="manufacturing/bom" element={<Suspense fallback={<PageLoader />}><BillOfMaterials /></Suspense>} />
+                <Route path="manufacturing/work-centers" element={<Suspense fallback={<PageLoader />}><WorkCenters /></Suspense>} />
+                <Route path="manufacturing/production-orders" element={<Suspense fallback={<PageLoader />}><ProductionOrders /></Suspense>} />
+              </Route>
+
+              <Route element={<ModuleErrorBoundary moduleName="Specialized"><Outlet /></ModuleErrorBoundary>}>
+                <Route path="specialized" element={<Suspense fallback={<PageLoader />}><Specialized /></Suspense>} />
+                <Route path="specialized/pos" element={<Suspense fallback={<PageLoader />}><PointOfSale /></Suspense>} />
+                <Route path="specialized/discuss" element={<Suspense fallback={<PageLoader />}><Discuss /></Suspense>} />
+                <Route path="specialized/rentals" element={<Suspense fallback={<PageLoader />}><Rentals /></Suspense>} />
+                <Route path="specialized/website-builder" element={<Suspense fallback={<PageLoader />}><WebsiteBuilder /></Suspense>} />
+              </Route>
+
+              <Route path="settings" element={<ModuleErrorBoundary moduleName="Settings"><Suspense fallback={<PageLoader />}><Settings /></Suspense></ModuleErrorBoundary>} />
+              <Route path="reports" element={<ModuleErrorBoundary moduleName="Reports"><Suspense fallback={<PageLoader />}><Reports /></Suspense></ModuleErrorBoundary>} />
+              <Route path="tally-help" element={<ModuleErrorBoundary moduleName="Help"><Suspense fallback={<PageLoader />}><TallyHelp /></Suspense></ModuleErrorBoundary>} />
+              <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
             </Route>
-
-            {/* Purchase Module Routes */}
-            <Route element={<ModuleErrorBoundary moduleName="Purchase"><Outlet /></ModuleErrorBoundary>}>
-              <Route path="purchase" element={<Purchase />} />
-              <Route path="purchase/vendors" element={<Vendors />} />
-              <Route path="purchase/orders" element={<PurchaseOrders />} />
-              <Route path="purchase/requisitions" element={<PurchaseRequisitions />} />
-              <Route path="purchase/rfqs" element={<RFQs />} />
-              <Route path="purchase/grns" element={<GRNs />} />
-              <Route path="purchase/supplier-invoices" element={<SupplierInvoices />} />
-              <Route path="purchase/returns" element={<VendorReturns />} />
-              <Route path="purchase/evaluations" element={<VendorEvaluations />} />
-              <Route path="purchase/subscriptions" element={<Subscriptions />} />
-            </Route>
-
-            {/* Accounting Module Routes */}
-            <Route element={<ModuleErrorBoundary moduleName="Accounting"><Outlet /></ModuleErrorBoundary>}>
-              <Route path="accounting" element={<Accounting />} />
-              <Route path="accounting/journal" element={<JournalEntries />} />
-              <Route path="accounting/journal-entries" element={<JournalEntries />} />
-              <Route path="accounting/general-ledger" element={<GeneralLedger />} />
-              <Route path="accounting/ledger" element={<GeneralLedger />} />
-              <Route path="accounting/bank" element={<BankAccounts />} />
-              <Route path="accounting/bank-accounts" element={<BankAccounts />} />
-              <Route path="accounting/expenses" element={<AccountingExpenses />} />
-              <Route path="accounting/budgets" element={<Budgets />} />
-              <Route path="accounting/receivable" element={<AccountsReceivable />} />
-              <Route path="accounting/receivables" element={<AccountsReceivable />} />
-              <Route path="accounting/payable" element={<AccountsPayable />} />
-              <Route path="accounting/payables" element={<AccountsPayable />} />
-              <Route path="accounting/chart" element={<ChartOfAccounts />} />
-              <Route path="accounting/chart-of-accounts" element={<ChartOfAccounts />} />
-              <Route path="accounting/reports" element={<FinancialReports />} />
-              <Route path="accounting/assets" element={<FixedAssets />} />
-              <Route path="accounting/cost-centers" element={<CostCenters />} />
-              <Route path="accounting/taxation" element={<Taxation />} />
-              <Route path="accounting/automation" element={<Automation />} />
-              <Route path="accounting/cheque-printing" element={<ChequePrinting />} />
-              <Route path="accounting/debit-notes" element={<DebitNotes />} />
-            </Route>
-
-            {/* Inventory Module Routes */}
-            <Route element={<ModuleErrorBoundary moduleName="Inventory"><Outlet /></ModuleErrorBoundary>}>
-              <Route path="inventory" element={<Inventory />} />
-              <Route path="inventory/movements" element={<StockMovements />} />
-              <Route path="inventory/transfers" element={<StockTransfers />} />
-              <Route path="inventory/warehouses" element={<Warehouses />} />
-              <Route path="inventory/serial-numbers" element={<SerialNumbers />} />
-              <Route path="inventory/stock-groups" element={<StockGroups />} />
-              <Route path="inventory/units" element={<Units />} />
-              <Route path="inventory/stock-journal" element={<StockJournal />} />
-              <Route path="inventory/physical-stock" element={<PhysicalStock />} />
-              <Route path="inventory/rejections-in" element={<RejectionsIn />} />
-              <Route path="inventory/rejections-out" element={<RejectionsOut />} />
-            </Route>
-
-            <Route element={<ModuleErrorBoundary moduleName="Products"><Outlet /></ModuleErrorBoundary>}>
-              <Route path="products" element={<ProductList />} />
-              <Route path="products/price-lists" element={<PriceLists />} />
-            </Route>
-            {/* CRM Module Routes */}
-            <Route element={<ModuleErrorBoundary moduleName="CRM"><Outlet /></ModuleErrorBoundary>}>
-              <Route path="crm" element={<CRMDashboard />} />
-              <Route path="crm/leads" element={<Leads />} />
-              <Route path="crm/leads/new" element={<Leads />} />
-              <Route path="crm/opportunities" element={<Opportunities />} />
-              <Route path="crm/opportunities/new" element={<Opportunities />} />
-              <Route path="crm/contacts" element={<Contacts />} />
-              <Route path="crm/contacts/new" element={<Contacts />} />
-              <Route path="crm/activities" element={<Activities />} />
-            </Route>
-
-            {/* Influencer Module Routes */}
-            <Route element={<ModuleErrorBoundary moduleName="Influencer"><Outlet /></ModuleErrorBoundary>}>
-              <Route path="influencer" element={<InfluencerDashboard />} />
-              <Route path="influencer/creators" element={<CreatorDatabase />} />
-              <Route path="influencer/campaigns" element={<CampaignDashboard />} />
-              <Route path="influencer/generator" element={<CampaignGenerator />} />
-              <Route path="influencer/outreach" element={<OutreachDashboard />} />
-              <Route path="influencer/sales" element={<SalesCRM />} />
-              <Route path="influencer/content" element={<ContentScheduling />} />
-              <Route path="influencer/invoices" element={<PaymentInvoicing />} />
-            </Route>
-
-            {/* HR Module Routes */}
-            <Route element={<ModuleErrorBoundary moduleName="HR"><Outlet /></ModuleErrorBoundary>}>
-              <Route path="hr" element={<HRDashboard />} />
-              <Route path="hr/employees" element={<EmployeeList />} />
-              <Route path="hr/employees/new" element={<EmployeeList />} />
-              <Route path="hr/recruitment" element={<RecruitmentBoard />} />
-              <Route path="hr/assets" element={<AssetList />} />
-              <Route path="hr/timesheets" element={<TimeSheet />} />
-              <Route path="hr/org-chart" element={<OrgChart />} />
-              <Route path="hr/attendance" element={<Attendance />} />
-              <Route path="hr/leaves" element={<Leaves />} />
-              <Route path="hr/payroll" element={<Payroll />} />
-              <Route path="hr/trainings" element={<Trainings />} />
-              <Route path="hr/performance" element={<Performance />} />
-              <Route path="hr/expenses" element={<Expenses />} />
-              <Route path="hr/announcements" element={<Announcements />} />
-              <Route path="hr/departments" element={<Departments />} />
-            </Route>
-
-            <Route element={<ModuleErrorBoundary moduleName="Manufacturing"><Outlet /></ModuleErrorBoundary>}>
-              <Route path="manufacturing" element={<Manufacturing />} />
-              <Route path="manufacturing/bom" element={<BillOfMaterials />} />
-              <Route path="manufacturing/work-centers" element={<WorkCenters />} />
-              <Route path="manufacturing/production-orders" element={<ProductionOrders />} />
-            </Route>
-
-            <Route element={<ModuleErrorBoundary moduleName="Specialized"><Outlet /></ModuleErrorBoundary>}>
-              <Route path="specialized" element={<Specialized />} />
-              <Route path="specialized/pos" element={<PointOfSale />} />
-              <Route path="specialized/discuss" element={<Discuss />} />
-              <Route path="specialized/rentals" element={<Rentals />} />
-              <Route path="specialized/website-builder" element={<WebsiteBuilder />} />
-            </Route>
-
-            <Route path="settings" element={<ModuleErrorBoundary moduleName="Settings"><Settings /></ModuleErrorBoundary>} />
-            <Route path="reports" element={<ModuleErrorBoundary moduleName="Reports"><Reports /></ModuleErrorBoundary>} />
-            <Route path="tally-help" element={<ModuleErrorBoundary moduleName="Help"><TallyHelp /></ModuleErrorBoundary>} />
-            <Route path="*" element={<NotFound />} />
-          </Route>
-        </Routes>
+          </Routes>
+        </Suspense>
       </ToastProvider>
     </ErrorBoundary>
   )

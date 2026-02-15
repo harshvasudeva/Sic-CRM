@@ -6,7 +6,7 @@ import {
     UserPlus, Target, FileText, Clock, ChevronRight, BarChart3,
     Zap, Eye, MessageSquare
 } from 'lucide-react'
-import { getInfluencerStats, getCreators, getCampaigns, getOutreachList } from '../../stores/influencerStore'
+import { getInfluencerStats, getCreators, getCampaigns, getOutreachList, getCreatorsWithScores, getCreatorTierColor } from '../../stores/influencerStore'
 
 function InfluencerDashboard() {
     const navigate = useNavigate()
@@ -14,12 +14,16 @@ function InfluencerDashboard() {
     const [recentCreators, setRecentCreators] = useState([])
     const [activeCampaigns, setActiveCampaigns] = useState([])
     const [pendingOutreach, setPendingOutreach] = useState([])
+    const [topCreators, setTopCreators] = useState([])
 
     useEffect(() => {
         setStats(getInfluencerStats())
         setRecentCreators(getCreators().slice(0, 5))
         setActiveCampaigns(getCampaigns({ status: 'Active' }).concat(getCampaigns({ status: 'Planning' })).slice(0, 4))
         setPendingOutreach(getOutreachList().filter(o => o.status !== 'Replied').slice(0, 4))
+        const scored = getCreatorsWithScores()
+        scored.sort((a, b) => b.creatorScore.total - a.creatorScore.total)
+        setTopCreators(scored.slice(0, 5))
     }, [])
 
     if (!stats) return <div className="page"><p>Loading...</p></div>
@@ -49,6 +53,8 @@ function InfluencerDashboard() {
         { icon: Send, label: 'New Outreach', path: '/influencer/outreach', color: '#3b82f6' },
         { icon: Calendar, label: 'Schedule Content', path: '/influencer/content', color: '#8b5cf6' },
         { icon: FileText, label: 'Create Invoice', path: '/influencer/invoices', color: '#ec4899' },
+        { icon: BarChart3, label: 'Analytics', path: '/influencer/analytics', color: '#06b6d4' },
+        { icon: Target, label: 'Compare Campaigns', path: '/influencer/comparison', color: '#ef4444' },
     ]
 
     const statusColors = {
@@ -132,6 +138,32 @@ function InfluencerDashboard() {
                                 </div>
                                 <div className="inf-list-badge" style={{ background: `${statusColors[c.status]}20`, color: statusColors[c.status] }}>
                                     {c.status}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </motion.div>
+
+                <motion.div className="inf-dashboard-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.37 }}>
+                    <div className="inf-card-header">
+                        <h3><TrendingUp size={18} /> Top Creators by Score</h3>
+                        <button className="inf-link-btn" onClick={() => navigate('/influencer/analytics')}>Analytics <ChevronRight size={14} /></button>
+                    </div>
+                    <div className="inf-card-list">
+                        {topCreators.map((c, i) => (
+                            <div key={c.id} className="inf-list-item" onClick={() => navigate('/influencer/analytics')}>
+                                <div className="inf-list-avatar" style={{ background: `${getCreatorTierColor(c.creatorTier)}20`, color: getCreatorTierColor(c.creatorTier) }}>
+                                    {i + 1}
+                                </div>
+                                <div className="inf-list-info">
+                                    <div className="inf-list-name">{c.name}</div>
+                                    <div className="inf-list-meta">{c.platform} &bull; {c.creatorTier?.toUpperCase()} &bull; {c.niche}</div>
+                                </div>
+                                <div className="inf-list-badge" style={{
+                                    background: c.creatorScore.total >= 70 ? '#10b98120' : c.creatorScore.total >= 40 ? '#f59e0b20' : '#ef444420',
+                                    color: c.creatorScore.total >= 70 ? '#10b981' : c.creatorScore.total >= 40 ? '#f59e0b' : '#ef4444'
+                                }}>
+                                    {c.creatorScore.total}/100
                                 </div>
                             </div>
                         ))}

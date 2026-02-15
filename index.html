@@ -3,7 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="manifest" href="/manifest.json" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#6366f1" />
     <title>Sic CRM - Enterprise Resource Planning</title>
     <meta name="description" content="Sic CRM - A comprehensive ERP solution for Sales, Products, Purchase, Accounting, CRM, HR, Manufacturing, and more." />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,5 +15,12 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {})
+        })
+      }
+    </script>
   </body>
 </html>

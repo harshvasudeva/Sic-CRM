@@ -7,8 +7,10 @@ import {
 } from 'lucide-react'
 import {
     getCreators, createCreator, updateCreator, deleteCreator, getLabels,
-    createLabel, addDealToCreator, calculateSmartAvgViews, calculateSuggestedCPV
+    createLabel, addDealToCreator, calculateSmartAvgViews, calculateSuggestedCPV,
+    getCreatorsWithScores, verifyCreator, getCreatorTierLabel, getCreatorTierColor
 } from '../../stores/influencerStore'
+import CreatorScoreCard from '../../components/influencer/CreatorScoreCard'
 
 function CreatorDatabase() {
     const [creators, setCreators] = useState([])
@@ -31,8 +33,16 @@ function CreatorDatabase() {
     useEffect(() => { loadData() }, [filters])
 
     function loadData() {
-        setCreators(getCreators(filters))
+        setCreators(getCreatorsWithScores(filters))
         setLabels(getLabels())
+    }
+
+    function handleVerify(creatorId) {
+        verifyCreator(creatorId, 'verified')
+        loadData()
+        if (selectedCreator?.id === creatorId) {
+            setSelectedCreator(getCreatorsWithScores().find(c => c.id === creatorId))
+        }
     }
 
     function resetForm() {
@@ -182,6 +192,7 @@ function CreatorDatabase() {
                     <thead>
                         <tr>
                             <th>Creator</th>
+                            <th>Score / Tier</th>
                             <th>Platform</th>
                             <th>Followers</th>
                             <th>Avg Views</th>
@@ -207,6 +218,7 @@ function CreatorDatabase() {
                                         </div>
                                     </div>
                                 </td>
+                                <td><CreatorScoreCard creator={c} compact /></td>
                                 <td>
                                     <span className="inf-platform-badge" style={{ background: c.platform === 'Instagram' ? '#E1306C20' : '#FF000020', color: c.platform === 'Instagram' ? '#E1306C' : '#FF0000' }}>
                                         {c.platform === 'Instagram' ? <Instagram size={14} /> : <Youtube size={14} />} {c.platform}
@@ -242,7 +254,7 @@ function CreatorDatabase() {
                             </tr>
                         ))}
                         {creators.length === 0 && (
-                            <tr><td colSpan="12" className="inf-empty-row">No creators found. Add your first creator!</td></tr>
+                            <tr><td colSpan="13" className="inf-empty-row">No creators found. Add your first creator!</td></tr>
                         )}
                     </tbody>
                 </table>
@@ -277,6 +289,13 @@ function CreatorDatabase() {
                                     <div><TrendingUp size={14} /> <strong>{formatNum(selectedCreator.avgViews)}</strong> Avg Views</div>
                                     <div><IndianRupee size={14} /> <strong>{formatCurrency(selectedCreator.suggestedCPV)}</strong> CPV Rate</div>
                                 </div>
+
+                                {selectedCreator.creatorScore && (
+                                    <div className="inf-detail-section">
+                                        <h4>Creator Score & Verification</h4>
+                                        <CreatorScoreCard creator={selectedCreator} onVerify={handleVerify} />
+                                    </div>
+                                )}
 
                                 <div className="inf-detail-section">
                                     <h4>Contact</h4>

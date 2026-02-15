@@ -930,6 +930,188 @@ export function generateColdMessages(creatorName, brand, platform = 'Email') {
     return { openers, followUps }
 }
 
+// ==================== CREATOR VERIFICATION & SCORING ====================
+export function getCreatorTier(followerCount) {
+    if (followerCount >= 1000000) return 'mega'
+    if (followerCount >= 100000) return 'macro'
+    if (followerCount >= 10000) return 'micro'
+    return 'nano'
+}
+
+export function getCreatorTierLabel(tier) {
+    return { nano: 'Nano (1K-10K)', micro: 'Micro (10K-100K)', macro: 'Macro (100K-1M)', mega: 'Mega (1M+)' }[tier] || tier
+}
+
+export function getCreatorTierColor(tier) {
+    return { nano: '#6b7280', micro: '#3b82f6', macro: '#8b5cf6', mega: '#f59e0b' }[tier] || '#6b7280'
+}
+
+export function calculateCreatorScore(creator) {
+    // Engagement rate (40%) - based on avgViews/followers ratio
+    const avgViews = calculateSmartAvgViews(creator.reelViews)
+    const engagementRate = creator.followers > 0 ? (avgViews / creator.followers) : 0
+    const engagementScore = Math.min(engagementRate * 10, 1) * 40 // 10%+ engagement = perfect score
+
+    // Audience quality (30%) - based on follower count tiers
+    const tier = getCreatorTier(creator.followers)
+    const tierScores = { nano: 15, micro: 22, macro: 27, mega: 30 }
+    const audienceScore = tierScores[tier] || 15
+
+    // Reliability (20%) - based on deal completion history
+    const deals = creator.dealHistory || []
+    const completedDeals = deals.filter(d => d.status === 'Completed').length
+    const totalDeals = deals.length
+    const reliabilityRate = totalDeals > 0 ? completedDeals / totalDeals : 0.5
+    const reliabilityScore = reliabilityRate * 20
+
+    // Profile completeness (10%) - based on fields filled
+    let filled = 0
+    if (creator.name) filled++
+    if (creator.handle) filled++
+    if (creator.contactEmail) filled++
+    if (creator.contactWhatsApp) filled++
+    if (creator.niche) filled++
+    if (creator.city) filled++
+    if (creator.brandsWorkedWith?.length) filled++
+    if (creator.reelViews?.length) filled++
+    const completenessScore = (filled / 8) * 10
+
+    const total = Math.round(engagementScore + audienceScore + reliabilityScore + completenessScore)
+    return {
+        total: Math.min(total, 100),
+        engagement: Math.round(engagementScore / 40 * 100),
+        audienceQuality: Math.round(audienceScore / 30 * 100),
+        reliability: Math.round(reliabilityScore / 20 * 100),
+        completeness: Math.round(completenessScore / 10 * 100),
+    }
+}
+
+export function verifyCreator(creatorId, status = 'verified') {
+    const creators = getStore(STORAGE_KEYS.creators, initialCreators)
+    const index = creators.findIndex(c => c.id === creatorId)
+    if (index === -1) return null
+    creators[index].verificationStatus = status
+    creators[index].updatedAt = today()
+    setStore(STORAGE_KEYS.creators, creators)
+    return creators[index]
+}
+
+export function getCreatorsWithScores(filters = {}) {
+    return getCreators(filters).map(c => ({
+        ...c,
+        creatorTier: getCreatorTier(c.followers),
+        creatorScore: calculateCreatorScore(c),
+        verificationStatus: c.verificationStatus || 'unverified'
+    }))
+}
+
+// ==================== CAMPAIGN BRIEF TEMPLATES ====================
+const briefTemplates = [
+    {
+        id: 'tpl-product-launch',
+        name: 'Product Launch',
+        icon: '🚀',
+        objective: 'Product Launch',
+        brief: 'Create excitement around the new product launch. Focus on unboxing, first impressions, and key features. Show authentic reactions and usage in daily life.',
+        contentSpecs: { postType: 'Reel', hashtags: ['#NewLaunch', '#Unboxing', '#FirstLook'], mentions: [] },
+        deliverables: ['1 Unboxing Reel', '2 Stories', '1 Static Post'],
+        messaging: 'Focus on genuine reactions, highlight key features, show real-life usage.',
+        duration: '2 weeks',
+    },
+    {
+        id: 'tpl-brand-awareness',
+        name: 'Brand Awareness',
+        icon: '📢',
+        objective: 'Brand Awareness',
+        brief: 'Introduce the brand to a wider audience through authentic storytelling. Creators should naturally integrate the brand into their lifestyle content.',
+        contentSpecs: { postType: 'Reel', hashtags: ['#Ad', '#BrandPartner'], mentions: [] },
+        deliverables: ['2 Reels', '3 Stories', '1 Carousel'],
+        messaging: 'Natural integration, storytelling approach, show brand values.',
+        duration: '3 weeks',
+    },
+    {
+        id: 'tpl-sales-promo',
+        name: 'Sales Promo',
+        icon: '💰',
+        objective: 'Sales',
+        brief: 'Drive direct sales with creator discount codes and limited-time offers. Include clear CTAs and show product benefits with testimonials.',
+        contentSpecs: { postType: 'Reel', hashtags: ['#Sale', '#Deal', '#LimitedOffer'], mentions: [] },
+        deliverables: ['1 Reel with CTA', '2 Stories with Swipe-Up', '1 Post'],
+        messaging: 'Clear CTA, discount code, urgency, testimonial style.',
+        duration: '1 week',
+    },
+    {
+        id: 'tpl-event-sponsorship',
+        name: 'Event Sponsorship',
+        icon: '🎪',
+        objective: 'Brand Awareness',
+        brief: 'Cover the sponsored event with behind-the-scenes content, live updates, and post-event recaps. Tag the brand and event in all posts.',
+        contentSpecs: { postType: 'Story', hashtags: ['#Event', '#Sponsored'], mentions: [] },
+        deliverables: ['5+ Stories', '1 Reel Recap', '2 Static Posts'],
+        messaging: 'Live coverage, BTS content, event highlights, brand visibility.',
+        duration: '3 days',
+    },
+    {
+        id: 'tpl-app-downloads',
+        name: 'App Downloads',
+        icon: '📱',
+        objective: 'App Downloads',
+        brief: 'Show the app in action with screen recordings, features walkthrough, and real user benefits. Include download link in bio/swipe-up.',
+        contentSpecs: { postType: 'Reel', hashtags: ['#App', '#TechTip', '#HowTo'], mentions: [] },
+        deliverables: ['1 Demo Reel', '2 Stories', '1 Feature Walkthrough'],
+        messaging: 'Show features, real benefits, easy tutorial style.',
+        duration: '2 weeks',
+    },
+]
+
+export function getBriefTemplates() { return briefTemplates }
+
+export function getBriefTemplate(id) { return briefTemplates.find(t => t.id === id) || null }
+
+export function applyBriefTemplate(templateId, brandName = '', platformOverride = '') {
+    const template = getBriefTemplate(templateId)
+    if (!template) return null
+    return {
+        brief: template.brief.replace(/the brand/g, brandName || 'the brand'),
+        objective: template.objective,
+        contentSpecs: {
+            ...template.contentSpecs,
+            mentions: brandName ? [`@${brandName.toLowerCase().replace(/\s+/g, '')}`] : [],
+        },
+        deliverables: template.deliverables,
+        messaging: template.messaging,
+        duration: template.duration,
+    }
+}
+
+// ==================== CAMPAIGN COMPARISON ====================
+export function compareCampaigns(campaignIds) {
+    const all = getCampaigns()
+    return campaignIds.map(id => {
+        const c = all.find(camp => camp.id === id)
+        if (!c) return null
+        const totalViews = c.creators.reduce((s, cr) => s + (cr.contentInsights?.views || 0), 0)
+        const totalLikes = c.creators.reduce((s, cr) => s + (cr.contentInsights?.likes || 0), 0)
+        const totalComments = c.creators.reduce((s, cr) => s + (cr.contentInsights?.comments || 0), 0)
+        const totalShares = c.creators.reduce((s, cr) => s + (cr.contentInsights?.shares || 0), 0)
+        const totalEngagement = totalLikes + totalComments + totalShares
+        const cpe = totalEngagement > 0 ? Math.round(c.spent / totalEngagement) : 0
+        const roi = c.spent > 0 ? ((totalEngagement * 2 - c.spent) / c.spent * 100).toFixed(1) : 0
+        return {
+            ...c,
+            metrics: { views: totalViews, likes: totalLikes, comments: totalComments, shares: totalShares, engagement: totalEngagement },
+            cpe,
+            roi,
+            budgetUtilization: c.budget > 0 ? Math.round(c.spent / c.budget * 100) : 0
+        }
+    }).filter(Boolean)
+}
+
+export function getCampaignROI(campaignId) {
+    const result = compareCampaigns([campaignId])
+    return result.length ? { roi: result[0].roi, cpe: result[0].cpe } : { roi: 0, cpe: 0 }
+}
+
 // ==================== STATS ====================
 export function getInfluencerStats() {
     const creators = getCreators()

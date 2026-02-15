@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -15,31 +15,71 @@ import {
   HelpCircle,
   Settings,
   BarChart3,
-  Megaphone
+  Megaphone,
+  ChevronDown
 } from 'lucide-react'
 import { useState } from 'react'
 import HelpModal from './HelpModal'
+import { getSettings, updateSettings } from '../stores/settingsStore'
 
-const navItems = [
-  { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/sales', icon: ShoppingCart, label: 'Sales' },
-  { path: '/products', icon: Package, label: 'Products' },
-  { path: '/purchase', icon: Truck, label: 'Purchase' },
-  { path: '/accounting', icon: Calculator, label: 'Accounting' },
-  { path: '/inventory', icon: Package, label: 'Inventory' },
-  { path: '/hr', icon: Users, label: 'HR' },
-  { path: '/crm', icon: UserCircle, label: 'CRM' },
-  { path: '/influencer', icon: Megaphone, label: 'Influencer' },
-  { path: '/manufacturing', icon: Factory, label: 'Manufacturing' },
-  { path: '/specialized', icon: Sparkles, label: 'Specialized' },
-  { path: '/reports', icon: BarChart3, label: 'Reports' },
-  { path: '/settings', icon: Settings, label: 'Settings' }
+const navGroups = [
+  {
+    label: null,
+    items: [
+      { path: '/', icon: LayoutDashboard, label: 'Dashboard' }
+    ]
+  },
+  {
+    label: 'Sales & CRM',
+    items: [
+      { path: '/sales', icon: ShoppingCart, label: 'Sales' },
+      { path: '/products', icon: Package, label: 'Products' },
+      { path: '/crm', icon: UserCircle, label: 'CRM' },
+      { path: '/influencer', icon: Megaphone, label: 'Influencer' },
+    ]
+  },
+  {
+    label: 'Operations',
+    items: [
+      { path: '/purchase', icon: Truck, label: 'Purchase' },
+      { path: '/inventory', icon: Package, label: 'Inventory' },
+      { path: '/manufacturing', icon: Factory, label: 'Manufacturing' },
+    ]
+  },
+  {
+    label: 'Finance & HR',
+    items: [
+      { path: '/accounting', icon: Calculator, label: 'Accounting' },
+      { path: '/hr', icon: Users, label: 'HR' },
+    ]
+  },
+  {
+    label: 'Other',
+    items: [
+      { path: '/specialized', icon: Sparkles, label: 'Specialized' },
+      { path: '/reports', icon: BarChart3, label: 'Reports' },
+      { path: '/settings', icon: Settings, label: 'Settings' }
+    ]
+  }
 ]
 
 function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
+  const [collapsedGroups, setCollapsedGroups] = useState(() => {
+    return getSettings().sidebarCollapsedGroups || []
+  })
   const location = useLocation()
+
+  const toggleGroup = (label) => {
+    const next = collapsedGroups.includes(label)
+      ? collapsedGroups.filter(g => g !== label)
+      : [...collapsedGroups, label]
+    setCollapsedGroups(next)
+    updateSettings({ sidebarCollapsedGroups: next })
+  }
+
+  let itemIndex = 0
 
   return (
     <>
@@ -80,34 +120,71 @@ function Sidebar() {
         </div>
 
         <nav className="sidebar-nav">
-          {navItems.map((item, index) => (
-            <motion.div
-              key={item.path}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-            >
-              <NavLink
-                to={item.path}
-                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-                onClick={() => setMobileOpen(false)}
-              >
-                <item.icon size={20} />
-                <span>{item.label}</span>
-                {location.pathname === item.path && (
-                  <motion.div
-                    className="nav-indicator"
-                    layoutId="nav-indicator"
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  />
+          {navGroups.map((group, gi) => {
+            const isCollapsed = group.label && collapsedGroups.includes(group.label)
+            return (
+              <div key={gi} className="nav-group">
+                {group.label && (
+                  <button
+                    className="nav-group-header"
+                    onClick={() => toggleGroup(group.label)}
+                  >
+                    <span>{group.label}</span>
+                    <ChevronDown
+                      size={14}
+                      style={{
+                        transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0)',
+                        transition: 'transform 0.2s'
+                      }}
+                    />
+                  </button>
                 )}
-              </NavLink>
-            </motion.div>
-          ))}
+                <AnimatePresence initial={false}>
+                  {!isCollapsed && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      style={{ overflow: 'hidden' }}
+                    >
+                      {group.items.map((item) => {
+                        const idx = itemIndex++
+                        return (
+                          <motion.div
+                            key={item.path}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.3, delay: idx * 0.03 }}
+                          >
+                            <NavLink
+                              to={item.path}
+                              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                              onClick={() => setMobileOpen(false)}
+                              end={item.path === '/'}
+                            >
+                              <item.icon size={20} />
+                              <span>{item.label}</span>
+                              {location.pathname === item.path && (
+                                <motion.div
+                                  className="nav-indicator"
+                                  layoutId="nav-indicator"
+                                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                                />
+                              )}
+                            </NavLink>
+                          </motion.div>
+                        )
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )
+          })}
         </nav>
 
         <div className="sidebar-footer">
-          {/* Help Button */}
           <motion.button
             className="help-btn"
             onClick={() => setHelpOpen(true)}
@@ -122,7 +199,7 @@ function Sidebar() {
             <div className="version-badge">
               <span>v2.0.0</span>
             </div>
-            <p>© 2026 Sic CRM</p>
+            <p>&copy; 2026 Sic CRM</p>
           </div>
         </div>
       </aside>
@@ -177,7 +254,7 @@ function Sidebar() {
           display: flex;
           flex-direction: column;
           z-index: 1000;
-          transition: transform 0.3s ease;
+          transition: transform 0.3s ease, background 0.3s ease;
         }
 
         @media (max-width: 1024px) {
@@ -235,20 +312,48 @@ function Sidebar() {
 
         .sidebar-nav {
           flex: 1;
-          padding: 20px 12px;
+          padding: 12px 12px;
           overflow-y: auto;
+        }
+
+        .nav-group {
+          margin-bottom: 4px;
+        }
+
+        .nav-group-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 8px 16px;
+          margin-top: 8px;
+          margin-bottom: 2px;
+          font-size: 0.7rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: var(--text-muted);
+          width: 100%;
+          cursor: pointer;
+          border-radius: 8px;
+          transition: all 0.15s;
+        }
+
+        .nav-group-header:hover {
+          color: var(--text-secondary);
+          background: rgba(255,255,255,0.03);
         }
 
         .nav-item {
           display: flex;
           align-items: center;
           gap: 14px;
-          padding: 14px 16px;
+          padding: 12px 16px;
           border-radius: 12px;
           color: var(--text-secondary);
           transition: all 0.2s ease;
           position: relative;
-          margin-bottom: 4px;
+          margin-bottom: 2px;
+          font-size: 0.9rem;
         }
 
         .nav-item:hover {

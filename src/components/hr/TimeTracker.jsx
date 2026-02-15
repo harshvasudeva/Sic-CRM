@@ -72,8 +72,8 @@ function TimeTracker() {
             animate={{ width: isExpanded ? 320 : 48, height: isExpanded ? 'auto' : 48 }}
             style={{
                 position: 'fixed',
-                bottom: 84,
-                right: 24,
+                bottom: 36,
+                right: 100,
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border-color)',
                 borderRadius: 24,
