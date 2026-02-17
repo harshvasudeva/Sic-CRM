@@ -118,7 +118,7 @@ function CRMDashboard() {
                                     <strong>{opp.name}</strong>
                                     <span>{opp.company}</span>
                                 </div>
-                                <div className="opp-value">{formatCurrency(opp.value)}</div>
+                                <div className="opp-value">{formatCurrency(opp.value, opp.currency)}</div>
                                 <span className={`stage-badge ${opp.stage.toLowerCase().replace(' ', '-')}`}>{opp.stage}</span>
                             </div>
                         ))}
@@ -172,15 +172,15 @@ function CRMDashboard() {
             </motion.div>
 
             <style>{`
-        .crm-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+        .crm-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
         @media (max-width: 1200px) { .crm-stats-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 600px) { .crm-stats-grid { grid-template-columns: 1fr; } }
         
-        .crm-stat-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 20px; display: flex; align-items: center; gap: 16px; transition: all 0.2s; }
+        .crm-stat-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 14px; display: flex; align-items: center; gap: 12px; transition: all 0.2s; }
         .crm-stat-card.clickable { cursor: pointer; }
-        .crm-stat-card.clickable:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+        .crm-stat-card.clickable:hover { border-color: var(--accent-primary); transform: translateY(-1px); }
         
-        .crm-stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; }
+        .crm-stat-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
         .crm-stat-icon.blue { background: linear-gradient(135deg, #3b82f6, #06b6d4); }
         .crm-stat-icon.green { background: linear-gradient(135deg, #10b981, #34d399); }
         .crm-stat-icon.orange { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
@@ -190,31 +190,31 @@ function CRMDashboard() {
         .crm-stat-icon.teal { background: linear-gradient(135deg, #14b8a6, #2dd4bf); }
         .crm-stat-icon.cyan { background: linear-gradient(135deg, #06b6d4, #22d3ee); }
         
-        .crm-stat-value { font-size: 1.5rem; font-weight: 700; }
-        .crm-stat-label { font-size: 0.85rem; color: var(--text-muted); }
+        .crm-stat-value { font-size: 1.25rem; font-weight: 700; }
+        .crm-stat-label { font-size: 0.78rem; color: var(--text-muted); }
         
-        .quick-actions-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .quick-actions-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         @media (max-width: 800px) { .quick-actions-grid { grid-template-columns: repeat(2, 1fr); } }
         
-        .quick-action-card { display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); text-align: left; transition: all 0.2s; }
+        .quick-action-card { display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); text-align: left; transition: all 0.2s; }
         .quick-action-card:hover { border-color: var(--accent-primary); }
-        .qa-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; }
-        .quick-action-card span { flex: 1; font-size: 0.9rem; font-weight: 500; color: var(--text-primary); }
+        .qa-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; }
+        .quick-action-card span { flex: 1; font-size: 0.82rem; font-weight: 500; color: var(--text-primary); }
         .qa-arrow { color: var(--text-muted); }
         
-        .crm-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 24px; }
+        .crm-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 16px; }
         @media (max-width: 900px) { .crm-grid-2 { grid-template-columns: 1fr; } }
         
-        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-        .card-header h3 { display: flex; align-items: center; gap: 8px; font-size: 1rem; }
-        .link-btn { font-size: 0.85rem; color: var(--accent-primary); }
+        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+        .card-header h3 { display: flex; align-items: center; gap: 8px; font-size: 0.95rem; }
+        .link-btn { font-size: 0.8rem; color: var(--accent-primary); }
         
-        .opportunity-list, .activity-list { display: flex; flex-direction: column; gap: 12px; }
-        .opportunity-item { display: flex; align-items: center; gap: 16px; padding: 12px; background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); }
+        .opportunity-list, .activity-list { display: flex; flex-direction: column; gap: 8px; }
+        .opportunity-item { display: flex; align-items: center; gap: 12px; padding: 10px; background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); }
         .opp-info { flex: 1; }
-        .opp-info strong { display: block; font-size: 0.9rem; }
-        .opp-info span { font-size: 0.8rem; color: var(--text-muted); }
-        .opp-value { font-weight: 600; color: var(--success); }
+        .opp-info strong { display: block; font-size: 0.85rem; }
+        .opp-info span { font-size: 0.75rem; color: var(--text-muted); }
+        .opp-value { font-weight: 600; color: var(--success); font-size: 0.9rem; }
         .stage-badge { padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
         
         .activity-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); }

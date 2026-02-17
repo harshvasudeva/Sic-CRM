@@ -61,7 +61,7 @@ function CreditNotesDebits() {
         setCreditNotes(getCreditNotes())
         setDebitNotes(getDebitNotes())
         setReturns(getSalesReturns())
-        setInvoices(getInvoices())
+        setInvoices(await getInvoices())
         try {
             const contactsData = await getContacts()
             setContacts(Array.isArray(contactsData) ? contactsData : [])

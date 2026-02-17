@@ -82,7 +82,7 @@ const notifications = [
   { id: 1, type: 'success', icon: Check, title: 'Order Completed', message: 'Order #1234 has been delivered', time: '2 min ago' },
   { id: 2, type: 'warning', icon: AlertCircle, title: 'Low Stock Alert', message: 'Widget Pro is running low', time: '15 min ago' },
   { id: 3, type: 'info', icon: Package, title: 'New Shipment', message: 'Incoming shipment from Vendor A', time: '1 hour ago' },
-  { id: 4, type: 'success', icon: DollarSign, title: 'Payment Received', message: '$2,500 from Acme Corp', time: '2 hours ago' },
+  { id: 4, type: 'success', icon: DollarSign, title: 'Payment Received', message: 'Payment from Acme Corp', time: '2 hours ago' },
 ]
 
 function Header() {

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { BarChart3, ChevronLeft, Eye, Heart, MessageSquare, Share2, IndianRupee, Target, TrendingUp, Users } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts'
 import { getCampaigns, compareCampaigns } from '../../stores/influencerStore'
+import { getCurrency } from '../../stores/settingsStore'
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444']
 
@@ -23,9 +24,10 @@ function CampaignComparison() {
     }
 
     const formatCurrency = (val) => {
-        if (val >= 100000) return `₹${(val / 100000).toFixed(1)}L`
-        if (val >= 1000) return `₹${(val / 1000).toFixed(1)}K`
-        return `₹${val}`
+        const s = getCurrency().symbol
+        if (val >= 100000) return `${s}${(val / 100000).toFixed(1)}L`
+        if (val >= 1000) return `${s}${(val / 1000).toFixed(1)}K`
+        return `${s}${val}`
     }
 
     const formatNum = (n) => {
@@ -107,7 +109,7 @@ function CampaignComparison() {
                                         { label: 'Comments', icon: MessageSquare, get: c => formatNum(c.metrics.comments) },
                                         { label: 'Shares', icon: Share2, get: c => formatNum(c.metrics.shares) },
                                         { label: 'Total Engagement', icon: TrendingUp, get: c => formatNum(c.metrics.engagement) },
-                                        { label: 'Cost per Engagement', icon: IndianRupee, get: c => c.cpe > 0 ? `₹${c.cpe}` : 'N/A' },
+                                        { label: 'Cost per Engagement', icon: IndianRupee, get: c => c.cpe > 0 ? `${getCurrency().symbol}${c.cpe}` : 'N/A' },
                                         { label: 'ROI', icon: BarChart3, get: c => `${c.roi}%` },
                                     ].map((row, ri) => (
                                         <tr key={ri}>

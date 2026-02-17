@@ -7,6 +7,7 @@ import {
 import {
     getInvoices, createInvoice, updateInvoice, getCreators, getCampaigns
 } from '../../stores/influencerStore'
+import { getCurrency } from '../../stores/settingsStore'
 
 function PaymentInvoicing() {
     const [invoices, setInvoices] = useState([])
@@ -51,7 +52,8 @@ function PaymentInvoicing() {
 
     const formatCurrency = (val) => {
         if (!val) return '—'
-        return `₹${val.toLocaleString('en-IN')}`
+        const s = getCurrency().symbol
+        return `${s}${val.toLocaleString('en-IN')}`
     }
 
     const statusColors = { Pending: '#f59e0b', Paid: '#10b981', Overdue: '#ef4444', Cancelled: '#6b7280' }
@@ -218,7 +220,7 @@ function PaymentInvoicing() {
                                             <option value="">Select Campaign</option>
                                             {campaigns.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                         </select></div>
-                                    <div className="inf-form-group"><label>Base Amount (₹) *</label>
+                                    <div className="inf-form-group"><label>Base Amount ({getCurrency().symbol}) *</label>
                                         <input type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} required /></div>
                                     <div className="inf-form-group"><label>Issue Date *</label>
                                         <input type="date" value={form.issueDate} onChange={e => setForm(f => ({ ...f, issueDate: e.target.value }))} required /></div>
@@ -227,10 +229,10 @@ function PaymentInvoicing() {
                                     {form.amount && (
                                         <div className="inf-form-group full-width">
                                             <div className="inv-preview">
-                                                <div className="inv-row"><span>Base:</span><strong>₹{Number(form.amount).toLocaleString('en-IN')}</strong></div>
-                                                <div className="inv-row"><span>GST (18%):</span><strong style={{ color: '#f59e0b' }}>+₹{Math.round(Number(form.amount) * 0.18).toLocaleString('en-IN')}</strong></div>
-                                                <div className="inv-row"><span>TDS (10%):</span><strong style={{ color: '#ef4444' }}>-₹{Math.round(Number(form.amount) * 0.10).toLocaleString('en-IN')}</strong></div>
-                                                <div className="inv-row inv-total"><span>Payable:</span><strong>₹{Math.round(Number(form.amount) * 1.08).toLocaleString('en-IN')}</strong></div>
+                                                <div className="inv-row"><span>Base:</span><strong>{formatCurrency(Number(form.amount))}</strong></div>
+                                                <div className="inv-row"><span>GST (18%):</span><strong style={{ color: '#f59e0b' }}>+{formatCurrency(Math.round(Number(form.amount) * 0.18))}</strong></div>
+                                                <div className="inv-row"><span>TDS (10%):</span><strong style={{ color: '#ef4444' }}>-{formatCurrency(Math.round(Number(form.amount) * 0.10))}</strong></div>
+                                                <div className="inv-row inv-total"><span>Payable:</span><strong>{formatCurrency(Math.round(Number(form.amount) * 1.08))}</strong></div>
                                             </div>
                                         </div>
                                     )}

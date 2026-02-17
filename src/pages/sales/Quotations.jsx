@@ -49,7 +49,7 @@ function Quotations() {
         const filters = {}
         if (filterStatus) filters.status = filterStatus
         if (filterCustomer) filters.customerId = filterCustomer
-        setQuotations(getQuotations(filters))
+        setQuotations(await getQuotations(filters))
         setTemplates(getQuotationTemplates())
         try {
             const contactsData = await getContacts()
@@ -219,7 +219,7 @@ function Quotations() {
                 return customer ? `${customer.firstName} ${customer.lastName}` : '-'
             }
         },
-        { key: 'total', label: 'Total', render: (v) => <span className="amount">{formatCurrency(v)}</span> },
+        { key: 'total', label: 'Total', render: (v, row) => <span className="amount">{formatCurrency(v, row?.currency)}</span> },
         {
             key: 'status', label: 'Status',
             render: (v) => (

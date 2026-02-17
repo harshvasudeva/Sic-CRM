@@ -7,6 +7,7 @@ import {
     Zap, Eye, MessageSquare
 } from 'lucide-react'
 import { getInfluencerStats, getCreators, getCampaigns, getOutreachList, getCreatorsWithScores, getCreatorTierColor } from '../../stores/influencerStore'
+import { getCurrency } from '../../stores/settingsStore'
 
 function InfluencerDashboard() {
     const navigate = useNavigate()
@@ -29,10 +30,11 @@ function InfluencerDashboard() {
     if (!stats) return <div className="page"><p>Loading...</p></div>
 
     const formatCurrency = (val) => {
-        if (val >= 10000000) return `₹${(val / 10000000).toFixed(1)}Cr`
-        if (val >= 100000) return `₹${(val / 100000).toFixed(1)}L`
-        if (val >= 1000) return `₹${(val / 1000).toFixed(1)}K`
-        return `₹${val}`
+        const s = getCurrency().symbol
+        if (val >= 10000000) return `${s}${(val / 10000000).toFixed(1)}Cr`
+        if (val >= 100000) return `${s}${(val / 100000).toFixed(1)}L`
+        if (val >= 1000) return `${s}${(val / 1000).toFixed(1)}K`
+        return `${s}${val}`
     }
 
     const statCards = [

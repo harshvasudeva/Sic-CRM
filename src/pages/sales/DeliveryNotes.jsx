@@ -47,7 +47,7 @@ function DeliveryNotes() {
     }, [])
 
     const loadData = async () => {
-        setOrders(getSalesOrders())
+        setOrders(await getSalesOrders())
         try {
             const contactsData = await getContacts()
             setContacts(Array.isArray(contactsData) ? contactsData : [])

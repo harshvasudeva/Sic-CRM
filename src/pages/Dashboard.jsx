@@ -98,9 +98,11 @@ const modules = [
 
 function CurrencyWidget() {
     const currencies = getSupportedCurrencies()
-    const baseCurrency = getBaseCurrency()
-    const [fromCurr, setFromCurr] = useState(baseCurrency)
-    const [toCurr, setToCurr] = useState(getDisplayCurrency() === baseCurrency ? 'USD' : getDisplayCurrency())
+    const displayCurrency = getDisplayCurrency()
+    // Default "From" to a different currency than display so the widget is useful
+    const defaultFrom = displayCurrency === 'USD' ? 'EUR' : 'USD'
+    const [fromCurr, setFromCurr] = useState(defaultFrom)
+    const [toCurr, setToCurr] = useState(displayCurrency)
     const [amount, setAmount] = useState(1000)
     const [refreshing, setRefreshing] = useState(false)
 

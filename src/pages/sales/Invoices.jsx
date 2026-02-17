@@ -49,8 +49,8 @@ function Invoices() {
         const filters = {}
         if (filterStatus) filters.status = filterStatus
         if (filterCustomer) filters.customerId = filterCustomer
-        setInvoices(getInvoices(filters))
-        setOrders(getSalesOrders().filter(o => o.status !== 'cancelled'))
+        setInvoices(await getInvoices(filters))
+        setOrders((await getSalesOrders()).filter(o => o.status !== 'cancelled'))
         // Handle async getContacts - ensure it returns an array
         try {
             const contactsData = await getContacts()
@@ -239,9 +239,9 @@ function Invoices() {
                 return customer ? `${customer.firstName} ${customer.lastName}` : '-'
             }
         },
-        { key: 'total', label: 'Total', render: (v) => <span className="amount">{formatCurrency(v)}</span> },
-        { key: 'paid', label: 'Paid', render: (v) => <span className="paid-amount">{formatCurrency(v)}</span> },
-        { key: 'balance', label: 'Balance', render: (v) => <span className={v > 0 ? 'balance-due' : 'balance-paid'}>{formatCurrency(v)}</span> },
+        { key: 'total', label: 'Total', render: (v, row) => <span className="amount">{formatCurrency(v, row?.currency)}</span> },
+        { key: 'paid', label: 'Paid', render: (v, row) => <span className="paid-amount">{formatCurrency(v, row?.currency)}</span> },
+        { key: 'balance', label: 'Balance', render: (v, row) => <span className={v > 0 ? 'balance-due' : 'balance-paid'}>{formatCurrency(v, row?.currency)}</span> },
         {
             key: 'status', label: 'Status',
             render: (v) => (

@@ -71,6 +71,7 @@ const initialQuotations = [
         items: [
             { productId: 'prod-001', name: 'Enterprise License', description: 'Annual enterprise license', quantity: 1, price: 75000, discount: 0, tax: 0, total: 75000 }
         ],
+        currency: 'INR',
         subtotal: 75000,
         discount: 0,
         tax: 0,
@@ -104,6 +105,7 @@ const initialSalesOrders = [
         items: [
             { productId: 'prod-001', name: 'Enterprise License', quantity: 2, price: 60000, discount: 0, tax: 0, total: 120000 }
         ],
+        currency: 'INR',
         subtotal: 120000, discount: 0, tax: 0, total: 120000,
         status: 'confirmed',
         orderDate: '2026-01-10',
@@ -131,6 +133,7 @@ const initialInvoices = [
         items: [
             { productId: 'prod-001', name: 'Enterprise License', quantity: 2, price: 60000, discount: 0, tax: 0, total: 120000 }
         ],
+        currency: 'INR',
         subtotal: 120000, discount: 0, tax: 0, total: 120000,
         paid: 40000, balance: 80000,
         status: 'sent',
@@ -154,15 +157,15 @@ const initialInvoiceTemplates = [
 ]
 
 const initialCreditNotes = [
-    { id: 'cn-001', creditNoteNumber: 'CN-2026-001', customerId: 'cont-002', invoiceId: null, returnId: null, reason: 'Product returned', amount: 5000, taxAmount: 0, totalAmount: 5000, status: 'approved', noteDate: '2026-01-14', approvedDate: '2026-01-15', approvedBy: 'emp-001', notes: 'Credit for returned product', createdAt: '2026-01-14' }
+    { id: 'cn-001', creditNoteNumber: 'CN-2026-001', customerId: 'cont-002', invoiceId: null, returnId: null, reason: 'Product returned', amount: 5000, taxAmount: 0, totalAmount: 5000, currency: 'INR', status: 'approved', noteDate: '2026-01-14', approvedDate: '2026-01-15', approvedBy: 'emp-001', notes: 'Credit for returned product', createdAt: '2026-01-14' }
 ]
 
 const initialDebitNotes = [
-    { id: 'dn-001', debitNoteNumber: 'DN-2026-001', customerId: 'cont-002', invoiceId: 'inv-001', reason: 'Additional charges', amount: 2500, taxAmount: 0, totalAmount: 2500, status: 'sent', noteDate: '2026-01-13', notes: 'Additional service charges', createdAt: '2026-01-13' }
+    { id: 'dn-001', debitNoteNumber: 'DN-2026-001', customerId: 'cont-002', invoiceId: 'inv-001', reason: 'Additional charges', amount: 2500, taxAmount: 0, totalAmount: 2500, currency: 'INR', status: 'sent', noteDate: '2026-01-13', notes: 'Additional service charges', createdAt: '2026-01-13' }
 ]
 
 const initialSalesReturns = [
-    { id: 'ret-001', returnNumber: 'SR-2026-001', customerId: 'cont-002', orderId: 'order-001', invoiceId: 'inv-001', items: [{ productId: 'prod-001', name: 'Enterprise License', quantity: 1, reason: 'Wrong product', condition: 'opened' }], refundType: 'credit', refundAmount: 60000, status: 'approved', returnDate: '2026-01-14', approvedDate: '2026-01-15', approvedBy: 'emp-001', notes: 'Customer ordered wrong edition', receivedItems: true, creditNoteId: 'cn-001', createdAt: '2026-01-14' }
+    { id: 'ret-001', returnNumber: 'SR-2026-001', customerId: 'cont-002', orderId: 'order-001', invoiceId: 'inv-001', items: [{ productId: 'prod-001', name: 'Enterprise License', quantity: 1, reason: 'Wrong product', condition: 'opened' }], refundType: 'credit', refundAmount: 60000, currency: 'INR', status: 'approved', returnDate: '2026-01-14', approvedDate: '2026-01-15', approvedBy: 'emp-001', notes: 'Customer ordered wrong edition', receivedItems: true, creditNoteId: 'cn-001', createdAt: '2026-01-14' }
 ]
 
 const initialPricingRules = [
@@ -180,7 +183,7 @@ const initialCommissions = [
 ]
 
 const initialPayments = [
-    { id: 'pay-001', paymentNumber: 'PAY-2026-001', invoiceId: 'inv-001', customerId: 'cont-001', amount: 40000, paymentMethod: 'bank_transfer', paymentDate: '2026-01-18', reference: 'TXN-123456', notes: 'First installment', status: 'completed', createdAt: '2026-01-18' }
+    { id: 'pay-001', paymentNumber: 'PAY-2026-001', invoiceId: 'inv-001', customerId: 'cont-001', amount: 40000, currency: 'INR', paymentMethod: 'bank_transfer', paymentDate: '2026-01-18', reference: 'TXN-123456', notes: 'First installment', status: 'completed', createdAt: '2026-01-18' }
 ]
 
 // ==================== QUOTATIONS (API-first) ====================
@@ -233,6 +236,7 @@ export async function createQuotation(data) {
         id: `quot-${Date.now()}`,
         quoteNumber: data.quoteNumber || quoteNumber,
         revision: data.revision || 1,
+        currency: data.currency || (() => { try { const s = localStorage.getItem('sic-crm-settings'); return s ? (JSON.parse(s).currency || 'INR') : 'INR' } catch { return 'INR' } })(),
         status: 'draft',
         subtotal: data.subtotal || 0,
         discount: data.discount || 0,
@@ -389,6 +393,7 @@ export async function createSalesOrder(data) {
         id: `order-${Date.now()}`,
         orderNumber: data.orderNumber || orderNumber,
         orderDate: data.orderDate || new Date().toISOString().split('T')[0],
+        currency: data.currency || (() => { try { const s = localStorage.getItem('sic-crm-settings'); return s ? (JSON.parse(s).currency || 'INR') : 'INR' } catch { return 'INR' } })(),
         status: 'pending',
         subtotal: data.subtotal || 0, discount: data.discount || 0, tax: data.tax || 0, total: data.total || 0,
         actualDelivery: null,
@@ -494,6 +499,7 @@ export async function createInvoice(data) {
         invoiceNumber: data.invoiceNumber || invoiceNumber,
         invoiceDate: data.invoiceDate || new Date().toISOString().split('T')[0],
         type: data.type || 'standard',
+        currency: data.currency || (() => { try { const s = localStorage.getItem('sic-crm-settings'); return s ? (JSON.parse(s).currency || 'INR') : 'INR' } catch { return 'INR' } })(),
         status: 'draft',
         paid: 0, balance: data.total || 0,
         recurring: false, recurringSchedule: null, nextInvoiceDate: null,

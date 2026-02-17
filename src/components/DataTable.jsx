@@ -42,8 +42,9 @@ function DataTable({
     const searchInputRef = useRef(null)
 
     // Sort data
+    const safeData = Array.isArray(data) ? data : []
     const sortedData = useMemo(() => {
-        let sortableData = [...data]
+        let sortableData = [...safeData]
         if (sortConfig.key) {
             sortableData.sort((a, b) => {
                 const aVal = a[sortConfig.key]
@@ -56,7 +57,7 @@ function DataTable({
             })
         }
         return sortableData
-    }, [data, sortConfig])
+    }, [safeData, sortConfig])
 
     // Filter data
     const filteredData = useMemo(() => {

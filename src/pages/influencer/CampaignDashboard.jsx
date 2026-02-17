@@ -9,6 +9,7 @@ import {
     getCampaigns, createCampaign, updateCampaign, deleteCampaign, getCreators,
     addCreatorToCampaign, updateCampaignCreator
 } from '../../stores/influencerStore'
+import { getCurrency } from '../../stores/settingsStore'
 
 function CampaignDashboard() {
     const [campaigns, setCampaigns] = useState([])
@@ -96,9 +97,10 @@ function CampaignDashboard() {
 
     const formatCurrency = (val) => {
         if (!val) return '—'
-        if (val >= 100000) return `₹${(val / 100000).toFixed(1)}L`
-        if (val >= 1000) return `₹${(val / 1000).toFixed(1)}K`
-        return `₹${val}`
+        const s = getCurrency().symbol
+        if (val >= 100000) return `${s}${(val / 100000).toFixed(1)}L`
+        if (val >= 1000) return `${s}${(val / 1000).toFixed(1)}K`
+        return `${s}${val}`
     }
 
     const statusColors = { Planning: '#f59e0b', Active: '#10b981', Completed: '#6b7280', Paused: '#ef4444' }
@@ -261,7 +263,7 @@ function CampaignDashboard() {
                                                 <option key={c.id} value={c.id}>{c.name} ({c.platform})</option>
                                             ))}
                                         </select>
-                                        <input placeholder="Total Fee (₹)" type="number" value={addCreatorForm.totalFee}
+                                        <input placeholder={`Total Fee (${getCurrency().symbol})`} type="number" value={addCreatorForm.totalFee}
                                             onChange={e => setAddCreatorForm(f => ({ ...f, totalFee: e.target.value }))} required />
                                         <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 8 }}>Deliverable:</div>
                                         {addCreatorForm.deliverables.map((d, i) => (
@@ -318,7 +320,7 @@ function CampaignDashboard() {
                                         <select value={form.platform} onChange={e => setForm(f => ({ ...f, platform: e.target.value }))}>
                                             <option>Instagram</option><option>YouTube</option><option>Both</option>
                                         </select></div>
-                                    <div className="inf-form-group"><label>Budget (₹)</label>
+                                    <div className="inf-form-group"><label>Budget ({getCurrency().symbol})</label>
                                         <input type="number" value={form.budget} onChange={e => setForm(f => ({ ...f, budget: e.target.value }))} /></div>
                                     <div className="inf-form-group"><label>Objective</label>
                                         <select value={form.objective} onChange={e => setForm(f => ({ ...f, objective: e.target.value }))}>

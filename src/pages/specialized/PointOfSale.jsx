@@ -5,6 +5,7 @@ import DataTable from '../../components/DataTable'
 import Modal from '../../components/Modal'
 import FormInput from '../../components/FormInput'
 import { useToast } from '../../components/Toast'
+import { formatCurrency } from '../../stores/settingsStore'
 
 function PointOfSale() {
     const toast = useToast()
@@ -61,7 +62,7 @@ function PointOfSale() {
     }
 
     const processPayment = () => {
-        toast.success(`Payment processed successfully! Total: $${total.toFixed(2)}`)
+        toast.success(`Payment processed successfully! Total: ${formatCurrency(total)}`)
         setCart([])
         setCustomer('')
         setIsCheckoutOpen(false)
@@ -86,7 +87,7 @@ function PointOfSale() {
         {
             key: 'price',
             label: 'Price',
-            render: (item) => `$${item.price.toFixed(2)}`
+            render: (item) => formatCurrency(item.price)
         },
         {
             key: 'quantity',
@@ -106,7 +107,7 @@ function PointOfSale() {
         {
             key: 'total',
             label: 'Total',
-            render: (item) => `$${(item.price * item.quantity).toFixed(2)}`
+            render: (item) => formatCurrency(item.price * item.quantity)
         },
         {
             key: 'actions',
@@ -152,7 +153,7 @@ function PointOfSale() {
                                 <span className="text-xs bg-blue-600 px-2 py-0.5 rounded">Stock: {product.stock}</span>
                             </div>
                             <h3 className="font-semibold mb-1">{product.name}</h3>
-                            <p className="text-xl font-bold text-blue-400">${product.price.toFixed(2)}</p>
+                            <p className="text-xl font-bold text-blue-400">{formatCurrency(product.price)}</p>
                         </motion.div>
                     ))}
                 </div>
@@ -181,15 +182,15 @@ function PointOfSale() {
                     <div className="space-y-2 mb-4">
                         <div className="flex justify-between text-sm">
                             <span className="text-gray-400">Subtotal</span>
-                            <span>${subtotal.toFixed(2)}</span>
+                            <span>{formatCurrency(subtotal)}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                             <span className="text-gray-400">Tax (10%)</span>
-                            <span>${tax.toFixed(2)}</span>
+                            <span>{formatCurrency(tax)}</span>
                         </div>
                         <div className="flex justify-between text-xl font-bold border-t border-gray-700 pt-2">
                             <span>Total</span>
-                            <span className="text-blue-400">${total.toFixed(2)}</span>
+                            <span className="text-blue-400">{formatCurrency(total)}</span>
                         </div>
                     </div>
 
@@ -239,15 +240,15 @@ function PointOfSale() {
                         </div>
                         <div className="flex justify-between">
                             <span className="text-gray-400">Subtotal</span>
-                            <span>${subtotal.toFixed(2)}</span>
+                            <span>{formatCurrency(subtotal)}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-gray-400">Tax</span>
-                            <span>${tax.toFixed(2)}</span>
+                            <span>{formatCurrency(tax)}</span>
                         </div>
                         <div className="flex justify-between text-xl font-bold pt-2 border-t border-gray-700">
                             <span>Total</span>
-                            <span className="text-blue-400">${total.toFixed(2)}</span>
+                            <span className="text-blue-400">{formatCurrency(total)}</span>
                         </div>
                     </div>
                 </div>

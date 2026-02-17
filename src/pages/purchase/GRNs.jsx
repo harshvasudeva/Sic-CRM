@@ -6,6 +6,7 @@ import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
 import { useToast } from '../../components/Toast'
 import { getGRNs, createGRN, updateGRN, deleteGRN, getPurchaseOrders, getVendors } from '../../stores/purchaseStore'
+import { formatCurrency } from '../../stores/settingsStore'
 
 function GRNs() {
     const toast = useToast()
@@ -76,7 +77,7 @@ function GRNs() {
             return vendor ? vendor.name : '-'
         }},
         { key: 'totalQty', label: 'Total Qty', render: (v) => <span className="qty">{v} units</span> },
-        { key: 'totalAmount', label: 'Amount', render: (v) => <span className="amount">₹{(v || 0).toLocaleString('en-IN')}</span> },
+        { key: 'totalAmount', label: 'Amount', render: (v) => <span className="amount">{formatCurrency(v)}</span> },
         { key: 'status', label: 'Status', render: (v) => (
             <span className={`status-badge ${v}`}>
                 {v.charAt(0).toUpperCase() + v.slice(1)}

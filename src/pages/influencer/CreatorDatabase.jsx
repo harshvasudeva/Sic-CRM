@@ -10,6 +10,7 @@ import {
     createLabel, addDealToCreator, calculateSmartAvgViews, calculateSuggestedCPV,
     getCreatorsWithScores, verifyCreator, getCreatorTierLabel, getCreatorTierColor
 } from '../../stores/influencerStore'
+import { getCurrency } from '../../stores/settingsStore'
 import CreatorScoreCard from '../../components/influencer/CreatorScoreCard'
 
 function CreatorDatabase() {
@@ -122,9 +123,10 @@ function CreatorDatabase() {
 
     const formatCurrency = (val) => {
         if (!val) return '—'
-        if (val >= 100000) return `₹${(val / 100000).toFixed(1)}L`
-        if (val >= 1000) return `₹${(val / 1000).toFixed(1)}K`
-        return `₹${val}`
+        const s = getCurrency().symbol
+        if (val >= 100000) return `${s}${(val / 100000).toFixed(1)}L`
+        if (val >= 1000) return `${s}${(val / 1000).toFixed(1)}K`
+        return `${s}${val}`
     }
 
     const statusColors = { Cold: '#6b7280', Talking: '#3b82f6', Closed: '#10b981', Ghosted: '#ef4444' }
@@ -366,7 +368,7 @@ function CreatorDatabase() {
                                     <form className="inf-deal-form" onSubmit={handleAddDeal}>
                                         <h4>Add Deal</h4>
                                         <input placeholder="Brand" value={dealForm.brand} onChange={e => setDealForm(d => ({ ...d, brand: e.target.value }))} required />
-                                        <input placeholder="Amount (₹)" type="number" value={dealForm.amount} onChange={e => setDealForm(d => ({ ...d, amount: e.target.value }))} required />
+                                        <input placeholder={`Amount (${getCurrency().symbol})`} type="number" value={dealForm.amount} onChange={e => setDealForm(d => ({ ...d, amount: e.target.value }))} required />
                                         <input placeholder="Deliverables" value={dealForm.deliverables} onChange={e => setDealForm(d => ({ ...d, deliverables: e.target.value }))} required />
                                         <input type="date" value={dealForm.date} onChange={e => setDealForm(d => ({ ...d, date: e.target.value }))} required />
                                         <select value={dealForm.status} onChange={e => setDealForm(d => ({ ...d, status: e.target.value }))}>
@@ -437,11 +439,11 @@ function CreatorDatabase() {
                                         <input type="email" value={formData.contactEmail} onChange={e => setFormData(f => ({ ...f, contactEmail: e.target.value }))} />
                                     </div>
                                     <div className="inf-form-group">
-                                        <label>Last Quoted Rate (₹)</label>
+                                        <label>Last Quoted Rate ({getCurrency().symbol})</label>
                                         <input type="number" value={formData.lastQuotedRate} onChange={e => setFormData(f => ({ ...f, lastQuotedRate: e.target.value }))} />
                                     </div>
                                     <div className="inf-form-group">
-                                        <label>Lowest Closed Rate (₹)</label>
+                                        <label>Lowest Closed Rate ({getCurrency().symbol})</label>
                                         <input type="number" value={formData.lowestClosedRate} onChange={e => setFormData(f => ({ ...f, lowestClosedRate: e.target.value }))} />
                                     </div>
                                     <div className="inf-form-group">

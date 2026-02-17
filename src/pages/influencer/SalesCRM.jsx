@@ -5,6 +5,7 @@ import {
     Edit2, Trash2, Building2, ChevronRight, Target, Clock
 } from 'lucide-react'
 import { getSalesLeads, createSalesLead, updateSalesLead, deleteSalesLead } from '../../stores/influencerStore'
+import { getCurrency } from '../../stores/settingsStore'
 
 function SalesCRM() {
     const [leads, setLeads] = useState([])
@@ -51,9 +52,10 @@ function SalesCRM() {
 
     const formatCurrency = (val) => {
         if (!val) return '—'
-        if (val >= 100000) return `₹${(val / 100000).toFixed(1)}L`
-        if (val >= 1000) return `₹${(val / 1000).toFixed(1)}K`
-        return `₹${val}`
+        const s = getCurrency().symbol
+        if (val >= 100000) return `${s}${(val / 100000).toFixed(1)}L`
+        if (val >= 1000) return `${s}${(val / 1000).toFixed(1)}K`
+        return `${s}${val}`
     }
 
     const statusColors = { New: '#3b82f6', Qualified: '#10b981', Negotiation: '#f59e0b', Won: '#22c55e', Lost: '#ef4444' }
@@ -227,9 +229,9 @@ function SalesCRM() {
                                             <option value="">Select</option>
                                             {industries.map(i => <option key={i} value={i}>{i}</option>)}
                                         </select></div>
-                                    <div className="inf-form-group"><label>Budget (₹)</label>
+                                    <div className="inf-form-group"><label>Budget ({getCurrency().symbol})</label>
                                         <input type="number" value={form.budget} onChange={e => setForm(f => ({ ...f, budget: e.target.value }))} /></div>
-                                    <div className="inf-form-group"><label>Deal Value (₹)</label>
+                                    <div className="inf-form-group"><label>Deal Value ({getCurrency().symbol})</label>
                                         <input type="number" value={form.dealValue} onChange={e => setForm(f => ({ ...f, dealValue: e.target.value }))} /></div>
                                     <div className="inf-form-group"><label>Probability %</label>
                                         <input type="number" min="0" max="100" value={form.probability} onChange={e => setForm(f => ({ ...f, probability: e.target.value }))} /></div>

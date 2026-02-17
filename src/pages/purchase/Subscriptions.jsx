@@ -5,6 +5,7 @@ import {
     TrendingUp, Users, Cloud, Edit2, Trash2
 } from 'lucide-react'
 import { getSubscriptions, createSubscription, updateSubscription, deleteSubscription } from '../../stores/purchaseStore'
+import { formatCurrency, getCurrency } from '../../stores/settingsStore'
 import PageHelp from '../../components/PageHelp'
 
 const categories = ['Infrastructure', 'Productivity', 'Communication', 'Development', 'Design', 'Accounting', 'Marketing', 'Security', 'HR', 'Other']
@@ -67,8 +68,8 @@ function Subscriptions() {
     }
 
     const formatINR = (v) => {
-        if (!v) return '₹0'
-        return `₹${Number(v).toLocaleString('en-IN')}`
+        if (!v) return formatCurrency(0)
+        return formatCurrency(v)
     }
 
     // Dynamic stats
@@ -195,7 +196,7 @@ function Subscriptions() {
                                         <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required placeholder="e.g. AWS Cloud" /></div>
                                     <div className="sub-form-group"><label>Vendor *</label>
                                         <input value={form.vendor} onChange={e => setForm(f => ({ ...f, vendor: e.target.value }))} required placeholder="e.g. Amazon" /></div>
-                                    <div className="sub-form-group"><label>Cost (₹) *</label>
+                                    <div className="sub-form-group"><label>Cost ({getCurrency().symbol}) *</label>
                                         <input type="number" value={form.cost} onChange={e => setForm(f => ({ ...f, cost: e.target.value }))} required placeholder="0" /></div>
                                     <div className="sub-form-group"><label>Billing Period</label>
                                         <select value={form.period} onChange={e => setForm(f => ({ ...f, period: e.target.value }))}>

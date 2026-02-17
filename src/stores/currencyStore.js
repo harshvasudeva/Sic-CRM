@@ -3,7 +3,7 @@
  * live exchange rates, and INR-focused formatting.
  */
 
-import { fetchAllRates, getCachedRates } from '../utils/currencyService'
+import * as currencyService from '../utils/currencyService'
 
 const STORAGE_KEY = 'sic_crm_currencies'
 
@@ -60,7 +60,9 @@ function save(data) {
 export async function refreshRates() {
   const store = getStore()
   try {
-    const rates = await fetchAllRates(store.baseCurrency)
+    const rates = currencyService.fetchAllRates
+      ? await currencyService.fetchAllRates(store.baseCurrency)
+      : store.rates
     // Only keep the currencies we support
     const filtered = {}
     for (const code of Object.keys(store.rates)) {
@@ -82,7 +84,7 @@ export async function refreshRates() {
 export function getLastRateUpdate() {
   const store = getStore()
   if (!store.lastUpdated) {
-    const cached = getCachedRates()
+    const cached = currencyService.getCachedRates ? currencyService.getCachedRates() : null
     return cached ? new Date(Date.now() - cached.age).toISOString() : null
   }
   return store.lastUpdated

@@ -101,6 +101,7 @@ const initialOpportunities = [
         company: 'TechStart Inc',
         contactId: 'lead-001',
         value: 75000,
+        currency: 'INR',
         pipeline: 'pipe-001',
         stage: 'Proposal',
         probability: 60,
@@ -116,6 +117,7 @@ const initialOpportunities = [
         company: 'Global Retail Co',
         contactId: 'lead-002',
         value: 120000,
+        currency: 'INR',
         pipeline: 'pipe-001',
         stage: 'Negotiation',
         probability: 80,
@@ -131,6 +133,7 @@ const initialOpportunities = [
         company: 'Innovation Labs',
         contactId: 'lead-003',
         value: 45000,
+        currency: 'USD',
         pipeline: 'pipe-002',
         stage: 'POC',
         probability: 50,
@@ -146,6 +149,7 @@ const initialOpportunities = [
         company: 'HealthPlus Medical',
         contactId: 'lead-004',
         value: 200000,
+        currency: 'USD',
         pipeline: 'pipe-002',
         stage: 'Discovery',
         probability: 20,
@@ -402,9 +406,11 @@ export async function createOpportunity(data) {
     if (apiData) return apiData
 
     const opps = getStore(STORAGE_KEYS.opportunities, initialOpportunities)
+    const defaultCurrency = (() => { try { const s = localStorage.getItem('sic-crm-settings'); return s ? (JSON.parse(s).currency || 'INR') : 'INR' } catch { return 'INR' } })()
     const newOpp = {
         ...data,
         id: `opp-${Date.now()}`,
+        currency: data.currency || defaultCurrency,
         createdAt: new Date().toISOString().split('T')[0],
         updatedAt: new Date().toISOString().split('T')[0]
     }

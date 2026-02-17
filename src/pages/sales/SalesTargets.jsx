@@ -44,12 +44,12 @@ function SalesTargets() {
 
     const [updateData, setUpdateData] = useState({ amount: 0 })
 
-    const loadData = () => {
+    const loadData = async () => {
         const filters = {}
         if (filterStatus) filters.status = filterStatus
         if (filterType) filters.type = filterType
         setTargets(getSalesTargets())
-        setOrders(getSalesOrders())
+        setOrders(await getSalesOrders())
     }
 
     useEffect(() => { loadData() }, [filterStatus, filterType])
@@ -97,7 +97,7 @@ function SalesTargets() {
 
     const confirmUpdate = () => {
         updateTargetProgress(updateModal.id, updateData.amount)
-        toast.success(`Updated target progress by $${updateData.amount}`)
+        toast.success(`Updated target progress by ${formatCurrency(updateData.amount)}`)
         setUpdateModal(null)
         loadData()
     }

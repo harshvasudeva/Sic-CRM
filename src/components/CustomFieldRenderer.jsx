@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Star } from 'lucide-react'
 import { getCustomFields, validateCustomField } from '../stores/customFieldStore'
+import { getCurrency } from '../stores/settingsStore'
 
 function CustomFieldRenderer({ module, values = {}, onChange, readOnly = false }) {
   const fields = getCustomFields(module)
@@ -46,7 +47,7 @@ function CustomFieldRenderer({ module, values = {}, onChange, readOnly = false }
       case 'percentage':
         return (
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            {field.type === 'currency' && <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>$</span>}
+            {field.type === 'currency' && <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{getCurrency().symbol}</span>}
             <input
               type="number"
               value={value}

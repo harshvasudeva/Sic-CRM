@@ -54,6 +54,7 @@ const initialJournalEntries = [
         ],
         totalDebit: 120000,
         totalCredit: 120000,
+        currency: 'INR',
         status: 'posted',
         postedBy: 'emp-001',
         createdAt: '2026-01-15'
@@ -67,7 +68,7 @@ const initialBankAccounts = [
         accountNumber: '****1234',
         bankName: 'Chase Business',
         accountType: 'checking',
-        currency: 'USD',
+        currency: getSettings().currency || 'INR',
         balance: 450000,
         openingBalance: 500000,
         asOf: '2026-01-15',
@@ -79,7 +80,7 @@ const initialBankAccounts = [
         accountNumber: '****5678',
         bankName: 'Bank of America',
         accountType: 'savings',
-        currency: 'USD',
+        currency: getSettings().currency || 'INR',
         balance: 250000,
         openingBalance: 200000,
         asOf: '2026-01-15',
@@ -129,6 +130,7 @@ const initialExpenses = [
         amount: 2500,
         taxAmount: 212.5,
         totalAmount: 2712.5,
+        currency: 'INR',
         status: 'paid',
         paidDate: '2026-01-10',
         approvedBy: 'emp-001',
@@ -147,6 +149,7 @@ const initialAccountsPayable = [
         dueDate: '2026-02-20',
         amount: 5600,
         balance: 5600,
+        currency: 'INR',
         status: 'pending',
         paidAmount: 0,
         createdAt: '2026-01-21'
@@ -163,6 +166,7 @@ const initialAccountsReceivable = [
         dueDate: '2026-02-11',
         amount: 120000,
         balance: 120000,
+        currency: 'INR',
         status: 'pending',
         paidAmount: 0,
         daysOverdue: 0,
@@ -332,7 +336,20 @@ export function updateJournalEntry(id, data) {
 
 // ==================== BANK ACCOUNTS CRUD ====================
 export function getBankAccounts() {
-    return getStore(STORAGE_KEYS.bankAccounts, initialBankAccounts)
+    const accounts = getStore(STORAGE_KEYS.bankAccounts, initialBankAccounts)
+    const preferredCurrency = getSettings().currency || 'INR'
+    let updated = false
+
+    for (const account of accounts) {
+        const isSeeded = account.id === 'bank-001' || account.id === 'bank-002'
+        if (isSeeded && account.currency === 'USD' && preferredCurrency !== 'USD') {
+            account.currency = preferredCurrency
+            updated = true
+        }
+    }
+
+    if (updated) setStore(STORAGE_KEYS.bankAccounts, accounts)
+    return accounts
 }
 
 export function createBankAccount(data) {

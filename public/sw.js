@@ -40,6 +40,9 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (request.method !== 'GET') return
 
+  // Skip unsupported schemes (e.g., chrome-extension://, data:, blob:)
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return
+
   // API requests: Network-first, fallback to cache
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
@@ -79,7 +82,11 @@ self.addEventListener('fetch', (event) => {
         return fetch(request).then((response) => {
           if (response.ok) {
             const clone = response.clone()
-            caches.open(STATIC_CACHE).then((cache) => cache.put(request, clone))
+            caches.open(STATIC_CACHE).then((cache) => {
+              if (request.url.startsWith('http://') || request.url.startsWith('https://')) {
+                cache.put(request, clone)
+              }
+            })
           }
           return response
         })

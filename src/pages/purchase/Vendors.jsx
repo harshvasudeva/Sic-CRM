@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Plus, Search, Filter, MoreVertical, FileText, Trash2, Edit2, Download, Upload, Star } from 'lucide-react'
 import PageHelp from '../../components/PageHelp'
 import { getVendors, createVendor, updateVendor, deleteVendor } from '../../stores/purchaseStore'
+import { formatCurrency } from '../../stores/settingsStore'
 import DataTable from '../../components/DataTable'
 import Modal, { ModalFooter } from '../../components/Modal'
 import FormInput, { FormTextarea, FormSelect } from '../../components/FormInput'
@@ -115,7 +116,7 @@ function Vendors() {
                 </div>
             )
         },
-        { key: 'creditLimit', label: 'Credit Limit', render: (v) => <span className="amount">₹{Number(v || 0).toLocaleString('en-IN')}</span> },
+        { key: 'creditLimit', label: 'Credit Limit', render: (v) => <span className="amount">{formatCurrency(v)}</span> },
         { key: 'status', label: 'Status', render: (v) => <span className={`status-badge ${v}`}>{v}</span> },
         { key: 'createdAt', label: 'Created' },
         {

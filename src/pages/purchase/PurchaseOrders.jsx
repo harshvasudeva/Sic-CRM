@@ -306,7 +306,7 @@ function PurchaseOrders() {
                         </div>
                         <div className="summary-row">
                             <span>Discount</span>
-                            <span>-${formData.items.reduce((sum, item) => sum + item.discount, 0)}</span>
+                            <span>-{formatCurrency(formData.items.reduce((sum, item) => sum + item.discount, 0))}</span>
                         </div>
                         <div className="summary-row">
                             <span>Tax</span>

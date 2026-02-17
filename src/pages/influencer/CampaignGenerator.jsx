@@ -5,6 +5,7 @@ import {
     FileText, ChevronRight, Sparkles, CheckCircle, BarChart3
 } from 'lucide-react'
 import { generateCampaignIdea, getBriefTemplates, applyBriefTemplate } from '../../stores/influencerStore'
+import { getCurrency } from '../../stores/settingsStore'
 
 function CampaignGenerator() {
     const [input, setInput] = useState({
@@ -42,9 +43,10 @@ function CampaignGenerator() {
 
     const formatCurrency = (val) => {
         if (!val) return '—'
-        if (val >= 100000) return `₹${(val / 100000).toFixed(1)}L`
-        if (val >= 1000) return `₹${(val / 1000).toFixed(1)}K`
-        return `₹${val}`
+        const s = getCurrency().symbol
+        if (val >= 100000) return `${s}${(val / 100000).toFixed(1)}L`
+        if (val >= 1000) return `${s}${(val / 1000).toFixed(1)}K`
+        return `${s}${val}`
     }
 
     const industries = ['Beauty', 'Tech', 'Food', 'Fashion', 'Health', 'Finance', 'Education', 'Quick Commerce', 'Electronics', 'FMCG', 'Gaming', 'Travel', 'Real Estate', 'SaaS']
@@ -79,7 +81,7 @@ function CampaignGenerator() {
                             </select>
                         </div>
                         <div className="inf-form-group">
-                            <label>Budget (₹) *</label>
+                            <label>Budget ({getCurrency().symbol}) *</label>
                             <input type="number" value={input.budget} onChange={e => setInput(i => ({ ...i, budget: e.target.value }))}
                                 placeholder="e.g., 500000" required />
                         </div>

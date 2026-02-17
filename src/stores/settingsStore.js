@@ -16,7 +16,7 @@ const defaultShortcuts = [
 const defaultSettings = {
     currency: 'INR',
     exchangeRate: 1, // Conversion rate from Base (USD) to Current
-    baseCurrency: 'USD',
+    baseCurrency: 'INR',
     locale: 'en-IN',
     dateFormat: 'DD/MM/YYYY',
     theme: 'dark',         // 'dark' | 'light' | 'system'
@@ -94,7 +94,17 @@ export const CURRENCIES = {
 export function getSettings() {
     const stored = localStorage.getItem(SETTINGS_KEY)
     if (stored) {
-        return { ...defaultSettings, ...JSON.parse(stored) }
+        const merged = { ...defaultSettings, ...JSON.parse(stored) }
+        try {
+            const currencyPrefs = JSON.parse(localStorage.getItem('sic_crm_currencies') || 'null')
+            if (currencyPrefs) {
+                merged.currency = currencyPrefs.displayCurrency || currencyPrefs.baseCurrency || merged.currency
+                merged.baseCurrency = currencyPrefs.baseCurrency || merged.baseCurrency || merged.currency
+            }
+        } catch {
+            // ignore currency store sync errors
+        }
+        return merged
     }
     return defaultSettings
 }
@@ -110,25 +120,45 @@ export function updateSettings(newSettings) {
 // Get current currency config
 export function getCurrency() {
     const settings = getSettings()
-    return CURRENCIES[settings.currency] || CURRENCIES.USD
+    return CURRENCIES[settings.currency] || CURRENCIES.INR
 }
 
-// Format currency value
-export function formatCurrency(value, currencyCode = null) {
+// Read exchange rates from currencyStore's localStorage (avoids circular import)
+function getExchangeRates() {
+    try {
+        const stored = localStorage.getItem('sic_crm_currencies')
+        if (stored) return JSON.parse(stored).rates || {}
+    } catch {}
+    return { INR: 1, USD: 0.012, EUR: 0.011, GBP: 0.0094, AED: 0.044, SAR: 0.045, SGD: 0.016, AUD: 0.018, CAD: 0.016, JPY: 1.79, CNY: 0.087, CHF: 0.011, BRL: 0.059, MXN: 0.21, KRW: 16.2 }
+}
+
+// Convert amount between currencies using stored rates
+export function convertAmount(amount, fromCurrency, toCurrency) {
+    if (!fromCurrency || !toCurrency || fromCurrency === toCurrency) return amount
+    const rates = getExchangeRates()
+    const fromRate = rates[fromCurrency] || 1
+    const toRate = rates[toCurrency] || 1
+    return Math.round((amount / fromRate) * toRate * 100) / 100
+}
+
+/**
+ * Format and display a monetary value in the user's display currency.
+ * 
+ * @param {number} value - The amount to format
+ * @param {string|null} recordCurrency - The currency the value was stored in.
+ *   If provided, the amount is converted from recordCurrency → displayCurrency.
+ *   If null/undefined, assumes value is already in displayCurrency (backward compatible).
+ */
+export function formatCurrency(value, recordCurrency = null) {
     const amount = Number(value) || 0
     const settings = getSettings()
+    const displayCurrencyCode = settings.currency || 'INR'
+    const currency = CURRENCIES[displayCurrencyCode] || CURRENCIES.INR
 
-    // If specific currency code provided, just format it (assuming value is already in that currency)
-    // If NOT provided, we assume value is in BASE currency and needs conversion
-    const targetCurrencyCode = currencyCode || settings.currency
-    const currency = CURRENCIES[targetCurrencyCode] || CURRENCIES.USD
-
-    // Calculate converted amount if using system currency
+    // Convert from record's stored currency to user's display currency
     let displayAmount = amount
-    if (!currencyCode && settings.currency !== settings.baseCurrency) {
-        // Display = Base * Rate
-        // e.g. 1 USD * 83 = 83 INR
-        displayAmount = amount * (settings.exchangeRate || 1)
+    if (recordCurrency && recordCurrency !== displayCurrencyCode) {
+        displayAmount = convertAmount(amount, recordCurrency, displayCurrencyCode)
     }
 
     try {

@@ -86,7 +86,7 @@ function ChequePrinting() {
                                     </div>
                                     <div className="row amount-row">
                                         <div className="box amount">
-                                            ₹ {selectedPayment.totalAmount}
+                                            {formatCurrency(selectedPayment.totalAmount)}
                                         </div>
                                     </div>
                                     <div className="row signature-row">
