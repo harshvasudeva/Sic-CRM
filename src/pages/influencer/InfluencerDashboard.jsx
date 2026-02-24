@@ -4,7 +4,13 @@ import { useNavigate } from 'react-router-dom'
 import {
     Users, Megaphone, IndianRupee, Send, TrendingUp, Calendar,
     UserPlus, Target, FileText, Clock, ChevronRight, BarChart3,
-    Zap, Eye, MessageSquare
+    Zap, Eye, MessageSquare, Brain, Wrench, Mail, UsersRound,
+    CreditCard, Globe, FileBarChart, Shield, Keyboard, Search,
+    Bot, PieChart, Layers, Flame, Wand2, BookOpen, Bell,
+    Heart, Activity, MessageCircle, ClipboardList, DollarSign,
+    Database, Receipt, Gift, Video, PlayCircle, UserCheck, Code,
+    FileDown, CalendarClock, Share2, LayoutDashboard, RefreshCcw,
+    Upload, UserCog, Bookmark, History, Sparkles, Star
 } from 'lucide-react'
 import { getInfluencerStats, getCreators, getCampaigns, getOutreachList, getCreatorsWithScores, getCreatorTierColor } from '../../stores/influencerStore'
 import { getCurrency } from '../../stores/settingsStore'
@@ -195,6 +201,113 @@ function InfluencerDashboard() {
                 </motion.div>
             </div>
 
+            <motion.div className="section" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+                <h2 className="section-title" style={{ marginBottom: 20 }}>Explore All Features</h2>
+                {[
+                    { cat: 'Analytics & Intelligence', color: '#6366f1', icon: Brain, items: [
+                        { label: 'Audience Demographics', path: '/influencer/demographics', icon: PieChart },
+                        { label: 'Bot Detection', path: '/influencer/bot-detection', icon: Bot },
+                        { label: 'Audience Quality', path: '/influencer/audience-quality', icon: Star },
+                        { label: 'Niche Overlap', path: '/influencer/niche-overlap', icon: Layers },
+                        { label: 'Competitor Analysis', path: '/influencer/competitor-analysis', icon: Target },
+                        { label: 'Sentiment Analysis', path: '/influencer/sentiment', icon: MessageCircle },
+                        { label: 'Virality Prediction', path: '/influencer/virality', icon: Flame },
+                        { label: 'Seasonal Trends', path: '/influencer/seasonal-trends', icon: TrendingUp },
+                        { label: 'Content Format Split', path: '/influencer/content-format', icon: FileBarChart },
+                        { label: 'Consistency Tracker', path: '/influencer/consistency', icon: Activity },
+                    ]},
+                    { cat: 'Campaign Management', color: '#10b981', icon: Megaphone, items: [
+                        { label: 'Campaign Builder', path: '/influencer/campaign-builder', icon: Wrench },
+                        { label: 'Brief Generator', path: '/influencer/brief-generator', icon: Wand2 },
+                        { label: 'Deliverables Tracker', path: '/influencer/deliverables', icon: ClipboardList },
+                        { label: 'Performance Dashboard', path: '/influencer/performance', icon: BarChart3 },
+                        { label: 'Multi-Creator Compare', path: '/influencer/creator-comparison', icon: Users },
+                        { label: 'Campaign Templates', path: '/influencer/templates', icon: BookOpen },
+                        { label: 'Budget Allocator', path: '/influencer/budget-allocator', icon: DollarSign },
+                        { label: 'Campaign Calendar', path: '/influencer/calendar', icon: Calendar },
+                        { label: 'Content Approval', path: '/influencer/content-approval', icon: FileText },
+                        { label: 'Post-Campaign Report', path: '/influencer/post-campaign-report', icon: FileBarChart },
+                    ]},
+                    { cat: 'AI & Matching', color: '#8b5cf6', icon: Sparkles, items: [
+                        { label: 'Natural Language Search', path: '/influencer/nl-search', icon: Search },
+                        { label: 'Lookalike Discovery', path: '/influencer/lookalike', icon: Users },
+                        { label: 'Fit Score Explainer', path: '/influencer/fit-score', icon: Target },
+                        { label: 'Persona Generator', path: '/influencer/persona-generator', icon: UserPlus },
+                        { label: 'Trend Suggestions', path: '/influencer/trend-suggestions', icon: TrendingUp },
+                        { label: 'Goal Templates', path: '/influencer/goal-templates', icon: BookOpen },
+                        { label: 'Exclusion Filters', path: '/influencer/exclusion-filters', icon: Zap },
+                        { label: 'Tier Classification', path: '/influencer/tier-classification', icon: Layers },
+                        { label: 'Re-match Alerts', path: '/influencer/rematch-alerts', icon: Bell },
+                        { label: 'Collaborative Filtering', path: '/influencer/collaborative-filtering', icon: Heart },
+                    ]},
+                    { cat: 'Creator Outreach & CRM', color: '#3b82f6', icon: Mail, items: [
+                        { label: 'Email Generator', path: '/influencer/email-generator', icon: Mail },
+                        { label: 'Outreach Tracker', path: '/influencer/outreach-tracker', icon: Send },
+                        { label: 'Notes & Tags', path: '/influencer/notes-tags', icon: FileText },
+                        { label: 'Creator Watchlist', path: '/influencer/watchlist', icon: Eye },
+                        { label: 'Creator Alerts', path: '/influencer/alerts', icon: Bell },
+                        { label: 'Contact Vault', path: '/influencer/contact-vault', icon: Database },
+                        { label: 'Deal History', path: '/influencer/deal-history', icon: Receipt },
+                    ]},
+                    { cat: 'Team & Collaboration', color: '#f59e0b', icon: UsersRound, items: [
+                        { label: 'Workspaces', path: '/influencer/workspaces', icon: LayoutDashboard },
+                        { label: 'Shared Favorites', path: '/influencer/shared-favorites', icon: Heart },
+                        { label: 'Activity Feed', path: '/influencer/activity-feed', icon: Activity },
+                        { label: 'Profile Comments', path: '/influencer/comments', icon: MessageCircle },
+                        { label: 'Campaign Assignments', path: '/influencer/assignments', icon: ClipboardList },
+                    ]},
+                    { cat: 'Monetization & Billing', color: '#ec4899', icon: CreditCard, items: [
+                        { label: 'Subscription Plans', path: '/influencer/subscription', icon: CreditCard },
+                        { label: 'Usage Analytics', path: '/influencer/usage', icon: BarChart3 },
+                        { label: 'Creator DB Size', path: '/influencer/db-size', icon: Database },
+                        { label: 'Billing History', path: '/influencer/billing', icon: Receipt },
+                        { label: 'Trial Mode', path: '/influencer/trial', icon: Gift },
+                    ]},
+                    { cat: 'Platform Expansion', color: '#06b6d4', icon: Globe, items: [
+                        { label: 'TikTok Creators', path: '/influencer/tiktok', icon: Video },
+                        { label: 'YouTube Creators', path: '/influencer/youtube', icon: PlayCircle },
+                        { label: 'Creator Onboarding', path: '/influencer/creator-onboarding', icon: UserPlus },
+                        { label: 'Creator Verification', path: '/influencer/verification', icon: UserCheck },
+                        { label: 'API Access', path: '/influencer/api-access', icon: Code },
+                    ]},
+                    { cat: 'Reporting & Export', color: '#f97316', icon: FileBarChart, items: [
+                        { label: 'Report Builder', path: '/influencer/report-builder', icon: FileBarChart },
+                        { label: 'Scheduled Reports', path: '/influencer/scheduled-reports', icon: CalendarClock },
+                        { label: 'Profile Export', path: '/influencer/profile-export', icon: FileDown },
+                        { label: 'Dashboard Embed', path: '/influencer/embed', icon: Share2 },
+                    ]},
+                    { cat: 'Admin & Operations', color: '#ef4444', icon: Shield, items: [
+                        { label: 'Admin Dashboard', path: '/influencer/admin', icon: LayoutDashboard },
+                        { label: 'Data Refresh Scheduler', path: '/influencer/refresh-scheduler', icon: RefreshCcw },
+                        { label: 'Bulk Import', path: '/influencer/bulk-import', icon: Upload },
+                        { label: 'User Management', path: '/influencer/user-management', icon: UserCog },
+                    ]},
+                    { cat: 'UX & Tools', color: '#64748b', icon: Keyboard, items: [
+                        { label: 'Saved Searches', path: '/influencer/saved-searches', icon: Bookmark },
+                        { label: 'Recently Viewed', path: '/influencer/recently-viewed', icon: History },
+                        { label: 'Keyboard Shortcuts', path: '/influencer/shortcuts', icon: Keyboard },
+                        { label: 'Onboarding Wizard', path: '/influencer/onboarding', icon: Sparkles },
+                        { label: 'What\'s New', path: '/influencer/whats-new', icon: Star },
+                    ]},
+                ].map((section, si) => (
+                    <motion.div key={section.cat} className="inf-feature-section" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 + si * 0.05 }}>
+                        <div className="inf-feature-section-header">
+                            <section.icon size={16} style={{ color: section.color }} />
+                            <span style={{ color: section.color }}>{section.cat}</span>
+                            <span className="inf-feature-count">{section.items.length}</span>
+                        </div>
+                        <div className="inf-feature-grid">
+                            {section.items.map((item) => (
+                                <motion.button key={item.path} className="inf-feature-btn" onClick={() => navigate(item.path)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                                    <item.icon size={16} style={{ color: section.color, flexShrink: 0 }} />
+                                    <span>{item.label}</span>
+                                </motion.button>
+                            ))}
+                        </div>
+                    </motion.div>
+                ))}
+            </motion.div>
+
             <style>{`
                 .inf-stats-grid {
                     display: grid;
@@ -288,10 +401,56 @@ function InfluencerDashboard() {
                 }
                 .inf-empty { padding: 20px; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
 
+                .inf-feature-section {
+                    margin-bottom: 16px;
+                }
+                .inf-feature-section-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 8px 0;
+                    margin-bottom: 8px;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                }
+                .inf-feature-count {
+                    padding: 1px 8px;
+                    border-radius: 10px;
+                    background: rgba(255,255,255,0.08);
+                    color: var(--text-muted);
+                    font-size: 0.7rem;
+                    font-weight: 500;
+                }
+                .inf-feature-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                    gap: 8px;
+                }
+                .inf-feature-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 10px 14px;
+                    border-radius: 10px;
+                    background: rgba(30,30,45,0.4);
+                    border: 1px solid rgba(255,255,255,0.06);
+                    color: var(--text-secondary);
+                    font-size: 0.8rem;
+                    cursor: pointer;
+                    transition: all 0.15s;
+                    text-align: left;
+                }
+                .inf-feature-btn:hover {
+                    border-color: rgba(99,102,241,0.3);
+                    background: rgba(30,30,45,0.7);
+                    color: var(--text-primary);
+                }
+
                 @media (max-width: 768px) {
                     .inf-stats-grid { grid-template-columns: repeat(2, 1fr); }
                     .inf-dashboard-grid { grid-template-columns: 1fr; }
                     .inf-quick-actions { grid-template-columns: repeat(2, 1fr); }
+                    .inf-feature-grid { grid-template-columns: repeat(2, 1fr); }
                 }
             `}</style>
         </div>

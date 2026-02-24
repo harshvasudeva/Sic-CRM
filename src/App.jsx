@@ -94,7 +94,7 @@ const Opportunities = React.lazy(() => import('./pages/crm/Opportunities'))
 const Contacts = React.lazy(() => import('./pages/crm/Contacts'))
 const Activities = React.lazy(() => import('./pages/crm/Activities'))
 
-// Influencer Module
+// Influencer Module - Core
 const InfluencerDashboard = React.lazy(() => import('./pages/influencer/InfluencerDashboard'))
 const CreatorDatabase = React.lazy(() => import('./pages/influencer/CreatorDatabase'))
 const CampaignDashboard = React.lazy(() => import('./pages/influencer/CampaignDashboard'))
@@ -105,6 +105,91 @@ const ContentScheduling = React.lazy(() => import('./pages/influencer/ContentSch
 const PaymentInvoicing = React.lazy(() => import('./pages/influencer/PaymentInvoicing'))
 const CreatorAnalytics = React.lazy(() => import('./pages/influencer/CreatorAnalytics'))
 const CampaignComparison = React.lazy(() => import('./pages/influencer/CampaignComparison'))
+
+// Influencer Module - Analytics & Intelligence
+const AudienceDemographics = React.lazy(() => import('./pages/influencer/AudienceDemographics'))
+const BotDetection = React.lazy(() => import('./pages/influencer/BotDetection'))
+const AudienceQuality = React.lazy(() => import('./pages/influencer/AudienceQuality'))
+const NicheOverlap = React.lazy(() => import('./pages/influencer/NicheOverlap'))
+const CompetitorAnalysis = React.lazy(() => import('./pages/influencer/CompetitorAnalysis'))
+const SentimentAnalysis = React.lazy(() => import('./pages/influencer/SentimentAnalysis'))
+const ViralityPrediction = React.lazy(() => import('./pages/influencer/ViralityPrediction'))
+const SeasonalTrends = React.lazy(() => import('./pages/influencer/SeasonalTrends'))
+const ContentFormatSplit = React.lazy(() => import('./pages/influencer/ContentFormatSplit'))
+const ConsistencyTracker = React.lazy(() => import('./pages/influencer/ConsistencyTracker'))
+
+// Influencer Module - Campaign Management
+const CampaignBuilder = React.lazy(() => import('./pages/influencer/CampaignBuilder'))
+const BriefGenerator = React.lazy(() => import('./pages/influencer/BriefGenerator'))
+const DeliverablesTracker = React.lazy(() => import('./pages/influencer/DeliverablesTracker'))
+const CampaignPerformance = React.lazy(() => import('./pages/influencer/CampaignPerformance'))
+const MultiCreatorComparison = React.lazy(() => import('./pages/influencer/MultiCreatorComparison'))
+const CampaignTemplates = React.lazy(() => import('./pages/influencer/CampaignTemplates'))
+const BudgetAllocator = React.lazy(() => import('./pages/influencer/BudgetAllocator'))
+const CampaignCalendar = React.lazy(() => import('./pages/influencer/CampaignCalendar'))
+const ContentApproval = React.lazy(() => import('./pages/influencer/ContentApproval'))
+const PostCampaignReport = React.lazy(() => import('./pages/influencer/PostCampaignReport'))
+
+// Influencer Module - AI & Matching
+const NaturalLanguageSearch = React.lazy(() => import('./pages/influencer/NaturalLanguageSearch'))
+const LookalikeDiscovery = React.lazy(() => import('./pages/influencer/LookalikeDiscovery'))
+const FitScoreExplainer = React.lazy(() => import('./pages/influencer/FitScoreExplainer'))
+const AudiencePersonaGenerator = React.lazy(() => import('./pages/influencer/AudiencePersonaGenerator'))
+const TrendAlignedSuggestions = React.lazy(() => import('./pages/influencer/TrendAlignedSuggestions'))
+const GoalTemplates = React.lazy(() => import('./pages/influencer/GoalTemplates'))
+const ExclusionFilters = React.lazy(() => import('./pages/influencer/ExclusionFilters'))
+const CreatorTierClassification = React.lazy(() => import('./pages/influencer/CreatorTierClassification'))
+const RematchAlerts = React.lazy(() => import('./pages/influencer/RematchAlerts'))
+const CollaborativeFiltering = React.lazy(() => import('./pages/influencer/CollaborativeFiltering'))
+
+// Influencer Module - Creator Outreach & CRM
+const OutreachEmailGenerator = React.lazy(() => import('./pages/influencer/OutreachEmailGenerator'))
+const OutreachStatusTracker = React.lazy(() => import('./pages/influencer/OutreachStatusTracker'))
+const CreatorNotesTags = React.lazy(() => import('./pages/influencer/CreatorNotesTags'))
+const CreatorWatchlist = React.lazy(() => import('./pages/influencer/CreatorWatchlist'))
+const CreatorAlerts = React.lazy(() => import('./pages/influencer/CreatorAlerts'))
+const ContactVault = React.lazy(() => import('./pages/influencer/ContactVault'))
+const DealHistoryLog = React.lazy(() => import('./pages/influencer/DealHistoryLog'))
+
+// Influencer Module - Team & Collaboration
+const Workspaces = React.lazy(() => import('./pages/influencer/Workspaces'))
+const SharedFavorites = React.lazy(() => import('./pages/influencer/SharedFavorites'))
+const TeamActivityFeed = React.lazy(() => import('./pages/influencer/TeamActivityFeed'))
+const CreatorProfileComments = React.lazy(() => import('./pages/influencer/CreatorProfileComments'))
+const CampaignAssignments = React.lazy(() => import('./pages/influencer/CampaignAssignments'))
+
+// Influencer Module - Monetization & Billing
+const SubscriptionPlans = React.lazy(() => import('./pages/influencer/SubscriptionPlans'))
+const UsageAnalytics = React.lazy(() => import('./pages/influencer/UsageAnalytics'))
+const CreatorDbSize = React.lazy(() => import('./pages/influencer/CreatorDbSize'))
+const BillingHistory = React.lazy(() => import('./pages/influencer/BillingHistory'))
+const TrialMode = React.lazy(() => import('./pages/influencer/TrialMode'))
+
+// Influencer Module - Platform Expansion
+const TikTokCreators = React.lazy(() => import('./pages/influencer/TikTokCreators'))
+const YouTubeCreators = React.lazy(() => import('./pages/influencer/YouTubeCreators'))
+const CreatorOnboarding = React.lazy(() => import('./pages/influencer/CreatorOnboarding'))
+const CreatorVerification = React.lazy(() => import('./pages/influencer/CreatorVerification'))
+const ApiAccess = React.lazy(() => import('./pages/influencer/ApiAccess'))
+
+// Influencer Module - Reporting & Export
+const ReportBuilder = React.lazy(() => import('./pages/influencer/ReportBuilder'))
+const ScheduledReports = React.lazy(() => import('./pages/influencer/ScheduledReports'))
+const CreatorProfileExport = React.lazy(() => import('./pages/influencer/CreatorProfileExport'))
+const DashboardEmbed = React.lazy(() => import('./pages/influencer/DashboardEmbed'))
+
+// Influencer Module - Admin & Operations
+const AdminDashboard = React.lazy(() => import('./pages/influencer/AdminDashboard'))
+const DataRefreshScheduler = React.lazy(() => import('./pages/influencer/DataRefreshScheduler'))
+const BulkImport = React.lazy(() => import('./pages/influencer/BulkImport'))
+const UserManagement = React.lazy(() => import('./pages/influencer/UserManagement'))
+
+// Influencer Module - UX
+const SavedSearchPresets = React.lazy(() => import('./pages/influencer/SavedSearchPresets'))
+const RecentlyViewed = React.lazy(() => import('./pages/influencer/RecentlyViewed'))
+const KeyboardShortcuts = React.lazy(() => import('./pages/influencer/KeyboardShortcuts'))
+const OnboardingWizard = React.lazy(() => import('./pages/influencer/OnboardingWizard'))
+const WhatsNew = React.lazy(() => import('./pages/influencer/WhatsNew'))
 
 // Manufacturing Module
 const Manufacturing = React.lazy(() => import('./pages/Manufacturing'))
@@ -248,6 +333,7 @@ function App() {
 
               {/* Influencer Module Routes */}
               <Route element={<ModuleErrorBoundary moduleName="Influencer"><Outlet /></ModuleErrorBoundary>}>
+                {/* Core */}
                 <Route path="influencer" element={<Suspense fallback={<PageLoader />}><InfluencerDashboard /></Suspense>} />
                 <Route path="influencer/creators" element={<Suspense fallback={<PageLoader />}><CreatorDatabase /></Suspense>} />
                 <Route path="influencer/campaigns" element={<Suspense fallback={<PageLoader />}><CampaignDashboard /></Suspense>} />
@@ -258,6 +344,91 @@ function App() {
                 <Route path="influencer/invoices" element={<Suspense fallback={<PageLoader />}><PaymentInvoicing /></Suspense>} />
                 <Route path="influencer/analytics" element={<Suspense fallback={<PageLoader />}><CreatorAnalytics /></Suspense>} />
                 <Route path="influencer/comparison" element={<Suspense fallback={<PageLoader />}><CampaignComparison /></Suspense>} />
+
+                {/* Analytics & Creator Intelligence */}
+                <Route path="influencer/demographics" element={<Suspense fallback={<PageLoader />}><AudienceDemographics /></Suspense>} />
+                <Route path="influencer/bot-detection" element={<Suspense fallback={<PageLoader />}><BotDetection /></Suspense>} />
+                <Route path="influencer/audience-quality" element={<Suspense fallback={<PageLoader />}><AudienceQuality /></Suspense>} />
+                <Route path="influencer/niche-overlap" element={<Suspense fallback={<PageLoader />}><NicheOverlap /></Suspense>} />
+                <Route path="influencer/competitor-analysis" element={<Suspense fallback={<PageLoader />}><CompetitorAnalysis /></Suspense>} />
+                <Route path="influencer/sentiment" element={<Suspense fallback={<PageLoader />}><SentimentAnalysis /></Suspense>} />
+                <Route path="influencer/virality" element={<Suspense fallback={<PageLoader />}><ViralityPrediction /></Suspense>} />
+                <Route path="influencer/seasonal-trends" element={<Suspense fallback={<PageLoader />}><SeasonalTrends /></Suspense>} />
+                <Route path="influencer/content-format" element={<Suspense fallback={<PageLoader />}><ContentFormatSplit /></Suspense>} />
+                <Route path="influencer/consistency" element={<Suspense fallback={<PageLoader />}><ConsistencyTracker /></Suspense>} />
+
+                {/* Campaign Management */}
+                <Route path="influencer/campaign-builder" element={<Suspense fallback={<PageLoader />}><CampaignBuilder /></Suspense>} />
+                <Route path="influencer/brief-generator" element={<Suspense fallback={<PageLoader />}><BriefGenerator /></Suspense>} />
+                <Route path="influencer/deliverables" element={<Suspense fallback={<PageLoader />}><DeliverablesTracker /></Suspense>} />
+                <Route path="influencer/performance" element={<Suspense fallback={<PageLoader />}><CampaignPerformance /></Suspense>} />
+                <Route path="influencer/creator-comparison" element={<Suspense fallback={<PageLoader />}><MultiCreatorComparison /></Suspense>} />
+                <Route path="influencer/templates" element={<Suspense fallback={<PageLoader />}><CampaignTemplates /></Suspense>} />
+                <Route path="influencer/budget-allocator" element={<Suspense fallback={<PageLoader />}><BudgetAllocator /></Suspense>} />
+                <Route path="influencer/calendar" element={<Suspense fallback={<PageLoader />}><CampaignCalendar /></Suspense>} />
+                <Route path="influencer/content-approval" element={<Suspense fallback={<PageLoader />}><ContentApproval /></Suspense>} />
+                <Route path="influencer/post-campaign-report" element={<Suspense fallback={<PageLoader />}><PostCampaignReport /></Suspense>} />
+
+                {/* AI & Matching */}
+                <Route path="influencer/nl-search" element={<Suspense fallback={<PageLoader />}><NaturalLanguageSearch /></Suspense>} />
+                <Route path="influencer/lookalike" element={<Suspense fallback={<PageLoader />}><LookalikeDiscovery /></Suspense>} />
+                <Route path="influencer/fit-score" element={<Suspense fallback={<PageLoader />}><FitScoreExplainer /></Suspense>} />
+                <Route path="influencer/persona-generator" element={<Suspense fallback={<PageLoader />}><AudiencePersonaGenerator /></Suspense>} />
+                <Route path="influencer/trend-suggestions" element={<Suspense fallback={<PageLoader />}><TrendAlignedSuggestions /></Suspense>} />
+                <Route path="influencer/goal-templates" element={<Suspense fallback={<PageLoader />}><GoalTemplates /></Suspense>} />
+                <Route path="influencer/exclusion-filters" element={<Suspense fallback={<PageLoader />}><ExclusionFilters /></Suspense>} />
+                <Route path="influencer/tier-classification" element={<Suspense fallback={<PageLoader />}><CreatorTierClassification /></Suspense>} />
+                <Route path="influencer/rematch-alerts" element={<Suspense fallback={<PageLoader />}><RematchAlerts /></Suspense>} />
+                <Route path="influencer/collaborative-filtering" element={<Suspense fallback={<PageLoader />}><CollaborativeFiltering /></Suspense>} />
+
+                {/* Creator Outreach & CRM */}
+                <Route path="influencer/email-generator" element={<Suspense fallback={<PageLoader />}><OutreachEmailGenerator /></Suspense>} />
+                <Route path="influencer/outreach-tracker" element={<Suspense fallback={<PageLoader />}><OutreachStatusTracker /></Suspense>} />
+                <Route path="influencer/notes-tags" element={<Suspense fallback={<PageLoader />}><CreatorNotesTags /></Suspense>} />
+                <Route path="influencer/watchlist" element={<Suspense fallback={<PageLoader />}><CreatorWatchlist /></Suspense>} />
+                <Route path="influencer/alerts" element={<Suspense fallback={<PageLoader />}><CreatorAlerts /></Suspense>} />
+                <Route path="influencer/contact-vault" element={<Suspense fallback={<PageLoader />}><ContactVault /></Suspense>} />
+                <Route path="influencer/deal-history" element={<Suspense fallback={<PageLoader />}><DealHistoryLog /></Suspense>} />
+
+                {/* Team & Collaboration */}
+                <Route path="influencer/workspaces" element={<Suspense fallback={<PageLoader />}><Workspaces /></Suspense>} />
+                <Route path="influencer/shared-favorites" element={<Suspense fallback={<PageLoader />}><SharedFavorites /></Suspense>} />
+                <Route path="influencer/activity-feed" element={<Suspense fallback={<PageLoader />}><TeamActivityFeed /></Suspense>} />
+                <Route path="influencer/comments" element={<Suspense fallback={<PageLoader />}><CreatorProfileComments /></Suspense>} />
+                <Route path="influencer/assignments" element={<Suspense fallback={<PageLoader />}><CampaignAssignments /></Suspense>} />
+
+                {/* Monetization & Billing */}
+                <Route path="influencer/subscription" element={<Suspense fallback={<PageLoader />}><SubscriptionPlans /></Suspense>} />
+                <Route path="influencer/usage" element={<Suspense fallback={<PageLoader />}><UsageAnalytics /></Suspense>} />
+                <Route path="influencer/db-size" element={<Suspense fallback={<PageLoader />}><CreatorDbSize /></Suspense>} />
+                <Route path="influencer/billing" element={<Suspense fallback={<PageLoader />}><BillingHistory /></Suspense>} />
+                <Route path="influencer/trial" element={<Suspense fallback={<PageLoader />}><TrialMode /></Suspense>} />
+
+                {/* Platform Expansion */}
+                <Route path="influencer/tiktok" element={<Suspense fallback={<PageLoader />}><TikTokCreators /></Suspense>} />
+                <Route path="influencer/youtube" element={<Suspense fallback={<PageLoader />}><YouTubeCreators /></Suspense>} />
+                <Route path="influencer/creator-onboarding" element={<Suspense fallback={<PageLoader />}><CreatorOnboarding /></Suspense>} />
+                <Route path="influencer/verification" element={<Suspense fallback={<PageLoader />}><CreatorVerification /></Suspense>} />
+                <Route path="influencer/api-access" element={<Suspense fallback={<PageLoader />}><ApiAccess /></Suspense>} />
+
+                {/* Reporting & Export */}
+                <Route path="influencer/report-builder" element={<Suspense fallback={<PageLoader />}><ReportBuilder /></Suspense>} />
+                <Route path="influencer/scheduled-reports" element={<Suspense fallback={<PageLoader />}><ScheduledReports /></Suspense>} />
+                <Route path="influencer/profile-export" element={<Suspense fallback={<PageLoader />}><CreatorProfileExport /></Suspense>} />
+                <Route path="influencer/embed" element={<Suspense fallback={<PageLoader />}><DashboardEmbed /></Suspense>} />
+
+                {/* Admin & Operations */}
+                <Route path="influencer/admin" element={<Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense>} />
+                <Route path="influencer/refresh-scheduler" element={<Suspense fallback={<PageLoader />}><DataRefreshScheduler /></Suspense>} />
+                <Route path="influencer/bulk-import" element={<Suspense fallback={<PageLoader />}><BulkImport /></Suspense>} />
+                <Route path="influencer/user-management" element={<Suspense fallback={<PageLoader />}><UserManagement /></Suspense>} />
+
+                {/* UX */}
+                <Route path="influencer/saved-searches" element={<Suspense fallback={<PageLoader />}><SavedSearchPresets /></Suspense>} />
+                <Route path="influencer/recently-viewed" element={<Suspense fallback={<PageLoader />}><RecentlyViewed /></Suspense>} />
+                <Route path="influencer/shortcuts" element={<Suspense fallback={<PageLoader />}><KeyboardShortcuts /></Suspense>} />
+                <Route path="influencer/onboarding" element={<Suspense fallback={<PageLoader />}><OnboardingWizard /></Suspense>} />
+                <Route path="influencer/whats-new" element={<Suspense fallback={<PageLoader />}><WhatsNew /></Suspense>} />
               </Route>
 
               {/* HR Module Routes */}
