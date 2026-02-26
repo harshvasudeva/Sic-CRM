@@ -122,6 +122,21 @@ app.use('/api/financial-reports', financialReportsRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/logs', logsRoutes);
 
+// Unified Partners (A1, A2)
+const unifiedPartnersRoutes = require('./routes/unifiedPartners');
+app.use('/api/partners', unifiedPartnersRoutes);
+
+// Stock Movements & Item Catalog (A4, A5)
+const stockMovementsRoutes = require('./routes/stockMovements');
+app.use('/api/stock', stockMovementsRoutes);
+
+// Workflow Engine & Automations (B1-B25)
+const workflowsRoutes = require('./routes/workflows');
+app.use('/api/workflows', workflowsRoutes);
+
+// AI Engine (E1-E12)
+const aiEngineRoutes = require('./routes/aiEngine');
+app.use('/api/ai', aiEngineRoutes);
 
 // Setup Wizard Routes
 const setupRoutes = require('./routes/setupRoutes');

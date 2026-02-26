@@ -985,10 +985,513 @@ model SalesScript {
   stage       String   // prospecting, discovery, closing, objection
   content     String   // Script body with placeholders
   tags        String[]
-  
+
   isActive    Boolean  @default(true)
-  
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// ==================== UNIFIED PARTNERS (A1) ====================
+model Partner {
+  id            String   @id @default(uuid())
+  type          String   // customer, vendor, influencer, employee
+  name          String
+  company       String?
+  email         String?
+  phone         String?
+  website       String?
+  taxId         String?
+  creditLimit   Float    @default(0)
+  paymentTerms  String?
+  currency      String   @default("INR")
+  status        String   @default("active")
+  rating        Float    @default(0)
+  notes         String?
+  tags          String[]
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  addresses     Address[]
+  attachments   Attachment[]
+  comments      Comment[]
+  activities    UnifiedActivity[]
+  tags_rel      TagAssignment[]
+  transactions  GlobalTransaction[]
+  payments      UnifiedPayment[]
+}
+
+// ==================== CENTRALIZED ADDRESS BOOK (A2) ====================
+model Address {
+  id            String   @id @default(uuid())
+  partnerId     String?
+  partner       Partner? @relation(fields: [partnerId], references: [id])
+  addressType   String   // billing, shipping, warehouse, office, home
+  label         String?
+  street        String
+  city          String
+  state         String?
+  postalCode    String?
+  country       String   @default("India")
+  isDefault     Boolean  @default(false)
+  phone         String?
+  contactPerson String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ==================== GLOBAL TRANSACTIONS LEDGER (A3) ====================
+model GlobalTransaction {
+  id              String   @id @default(uuid())
+  transactionDate DateTime
+  type            String   // sale, purchase, payroll, manufacturing, refund, transfer
+  sourceModule    String   // sales, purchase, hr, manufacturing, pos
+  sourceId        String
+  partnerId       String?
+  partner         Partner? @relation(fields: [partnerId], references: [id])
+  amount          Float
+  currency        String   @default("INR")
+  taxAmount       Float    @default(0)
+  netAmount       Float
+  costCenterId    String?
+  costCenter      CostCenter? @relation(fields: [costCenterId], references: [id])
+  description     String?
+  reference       String?
+  status          String   @default("posted") // posted, void
+  createdBy       String?
+  createdAt       DateTime @default(now())
+
+  @@index([transactionDate])
+  @@index([type])
+  @@index([partnerId])
+  @@index([sourceModule, sourceId])
+}
+
+// ==================== UNIVERSAL STOCK MOVEMENTS (A4) ====================
+model StockMovement {
+  id              String   @id @default(uuid())
+  itemId          String
+  item            ItemCatalog @relation(fields: [itemId], references: [id])
+  movementType    String   // sale, purchase, return_in, return_out, manufacturing_consumption, manufacturing_output, transfer, adjustment, write_off, marketing_seeding
+  quantity        Float    // positive=in, negative=out
+  warehouseId     String?
+  warehouse       Location? @relation("MovementWarehouse", fields: [warehouseId], references: [id])
+  warehouseFromId String?
+  referenceType   String?  // sales_order, purchase_order, manufacturing_order, stock_journal
+  referenceId     String?
+  batchNumber     String?
+  serialNumber    String?
+  unitCost        Float    @default(0)
+  totalValue      Float    @default(0)
+  createdBy       String?
+  createdAt       DateTime @default(now())
+
+  @@index([itemId])
+  @@index([warehouseId])
+  @@index([movementType])
+  @@index([createdAt])
+}
+
+// ==================== SHARED ITEMS MASTER CATALOG (A5) ====================
+model ItemCatalog {
+  id               String   @id @default(uuid())
+  sku              String   @unique
+  name             String
+  description      String?
+  category         String?
+  unitOfMeasure    String   @default("pcs")
+  canBeSold        Boolean  @default(false)
+  canBePurchased   Boolean  @default(false)
+  isAsset          Boolean  @default(false)
+  isConsumable     Boolean  @default(false)
+  salesPrice       Float?
+  purchasePrice    Float?
+  costPrice        Float?
+  taxRuleId        String?
+  weight           Float?
+  dimensions       Json?
+  imageUrl         String?
+  minStockLevel    Float    @default(0)
+  maxStockLevel    Float    @default(0)
+  reorderPoint     Float    @default(0)
+  leadTimeDays     Int      @default(0)
+  defaultWarehouseId String?
+  variants         Json?
+  isActive         Boolean  @default(true)
+  tags             String[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  stockMovements   StockMovement[]
+}
+
+// ==================== POLYMORPHIC ATTACHMENTS (A6) ====================
+model Attachment {
+  id            String   @id @default(uuid())
+  entityType    String   // invoice, employee, product, lead, partner, etc.
+  entityId      String
+  partnerId     String?
+  partner       Partner? @relation(fields: [partnerId], references: [id])
+  fileName      String
+  fileType      String?  // pdf, image, doc, spreadsheet
+  fileSize      Int?
+  fileUrl       String
+  description   String?
+  uploadedBy    String?
+  createdAt     DateTime @default(now())
+
+  @@index([entityType, entityId])
+}
+
+// ==================== UNIFIED ACTIVITIES (A7) ====================
+model UnifiedActivity {
+  id            String   @id @default(uuid())
+  entityType    String   // partner, lead, deal, invoice, employee
+  entityId      String
+  partnerId     String?
+  partner       Partner? @relation(fields: [partnerId], references: [id])
+  type          String   // call, email, meeting, note, task
+  subject       String
+  description   String?
+  dueDate       DateTime?
+  completedAt   DateTime?
+  status        String   @default("pending") // pending, completed, cancelled
+  assignedTo    String?
+  createdBy     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([entityType, entityId])
+  @@index([status])
+}
+
+// ==================== SHARED TAX ENGINE (A8) ====================
+model TaxRule {
+  id            String   @id @default(uuid())
+  name          String
+  rate          Float
+  type          String   // gst, vat, sales_tax, excise
+  code          String   @unique
+  applicableTo  String[] // sales, purchase, pos, returns
+  region        String?
+  isCompound    Boolean  @default(false)
+  isInclusive   Boolean  @default(false)
+  effectiveFrom DateTime?
+  effectiveTo   DateTime?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ==================== UNIFIED PAYMENTS (A11) ====================
+model UnifiedPayment {
+  id                   String   @id @default(uuid())
+  direction            String   // inbound, outbound
+  type                 String   // customer_payment, vendor_payment, payroll, influencer_payout, refund
+  partnerId            String?
+  partner              Partner? @relation(fields: [partnerId], references: [id])
+  amount               Float
+  currency             String   @default("INR")
+  paymentMethod        String?
+  referenceNumber      String?
+  bankAccountId        String?
+  bankAccount          BankDefinition? @relation(fields: [bankAccountId], references: [id])
+  status               String   @default("pending") // pending, completed, failed, reversed
+  linkedTransactionId  String?
+  gatewayResponse      Json?
+  processedAt          DateTime?
+  createdBy            String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([partnerId])
+  @@index([status])
+  @@index([direction])
+}
+
+// ==================== POLYMORPHIC TAGS (A13) ====================
+model Tag {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  color       String   @default("#6366f1")
+  category    String?
+  createdAt   DateTime @default(now())
+
+  assignments TagAssignment[]
+}
+
+model TagAssignment {
+  id          String   @id @default(uuid())
+  tagId       String
+  tag         Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  entityType  String
+  entityId    String
+  partnerId   String?
+  partner     Partner? @relation(fields: [partnerId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@unique([tagId, entityType, entityId])
+  @@index([entityType, entityId])
+}
+
+// ==================== UNIVERSAL COMMENTS (A14) ====================
+model Comment {
+  id              String   @id @default(uuid())
+  entityType      String
+  entityId        String
+  partnerId       String?
+  partner         Partner? @relation(fields: [partnerId], references: [id])
+  parentCommentId String?
+  content         String
+  mentionedUsers  String[]
+  createdBy       String?
+  createdByName   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([entityType, entityId])
+}
+
+// ==================== NOTIFICATION HUB (A15) ====================
+model Notification {
+  id          String   @id @default(uuid())
+  userId      String
+  type        String   // low_stock, leave_request, crm_reminder, approval_needed, payment_received, system
+  title       String
+  message     String?
+  entityType  String?
+  entityId    String?
+  isRead      Boolean  @default(false)
+  priority    String   @default("normal") // low, normal, high, critical
+  createdAt   DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([type])
+}
+
+// ==================== COST CENTERS (A16) ====================
+model CostCenter {
+  id          String   @id @default(uuid())
+  name        String
+  code        String   @unique
+  type        String   @default("department") // department, project, location
+  parentId    String?
+  parent      CostCenter?  @relation("CostCenterHierarchy", fields: [parentId], references: [id])
+  children    CostCenter[] @relation("CostCenterHierarchy")
+  managerId   String?
+  budget      Float    @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  transactions GlobalTransaction[]
+}
+
+// ==================== DISCOUNT ENGINE (A17) ====================
+model Discount {
+  id                 String   @id @default(uuid())
+  name               String
+  type               String   // percentage, fixed, bogo, tiered
+  value              Float
+  conditions         Json?    // { minAmount, minQty, applicableProducts, customerGroups }
+  validFrom          DateTime?
+  validTo            DateTime?
+  usageLimit         Int?
+  usedCount          Int      @default(0)
+  couponCode         String?  @unique
+  isActive           Boolean  @default(true)
+  source             String   @default("all") // pos, ecommerce, influencer, all
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+// ==================== CENTRALIZED BANK DEFINITIONS (A19) ====================
+model BankDefinition {
+  id            String   @id @default(uuid())
+  bankName      String
+  accountName   String
+  accountNumber String
+  ifscCode      String?
+  swiftCode     String?
+  currency      String   @default("INR")
+  accountType   String   // checking, savings, current
+  isDefault     Boolean  @default(false)
+  usedBy        String[] // hr, purchase, accounting, all
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  payments      UnifiedPayment[]
+}
+
+// ==================== APPROVAL WORKFLOWS (A20) ====================
+model ApprovalWorkflow {
+  id          String   @id @default(uuid())
+  name        String
+  type        String   // leave, purchase_order, expense, invoice, credit_note
+  steps       Json     // [{ order, approverRole, approverId, autoApproveBelow }]
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  requests    ApprovalRequest[]
+}
+
+model ApprovalRequest {
+  id              String   @id @default(uuid())
+  workflowId      String
+  workflow        ApprovalWorkflow @relation(fields: [workflowId], references: [id])
+  entityType      String
+  entityId        String
+  requestedBy     String
+  requestedByName String?
+  currentStep     Int      @default(0)
+  status          String   @default("pending") // pending, approved, rejected, escalated
+  history         Json?    // [{ step, action, by, comment, at }]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([status])
+  @@index([entityType, entityId])
+}
+
+// ==================== SHARED LOCATIONS / WAREHOUSES (A21) ====================
+model Location {
+  id          String   @id @default(uuid())
+  name        String
+  code        String   @unique
+  type        String   // warehouse, office, store, branch
+  address     String?
+  city        String?
+  state       String?
+  country     String   @default("India")
+  capacity    Float?
+  managerId   String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  stockMovements StockMovement[] @relation("MovementWarehouse")
+}
+
+// ==================== EAV CUSTOM FIELDS (A23) ====================
+model EAVField {
+  id            String   @id @default(uuid())
+  label         String
+  fieldKey      String   @unique
+  type          String   // text, number, date, select, multiselect, boolean
+  module        String   // product, lead, partner, invoice, employee
+  options       Json?    // For select/multiselect
+  isRequired    Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  values        EAVValue[]
+}
+
+model EAVValue {
+  id          String   @id @default(uuid())
+  fieldId     String
+  field       EAVField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  entityType  String
+  entityId    String
+  value       String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([fieldId, entityType, entityId])
+  @@index([entityType, entityId])
+}
+
+// ==================== FINANCIAL PERIOD LOCKS (A24) ====================
+model FinancialPeriodLock {
+  id          String   @id @default(uuid())
+  module      String   // all, sales, purchase, hr, accounting, inventory
+  lockDate    DateTime
+  lockedBy    String?
+  reason      String?
+  createdAt   DateTime @default(now())
+}
+
+// ==================== STATUS MASTER (A25) ====================
+model StatusMaster {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  label           String
+  color           String   @default("#6b7280")
+  badgeClass      String?
+  applicableModules String[] // sales, purchase, hr, crm, inventory, manufacturing, all
+  sortOrder       Int      @default(0)
+  isActive        Boolean  @default(true)
+}
+
+// ==================== WORKFLOW ENGINE (Section B) ====================
+model WorkflowDefinition {
+  id          String   @id @default(uuid())
+  name        String
+  eventType   String   // The trigger event
+  conditions  Json?    // Conditions to check before executing
+  actions     Json     // Steps to execute
+  enabled     Boolean  @default(true)
+  priority    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  executions  WorkflowExecution[]
+}
+
+model WorkflowExecution {
+  id              String   @id @default(uuid())
+  workflowId      String
+  workflow        WorkflowDefinition @relation(fields: [workflowId], references: [id])
+  triggerEvent    String
+  triggerPayload  Json?
+  stepsExecuted   Json?    // [{ step, result, duration }]
+  status          String   @default("completed") // completed, failed, partial
+  errorMessage    String?
+  executedAt      DateTime @default(now())
+  duration        Int?     // ms
+}
+
+// ==================== AI ENGINE (Section E) ====================
+model DeduplicationResult {
+  id            String   @id @default(uuid())
+  entityType    String
+  primaryId     String
+  duplicateId   String
+  similarity    Float
+  status        String   @default("pending") // pending, merged, dismissed
+  mergedBy      String?
+  createdAt     DateTime @default(now())
+  resolvedAt    DateTime?
+}
+
+model AnomalyAlert {
+  id              String   @id @default(uuid())
+  entityType      String
+  entityId        String
+  anomalyType     String   // amount_spike, unusual_frequency, pattern_break
+  description     String
+  severity        String   @default("medium") // low, medium, high, critical
+  value           Float?
+  expectedRange   Json?    // { min, max, mean, stdDev }
+  status          String   @default("open") // open, reviewed, dismissed, escalated
+  reviewedBy      String?
+  resolution      String?
+  createdAt       DateTime @default(now())
+  resolvedAt      DateTime?
+
+  @@index([status])
+}
+
+model NLQueryLog {
+  id          String   @id @default(uuid())
+  query       String
+  parsedQuery Json?
+  results     Json?
+  executedBy  String?
+  executedAt  DateTime @default(now())
 }
 

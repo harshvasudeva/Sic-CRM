@@ -204,6 +204,14 @@ const Discuss = React.lazy(() => import('./pages/specialized/Discuss'))
 const Rentals = React.lazy(() => import('./pages/specialized/Rentals'))
 const WebsiteBuilder = React.lazy(() => import('./pages/specialized/WebsiteBuilder'))
 
+// Unified Module Pages (Roadmap A/B/E)
+const WorkflowDashboard = React.lazy(() => import('./pages/workflows/WorkflowDashboard'))
+const WorkflowBuilder = React.lazy(() => import('./pages/workflows/WorkflowBuilder'))
+const ApprovalCenter = React.lazy(() => import('./pages/workflows/ApprovalCenter'))
+const AIInsights = React.lazy(() => import('./pages/ai/AIInsights'))
+const AnomalyDashboard = React.lazy(() => import('./pages/ai/AnomalyDashboard'))
+const NLQueryPage = React.lazy(() => import('./pages/ai/NLQueryPage'))
+
 // Other
 const Settings = React.lazy(() => import('./pages/Settings'))
 const Reports = React.lazy(() => import('./pages/Reports'))
@@ -463,6 +471,20 @@ function App() {
                 <Route path="specialized/discuss" element={<Suspense fallback={<PageLoader />}><Discuss /></Suspense>} />
                 <Route path="specialized/rentals" element={<Suspense fallback={<PageLoader />}><Rentals /></Suspense>} />
                 <Route path="specialized/website-builder" element={<Suspense fallback={<PageLoader />}><WebsiteBuilder /></Suspense>} />
+              </Route>
+
+              {/* Workflow & Automation Module (B1-B25) */}
+              <Route element={<ModuleErrorBoundary moduleName="Workflows"><Outlet /></ModuleErrorBoundary>}>
+                <Route path="workflows" element={<Suspense fallback={<PageLoader />}><WorkflowDashboard /></Suspense>} />
+                <Route path="workflows/builder" element={<Suspense fallback={<PageLoader />}><WorkflowBuilder /></Suspense>} />
+                <Route path="workflows/approvals" element={<Suspense fallback={<PageLoader />}><ApprovalCenter /></Suspense>} />
+              </Route>
+
+              {/* AI & Insights Module (E1-E12) */}
+              <Route element={<ModuleErrorBoundary moduleName="AI"><Outlet /></ModuleErrorBoundary>}>
+                <Route path="ai" element={<Suspense fallback={<PageLoader />}><AIInsights /></Suspense>} />
+                <Route path="ai/anomalies" element={<Suspense fallback={<PageLoader />}><AnomalyDashboard /></Suspense>} />
+                <Route path="ai/query" element={<Suspense fallback={<PageLoader />}><NLQueryPage /></Suspense>} />
               </Route>
 
               <Route path="settings" element={<ModuleErrorBoundary moduleName="Settings"><Suspense fallback={<PageLoader />}><Settings /></Suspense></ModuleErrorBoundary>} />
