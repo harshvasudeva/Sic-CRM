@@ -1495,3 +1495,73 @@ model NLQueryLog {
   executedAt  DateTime @default(now())
 }
 
+// ==================== GLOBAL MULTI-CURRENCY (A12) ====================
+model CurrencyRate {
+  id           String   @id @default(uuid())
+  baseCurrency String   @default("INR")
+  currency     String   // USD, EUR, GBP, etc.
+  rate         Float    // 1 base = rate target
+  inverseRate  Float?   // 1 target = inverseRate base
+  source       String   @default("manual") // manual, api, ecb
+  effectiveDate DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  @@unique([baseCurrency, currency, effectiveDate])
+  @@index([currency])
+  @@index([effectiveDate])
+}
+
+// ==================== MATERIALIZED METRICS (A22) ====================
+model MaterializedMetric {
+  id            String   @id @default(uuid())
+  metricKey     String   // sales_total, purchase_total, employee_count, inventory_value, etc.
+  module        String   // sales, purchase, hr, inventory, crm, accounting
+  dimensions    Json?    // { period: "2026-02", department: "IT" }
+  value         Float    @default(0)
+  metadata      Json?    // additional breakdown data
+  computedAt    DateTime @default(now())
+  periodStart   DateTime?
+  periodEnd     DateTime?
+
+  @@unique([metricKey, module, computedAt])
+  @@index([metricKey])
+  @@index([module])
+  @@index([computedAt])
+}
+
+// ==================== ROLE PERMISSIONS (A9 enhancement) ====================
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  displayName String
+  description String?
+  isSystem    Boolean  @default(false) // admin, user are system roles
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  permissions RolePermission[]
+}
+
+model RolePermission {
+  id         String @id @default(uuid())
+  roleId     String
+  role       Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  module     String // sales, purchase, hr, crm, inventory, accounting, manufacturing, influencer
+  action     String // create, read, update, delete, export, approve
+  granted    Boolean @default(true)
+
+  @@unique([roleId, module, action])
+}
+
+// ==================== USER PREFERENCES (C24) ====================
+model UserPreference {
+  id        String   @id @default(uuid())
+  userId    String
+  key       String   // theme, sidebar_collapsed, table_density, default_currency, etc.
+  value     Json     // any JSON value
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, key])
+  @@index([userId])
+}
+

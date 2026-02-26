@@ -35,6 +35,37 @@ export default function DashboardComposer({ widgets = [], catalog = [], onLayout
   const [showCatalog, setShowCatalog] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [configuring, setConfiguring] = useState(null)
+  const [dragIndex, setDragIndex] = useState(null)
+  const [dragOverIndex, setDragOverIndex] = useState(null)
+
+  const handleDragStart = (e, index) => {
+    if (!editMode) return
+    setDragIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', index)
+  }
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault()
+    if (dragIndex === null || dragIndex === index) return
+    setDragOverIndex(index)
+  }
+
+  const handleDrop = (e, dropIndex) => {
+    e.preventDefault()
+    if (dragIndex === null || dragIndex === dropIndex) return
+    const updated = [...widgets]
+    const [dragged] = updated.splice(dragIndex, 1)
+    updated.splice(dropIndex, 0, dragged)
+    onLayoutChange?.(updated)
+    setDragIndex(null)
+    setDragOverIndex(null)
+  }
+
+  const handleDragEnd = () => {
+    setDragIndex(null)
+    setDragOverIndex(null)
+  }
 
   const moveWidget = (id, direction) => {
     const idx = widgets.findIndex(w => w.id === id)
@@ -154,7 +185,20 @@ export default function DashboardComposer({ widgets = [], catalog = [], onLayout
         {widgets.map((w, idx) => {
           const IconComp = DEFAULT_ICONS[w.icon] || LayoutGrid
           return (
-            <div key={w.id} style={s.widget(w.size || '1x1', editMode)}>
+            <div
+              key={w.id}
+              style={{
+                ...s.widget(w.size || '1x1', editMode),
+                opacity: dragIndex === idx ? 0.5 : 1,
+                border: dragOverIndex === idx ? '2px solid var(--accent)' : s.widget(w.size || '1x1', editMode).border,
+                cursor: editMode ? 'grab' : 'default',
+              }}
+              draggable={editMode}
+              onDragStart={(e) => handleDragStart(e, idx)}
+              onDragOver={(e) => handleDragOver(e, idx)}
+              onDrop={(e) => handleDrop(e, idx)}
+              onDragEnd={handleDragEnd}
+            >
               <div style={s.widgetHeader}>
                 <div style={s.widgetTitle}>
                   {editMode && <GripVertical size={12} style={{ color: 'var(--text-secondary)' }} />}

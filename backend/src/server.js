@@ -142,6 +142,22 @@ app.use('/api/ai', aiEngineRoutes);
 const setupRoutes = require('./routes/setupRoutes');
 app.use('/api/setup', setupRoutes);
 
+// Core Engine (A6/A8/A9/A11/A12/A14/A16/A17/A19/A22-A25/C24/D4)
+const coreEngineRoutes = require('./routes/coreEngine');
+app.use('/api/core', coreEngineRoutes);
+
+// Cross-Module Workflows (B2/B3/B6-B8/B10-B11/B13-B14/B16/B18/B21/D8/D10)
+const crossModuleRoutes = require('./routes/crossModule');
+app.use('/api/cross-module', crossModuleRoutes);
+
+// Domain Workflows (B9 Vendor Portal, B12 Recruitment, B17 Timeclock, B19 Product Matrix)
+const domainWorkflowRoutes = require('./routes/domainWorkflows');
+app.use('/api/domain', domainWorkflowRoutes);
+
+// Infrastructure: APM middleware
+const { apmMiddleware } = require('./services/infrastructure');
+app.use(apmMiddleware);
+
 // Health check routes
 const healthRoutes = require('./routes/health');
 app.use('/api/health', healthRoutes);

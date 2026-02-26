@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import ContextMenu from './ContextMenu'
 import { getSavedFilters, saveFilter, deleteFilter } from '../stores/settingsStore'
+import useVirtualList from '../hooks/useVirtualList'
 
 function DataTable({
     columns,
@@ -27,6 +28,7 @@ function DataTable({
     emptyMessage = 'No data found',
     emptyAction,      // { label, onClick } for empty state
     rowKey = 'id',    // key to use for row identity
+    virtualizeThreshold = 200, // Enable virtualization when rows exceed this count
 }) {
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
     const [searchQuery, setSearchQuery] = useState('')
@@ -84,11 +86,22 @@ function DataTable({
         return result
     }, [sortedData, searchQuery, activeFilters])
 
-    // Paginate data
+    // Virtualization for large datasets (C1)
+    const shouldVirtualize = filteredData.length > virtualizeThreshold
+    const virtualList = useVirtualList({
+        itemCount: shouldVirtualize ? filteredData.length : 0,
+        itemHeight: 48,
+        overscan: 10
+    })
+
+    // Paginate data (skip if virtualizing)
     const paginatedData = useMemo(() => {
+        if (shouldVirtualize) {
+            return virtualList.items.map(vi => filteredData[vi.index]).filter(Boolean)
+        }
         const start = (currentPage - 1) * itemsPerPage
         return filteredData.slice(start, start + itemsPerPage)
-    }, [filteredData, currentPage, itemsPerPage])
+    }, [filteredData, currentPage, itemsPerPage, shouldVirtualize, virtualList.items])
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
@@ -397,6 +410,7 @@ function DataTable({
                                     {columns.map((column) => (
                                         <td
                                             key={column.key}
+                                            data-label={column.label || column.key}
                                             onDoubleClick={() => {
                                                 if (column.editable && inlineEditable) {
                                                     startEdit(rowIndex, column.key, row[column.key])
