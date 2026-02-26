@@ -1,6 +1,8 @@
-// Analytics & Creator Intelligence Store - Comprehensive analytics with localStorage persistence
+// Analytics & Creator Intelligence Store - API-backed with localStorage cache
 // Covers: Demographics, Bot Detection, Audience Quality, Niche Overlap, Competitor Brands,
 // Sentiment Analysis, Virality Prediction, Seasonal Trends, Content Format Split, Consistency Streaks
+
+import api from '../utils/api.js'
 
 // ==================== HELPERS ====================
 function getStore(key, initial) {
@@ -13,6 +15,15 @@ function setStore(key, data) { localStorage.setItem(key, JSON.stringify(data)) }
 function genId(prefix) { return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}` }
 
 const today = () => new Date().toISOString().split('T')[0]
+
+// Try API first, fall back to localStorage on network error
+async function apiWithFallback(apiCall, fallbackFn) {
+    try {
+        return await apiCall()
+    } catch {
+        return typeof fallbackFn === 'function' ? fallbackFn() : fallbackFn
+    }
+}
 
 // ==================== STORAGE KEYS ====================
 const KEYS = {
@@ -29,496 +40,19 @@ const KEYS = {
 }
 
 // ==================================================================================
-// 1. AUDIENCE DEMOGRAPHICS
+// INITIAL DATA (empty — populated dynamically from API or user actions)
 // ==================================================================================
-const initialDemographics = {
-    'cr-001': {
-        creatorId: 'cr-001',
-        ageBrackets: { '13-17': 4, '18-24': 32, '25-34': 38, '35-44': 18, '45-54': 6, '55+': 2 },
-        genderSplit: { male: 28, female: 66, other: 6 },
-        topLocations: [
-            { city: 'Mumbai', pct: 24 },
-            { city: 'Delhi', pct: 16 },
-            { city: 'Bangalore', pct: 11 },
-            { city: 'Pune', pct: 8 },
-            { city: 'Hyderabad', pct: 7 },
-        ],
-        topCountries: [
-            { country: 'India', pct: 88 },
-            { country: 'United States', pct: 4 },
-            { country: 'United Kingdom', pct: 3 },
-            { country: 'UAE', pct: 2 },
-            { country: 'Canada', pct: 1.5 },
-        ],
-        updatedAt: '2026-02-20',
-    },
-    'cr-002': {
-        creatorId: 'cr-002',
-        ageBrackets: { '13-17': 12, '18-24': 38, '25-34': 30, '35-44': 14, '45-54': 4, '55+': 2 },
-        genderSplit: { male: 74, female: 22, other: 4 },
-        topLocations: [
-            { city: 'Bangalore', pct: 22 },
-            { city: 'Hyderabad', pct: 14 },
-            { city: 'Delhi', pct: 13 },
-            { city: 'Mumbai', pct: 11 },
-            { city: 'Chennai', pct: 8 },
-        ],
-        topCountries: [
-            { country: 'India', pct: 82 },
-            { country: 'United States', pct: 7 },
-            { country: 'United Kingdom', pct: 3 },
-            { country: 'Germany', pct: 2 },
-            { country: 'Singapore', pct: 2 },
-        ],
-        updatedAt: '2026-02-18',
-    },
-    'cr-003': {
-        creatorId: 'cr-003',
-        ageBrackets: { '13-17': 6, '18-24': 28, '25-34': 36, '35-44': 20, '45-54': 7, '55+': 3 },
-        genderSplit: { male: 35, female: 60, other: 5 },
-        topLocations: [
-            { city: 'Hyderabad', pct: 26 },
-            { city: 'Bangalore', pct: 14 },
-            { city: 'Chennai', pct: 10 },
-            { city: 'Mumbai', pct: 9 },
-            { city: 'Delhi', pct: 8 },
-        ],
-        topCountries: [
-            { country: 'India', pct: 91 },
-            { country: 'United States', pct: 3 },
-            { country: 'UAE', pct: 2 },
-            { country: 'Australia', pct: 1.5 },
-            { country: 'United Kingdom', pct: 1 },
-        ],
-        updatedAt: '2026-02-19',
-    },
-    'cr-004': {
-        creatorId: 'cr-004',
-        ageBrackets: { '13-17': 5, '18-24': 26, '25-34': 34, '35-44': 22, '45-54': 9, '55+': 4 },
-        genderSplit: { male: 48, female: 47, other: 5 },
-        topLocations: [
-            { city: 'Chennai', pct: 28 },
-            { city: 'Bangalore', pct: 14 },
-            { city: 'Hyderabad', pct: 11 },
-            { city: 'Mumbai', pct: 9 },
-            { city: 'Coimbatore', pct: 7 },
-        ],
-        topCountries: [
-            { country: 'India', pct: 90 },
-            { country: 'United States', pct: 3 },
-            { country: 'Singapore', pct: 2.5 },
-            { country: 'UAE', pct: 2 },
-            { country: 'Malaysia', pct: 1 },
-        ],
-        updatedAt: '2026-02-17',
-    },
-    'cr-005': {
-        creatorId: 'cr-005',
-        ageBrackets: { '13-17': 3, '18-24': 30, '25-34': 35, '35-44': 20, '45-54': 8, '55+': 4 },
-        genderSplit: { male: 40, female: 55, other: 5 },
-        topLocations: [
-            { city: 'Delhi', pct: 20 },
-            { city: 'Mumbai', pct: 15 },
-            { city: 'Jaipur', pct: 12 },
-            { city: 'Goa', pct: 9 },
-            { city: 'Bangalore', pct: 8 },
-        ],
-        topCountries: [
-            { country: 'India', pct: 84 },
-            { country: 'United States', pct: 5 },
-            { country: 'United Kingdom', pct: 4 },
-            { country: 'Australia', pct: 2 },
-            { country: 'Thailand', pct: 2 },
-        ],
-        updatedAt: '2026-02-15',
-    },
-    'cr-006': {
-        creatorId: 'cr-006',
-        ageBrackets: { '13-17': 18, '18-24': 42, '25-34': 26, '35-44': 10, '45-54': 3, '55+': 1 },
-        genderSplit: { male: 56, female: 38, other: 6 },
-        topLocations: [
-            { city: 'Pune', pct: 21 },
-            { city: 'Mumbai', pct: 18 },
-            { city: 'Delhi', pct: 14 },
-            { city: 'Bangalore', pct: 11 },
-            { city: 'Ahmedabad', pct: 7 },
-        ],
-        topCountries: [
-            { country: 'India', pct: 92 },
-            { country: 'United States', pct: 3 },
-            { country: 'Nepal', pct: 1.5 },
-            { country: 'UAE', pct: 1 },
-            { country: 'United Kingdom', pct: 1 },
-        ],
-        updatedAt: '2026-02-21',
-    },
-}
+const initialDemographics = {}
+const initialBotDetection = {}
+const initialAudienceQuality = {}
+const initialNicheOverlap = { creatorNiches: {}, pairwiseOverlap: {} }
+const initialCompetitorBrands = {}
+const initialContentSentiment = {}
+const initialViralityPrediction = {}
+const initialSeasonalTrends = {}
+const initialContentFormatSplit = {}
+const initialConsistencyStreak = {}
 
-// ==================================================================================
-// 2. FAKE FOLLOWER / BOT DETECTION SCORE
-// ==================================================================================
-const initialBotDetection = {
-    'cr-001': {
-        creatorId: 'cr-001',
-        botScore: 12,
-        suspiciousSignals: ['minor follower growth spike in Dec 2025'],
-        followerToEngagementRatio: 0.087,
-        estimatedRealFollowers: 457600,
-        lastChecked: '2026-02-18',
-    },
-    'cr-002': {
-        creatorId: 'cr-002',
-        botScore: 8,
-        suspiciousSignals: [],
-        followerToEngagementRatio: 0.15,
-        estimatedRealFollowers: 1104000,
-        lastChecked: '2026-02-19',
-    },
-    'cr-003': {
-        creatorId: 'cr-003',
-        botScore: 22,
-        suspiciousSignals: ['engagement spike anomaly', 'low comment quality'],
-        followerToEngagementRatio: 0.09,
-        estimatedRealFollowers: 241800,
-        lastChecked: '2026-02-17',
-    },
-    'cr-004': {
-        creatorId: 'cr-004',
-        botScore: 15,
-        suspiciousSignals: ['follower growth spike in Oct 2025'],
-        followerToEngagementRatio: 0.122,
-        estimatedRealFollowers: 663000,
-        lastChecked: '2026-02-20',
-    },
-    'cr-005': {
-        creatorId: 'cr-005',
-        botScore: 38,
-        suspiciousSignals: ['engagement spike anomaly', 'follower growth spike', 'low comment quality', 'suspicious follower geography'],
-        followerToEngagementRatio: 0.071,
-        estimatedRealFollowers: 260400,
-        lastChecked: '2026-02-16',
-    },
-    'cr-006': {
-        creatorId: 'cr-006',
-        botScore: 10,
-        suspiciousSignals: [],
-        followerToEngagementRatio: 0.135,
-        estimatedRealFollowers: 801000,
-        lastChecked: '2026-02-21',
-    },
-}
-
-// ==================================================================================
-// 3. AUDIENCE QUALITY SCORE DATA
-//    Weighted: realFollowerPct (40%) + activeCommenterPct (30%) + engagementAuthenticity (30%)
-// ==================================================================================
-const initialAudienceQuality = {
-    'cr-001': { creatorId: 'cr-001', realFollowerPct: 88, activeCommenterPct: 72, engagementAuthenticity: 91, updatedAt: '2026-02-18' },
-    'cr-002': { creatorId: 'cr-002', realFollowerPct: 92, activeCommenterPct: 78, engagementAuthenticity: 94, updatedAt: '2026-02-19' },
-    'cr-003': { creatorId: 'cr-003', realFollowerPct: 78, activeCommenterPct: 55, engagementAuthenticity: 68, updatedAt: '2026-02-17' },
-    'cr-004': { creatorId: 'cr-004', realFollowerPct: 85, activeCommenterPct: 70, engagementAuthenticity: 82, updatedAt: '2026-02-20' },
-    'cr-005': { creatorId: 'cr-005', realFollowerPct: 62, activeCommenterPct: 44, engagementAuthenticity: 56, updatedAt: '2026-02-16' },
-    'cr-006': { creatorId: 'cr-006', realFollowerPct: 90, activeCommenterPct: 80, engagementAuthenticity: 92, updatedAt: '2026-02-21' },
-}
-
-// ==================================================================================
-// 4. CREATOR NICHE OVERLAP MAP (base data - overlap computed dynamically)
-// ==================================================================================
-const initialNicheOverlap = {
-    creatorNiches: {
-        'cr-001': { niche: 'Lifestyle', subNiches: ['Fashion', 'Beauty', 'Travel', 'Food'], audienceInterests: ['fashion', 'skincare', 'lifestyle', 'travel', 'beauty'] },
-        'cr-002': { niche: 'Tech', subNiches: ['Gadgets', 'Gaming', 'Programming'], audienceInterests: ['technology', 'gadgets', 'gaming', 'science', 'coding'] },
-        'cr-003': { niche: 'Fitness', subNiches: ['Gym', 'Yoga', 'Nutrition'], audienceInterests: ['fitness', 'health', 'nutrition', 'wellness', 'gym'] },
-        'cr-004': { niche: 'Food', subNiches: ['Street Food', 'Restaurant Reviews', 'Cooking'], audienceInterests: ['food', 'cooking', 'restaurants', 'travel', 'street food'] },
-        'cr-005': { niche: 'Travel', subNiches: ['Budget Travel', 'Luxury', 'Adventure'], audienceInterests: ['travel', 'adventure', 'photography', 'lifestyle', 'hotels'] },
-        'cr-006': { niche: 'Comedy', subNiches: ['Sketch Comedy', 'Memes', 'Roasts'], audienceInterests: ['comedy', 'entertainment', 'memes', 'bollywood', 'trending'] },
-    },
-    pairwiseOverlap: {
-        'cr-001|cr-002': { sharedAudiencePct: 8, commonInterests: [] },
-        'cr-001|cr-003': { sharedAudiencePct: 18, commonInterests: ['health', 'lifestyle'] },
-        'cr-001|cr-004': { sharedAudiencePct: 22, commonInterests: ['food', 'lifestyle'] },
-        'cr-001|cr-005': { sharedAudiencePct: 35, commonInterests: ['travel', 'lifestyle', 'photography'] },
-        'cr-001|cr-006': { sharedAudiencePct: 14, commonInterests: ['entertainment'] },
-        'cr-002|cr-003': { sharedAudiencePct: 10, commonInterests: ['gadgets'] },
-        'cr-002|cr-004': { sharedAudiencePct: 6, commonInterests: [] },
-        'cr-002|cr-005': { sharedAudiencePct: 7, commonInterests: [] },
-        'cr-002|cr-006': { sharedAudiencePct: 15, commonInterests: ['trending'] },
-        'cr-003|cr-004': { sharedAudiencePct: 16, commonInterests: ['nutrition', 'health'] },
-        'cr-003|cr-005': { sharedAudiencePct: 12, commonInterests: ['adventure'] },
-        'cr-003|cr-006': { sharedAudiencePct: 9, commonInterests: [] },
-        'cr-004|cr-005': { sharedAudiencePct: 28, commonInterests: ['travel', 'food'] },
-        'cr-004|cr-006': { sharedAudiencePct: 11, commonInterests: ['entertainment'] },
-        'cr-005|cr-006': { sharedAudiencePct: 13, commonInterests: ['lifestyle'] },
-    },
-}
-
-// ==================================================================================
-// 5. COMPETITOR BRAND ANALYSIS
-// ==================================================================================
-const initialCompetitorBrands = {
-    'cr-001': {
-        creatorId: 'cr-001',
-        brands: [
-            { id: 'cb-001', brandName: 'Nykaa', platform: 'Instagram', date: '2025-11-15', contentType: 'Reel', estimatedReach: 92000, isCompetitor: false },
-            { id: 'cb-002', brandName: 'Mamaearth', platform: 'Instagram', date: '2025-12-20', contentType: 'Static', estimatedReach: 45000, isCompetitor: true },
-            { id: 'cb-003', brandName: 'Sugar Cosmetics', platform: 'Instagram', date: '2025-10-05', contentType: 'Reel', estimatedReach: 68000, isCompetitor: true },
-            { id: 'cb-004', brandName: 'Lakme', platform: 'Instagram', date: '2025-08-18', contentType: 'Carousel', estimatedReach: 55000, isCompetitor: true },
-            { id: 'cb-005', brandName: 'Forest Essentials', platform: 'Instagram', date: '2025-06-10', contentType: 'Story', estimatedReach: 38000, isCompetitor: false },
-        ],
-    },
-    'cr-002': {
-        creatorId: 'cr-002',
-        brands: [
-            { id: 'cb-006', brandName: 'Samsung', platform: 'YouTube', date: '2025-09-10', contentType: 'Dedicated Video', estimatedReach: 320000, isCompetitor: true },
-            { id: 'cb-007', brandName: 'OnePlus', platform: 'YouTube', date: '2025-07-22', contentType: 'Dedicated Video', estimatedReach: 280000, isCompetitor: true },
-            { id: 'cb-008', brandName: 'Boat', platform: 'YouTube', date: '2025-11-05', contentType: 'Integration', estimatedReach: 195000, isCompetitor: false },
-            { id: 'cb-009', brandName: 'Apple', platform: 'YouTube', date: '2025-05-15', contentType: 'Shorts', estimatedReach: 210000, isCompetitor: true },
-            { id: 'cb-010', brandName: 'Nothing', platform: 'YouTube', date: '2026-01-08', contentType: 'Dedicated Video', estimatedReach: 245000, isCompetitor: true },
-        ],
-    },
-    'cr-003': {
-        creatorId: 'cr-003',
-        brands: [
-            { id: 'cb-011', brandName: 'MuscleBlaze', platform: 'Instagram', date: '2025-09-25', contentType: 'Reel', estimatedReach: 32000, isCompetitor: false },
-            { id: 'cb-012', brandName: 'Healthkart', platform: 'Instagram', date: '2025-08-12', contentType: 'Story', estimatedReach: 25000, isCompetitor: true },
-            { id: 'cb-013', brandName: 'Cult.fit', platform: 'Instagram', date: '2025-11-30', contentType: 'Reel', estimatedReach: 28000, isCompetitor: false },
-        ],
-    },
-    'cr-004': {
-        creatorId: 'cr-004',
-        brands: [
-            { id: 'cb-014', brandName: 'Swiggy', platform: 'YouTube', date: '2025-10-20', contentType: 'Dedicated Video', estimatedReach: 150000, isCompetitor: true },
-            { id: 'cb-015', brandName: 'Zomato', platform: 'YouTube', date: '2025-08-05', contentType: 'Integration', estimatedReach: 120000, isCompetitor: true },
-            { id: 'cb-016', brandName: 'ITC', platform: 'YouTube', date: '2025-12-12', contentType: 'Dedicated Video', estimatedReach: 135000, isCompetitor: false },
-            { id: 'cb-017', brandName: 'EatSure', platform: 'YouTube', date: '2025-06-20', contentType: 'Shorts', estimatedReach: 88000, isCompetitor: true },
-            { id: 'cb-018', brandName: 'Blinkit', platform: 'Instagram', date: '2026-01-15', contentType: 'Reel', estimatedReach: 95000, isCompetitor: false },
-        ],
-    },
-    'cr-005': {
-        creatorId: 'cr-005',
-        brands: [
-            { id: 'cb-019', brandName: 'MakeMyTrip', platform: 'Instagram', date: '2025-08-15', contentType: 'Reel', estimatedReach: 42000, isCompetitor: true },
-            { id: 'cb-020', brandName: 'Airbnb', platform: 'Instagram', date: '2025-07-10', contentType: 'Carousel', estimatedReach: 38000, isCompetitor: false },
-            { id: 'cb-021', brandName: 'Cleartrip', platform: 'Instagram', date: '2025-11-22', contentType: 'Story', estimatedReach: 30000, isCompetitor: true },
-            { id: 'cb-022', brandName: 'Booking.com', platform: 'Instagram', date: '2025-05-18', contentType: 'Reel', estimatedReach: 35000, isCompetitor: true },
-        ],
-    },
-    'cr-006': {
-        creatorId: 'cr-006',
-        brands: [
-            { id: 'cb-023', brandName: 'Cred', platform: 'Instagram', date: '2025-12-01', contentType: 'Reel', estimatedReach: 250000, isCompetitor: false },
-            { id: 'cb-024', brandName: 'Dunzo', platform: 'Instagram', date: '2025-11-15', contentType: 'Reel', estimatedReach: 210000, isCompetitor: false },
-            { id: 'cb-025', brandName: 'Zepto', platform: 'Instagram', date: '2025-09-28', contentType: 'Reel', estimatedReach: 190000, isCompetitor: true },
-            { id: 'cb-026', brandName: 'Swiggy Instamart', platform: 'Instagram', date: '2025-07-20', contentType: 'Story', estimatedReach: 165000, isCompetitor: true },
-            { id: 'cb-027', brandName: 'PhonePe', platform: 'Instagram', date: '2026-01-20', contentType: 'Reel', estimatedReach: 230000, isCompetitor: false },
-        ],
-    },
-}
-
-// ==================================================================================
-// 6. CONTENT SENTIMENT ANALYSIS
-// ==================================================================================
-const initialContentSentiment = {
-    'cr-001': {
-        creatorId: 'cr-001',
-        posts: [
-            { postId: 'p-s001', date: '2026-01-20', positive: 74, neutral: 18, negative: 8, topPositiveKeywords: ['love', 'amazing', 'genuine', 'beautiful'], topNegativeKeywords: ['expensive', 'ad'], overallSentiment: 78 },
-            { postId: 'p-s002', date: '2026-01-28', positive: 68, neutral: 22, negative: 10, topPositiveKeywords: ['helpful', 'great', 'pretty'], topNegativeKeywords: ['sponsored', 'overrated'], overallSentiment: 72 },
-            { postId: 'p-s003', date: '2026-02-08', positive: 80, neutral: 14, negative: 6, topPositiveKeywords: ['stunning', 'must-try', 'authentic', 'gorgeous'], topNegativeKeywords: ['pricey'], overallSentiment: 84 },
-        ],
-        overallSentiment: 78,
-    },
-    'cr-002': {
-        creatorId: 'cr-002',
-        posts: [
-            { postId: 'p-s004', date: '2025-12-15', positive: 70, neutral: 20, negative: 10, topPositiveKeywords: ['honest', 'detailed', 'best review'], topNegativeKeywords: ['biased', 'too long'], overallSentiment: 74 },
-            { postId: 'p-s005', date: '2026-01-05', positive: 65, neutral: 25, negative: 10, topPositiveKeywords: ['informative', 'technical', 'clear'], topNegativeKeywords: ['boring', 'slow'], overallSentiment: 70 },
-            { postId: 'p-s006', date: '2026-01-20', positive: 72, neutral: 19, negative: 9, topPositiveKeywords: ['thorough', 'real-world', 'recommended'], topNegativeKeywords: ['sponsored'], overallSentiment: 76 },
-        ],
-        overallSentiment: 73,
-    },
-    'cr-003': {
-        creatorId: 'cr-003',
-        posts: [
-            { postId: 'p-s007', date: '2025-11-10', positive: 78, neutral: 15, negative: 7, topPositiveKeywords: ['motivating', 'inspiring', 'strong', 'goals'], topNegativeKeywords: ['unrealistic'], overallSentiment: 80 },
-            { postId: 'p-s008', date: '2026-01-18', positive: 60, neutral: 28, negative: 12, topPositiveKeywords: ['helpful', 'form check'], topNegativeKeywords: ['dangerous', 'wrong form', 'not safe'], overallSentiment: 62 },
-        ],
-        overallSentiment: 71,
-    },
-    'cr-004': {
-        creatorId: 'cr-004',
-        posts: [
-            { postId: 'p-s009', date: '2025-11-20', positive: 82, neutral: 12, negative: 6, topPositiveKeywords: ['yummy', 'must try', 'authentic', 'delicious'], topNegativeKeywords: ['unhealthy'], overallSentiment: 85 },
-            { postId: 'p-s010', date: '2026-01-10', positive: 76, neutral: 18, negative: 6, topPositiveKeywords: ['foodie', 'best ever', 'mouth-watering'], topNegativeKeywords: ['overpriced'], overallSentiment: 80 },
-            { postId: 'p-s011', date: '2026-02-05', positive: 84, neutral: 10, negative: 6, topPositiveKeywords: ['hidden gem', 'amazing taste', 'real review'], topNegativeKeywords: ['biased'], overallSentiment: 86 },
-        ],
-        overallSentiment: 84,
-    },
-    'cr-005': {
-        creatorId: 'cr-005',
-        posts: [
-            { postId: 'p-s012', date: '2025-08-15', positive: 70, neutral: 20, negative: 10, topPositiveKeywords: ['wanderlust', 'beautiful', 'dreamy'], topNegativeKeywords: ['ad', 'fake', 'sponsored'], overallSentiment: 72 },
-            { postId: 'p-s013', date: '2025-10-25', positive: 55, neutral: 25, negative: 20, topPositiveKeywords: ['nice views'], topNegativeKeywords: ['ghosted brand', 'unreliable', 'scam'], overallSentiment: 52 },
-        ],
-        overallSentiment: 62,
-    },
-    'cr-006': {
-        creatorId: 'cr-006',
-        posts: [
-            { postId: 'p-s014', date: '2025-12-01', positive: 88, neutral: 8, negative: 4, topPositiveKeywords: ['hilarious', 'funny', 'relatable', 'LOL', 'dead'], topNegativeKeywords: ['copied'], overallSentiment: 90 },
-            { postId: 'p-s015', date: '2025-12-15', positive: 82, neutral: 12, negative: 6, topPositiveKeywords: ['so funny', 'ROFL', 'creative'], topNegativeKeywords: ['offensive'], overallSentiment: 84 },
-            { postId: 'p-s016', date: '2026-01-10', positive: 86, neutral: 9, negative: 5, topPositiveKeywords: ['viral material', 'genius', 'share-worthy'], topNegativeKeywords: ['repetitive'], overallSentiment: 88 },
-            { postId: 'p-s017', date: '2026-02-02', positive: 90, neutral: 7, negative: 3, topPositiveKeywords: ['best content', 'legend', 'laughing'], topNegativeKeywords: [], overallSentiment: 92 },
-        ],
-        overallSentiment: 89,
-    },
-}
-
-// ==================================================================================
-// 7. VIRALITY PREDICTION SCORE
-// ==================================================================================
-const initialViralityPrediction = {
-    'cr-001': { creatorId: 'cr-001', viralityScore: 58, factors: { contentConsistency: 72, trendAlignment: 65, engagementVelocity: 48, audienceGrowthRate: 45 }, predictedNextPostReach: 52000, confidence: 68, updatedAt: '2026-02-20' },
-    'cr-002': { creatorId: 'cr-002', viralityScore: 74, factors: { contentConsistency: 80, trendAlignment: 78, engagementVelocity: 70, audienceGrowthRate: 68 }, predictedNextPostReach: 210000, confidence: 75, updatedAt: '2026-02-19' },
-    'cr-003': { creatorId: 'cr-003', viralityScore: 42, factors: { contentConsistency: 50, trendAlignment: 38, engagementVelocity: 40, audienceGrowthRate: 35 }, predictedNextPostReach: 30000, confidence: 55, updatedAt: '2026-02-17' },
-    'cr-004': { creatorId: 'cr-004', viralityScore: 65, factors: { contentConsistency: 75, trendAlignment: 60, engagementVelocity: 62, audienceGrowthRate: 58 }, predictedNextPostReach: 110000, confidence: 70, updatedAt: '2026-02-20' },
-    'cr-005': { creatorId: 'cr-005', viralityScore: 35, factors: { contentConsistency: 28, trendAlignment: 42, engagementVelocity: 32, audienceGrowthRate: 30 }, predictedNextPostReach: 22000, confidence: 45, updatedAt: '2026-02-16' },
-    'cr-006': { creatorId: 'cr-006', viralityScore: 88, factors: { contentConsistency: 85, trendAlignment: 92, engagementVelocity: 90, audienceGrowthRate: 82 }, predictedNextPostReach: 280000, confidence: 82, updatedAt: '2026-02-21' },
-}
-
-// ==================================================================================
-// 8. SEASONAL PERFORMANCE TRENDS
-// ==================================================================================
-const initialSeasonalTrends = {
-    'cr-001': {
-        creatorId: 'cr-001',
-        monthly: {
-            jan: { avgViews: 42000, avgEngagement: 7.8, postCount: 12 }, feb: { avgViews: 44000, avgEngagement: 8.1, postCount: 10 },
-            mar: { avgViews: 48000, avgEngagement: 8.5, postCount: 14 }, apr: { avgViews: 46000, avgEngagement: 8.2, postCount: 11 },
-            may: { avgViews: 40000, avgEngagement: 7.5, postCount: 9 }, jun: { avgViews: 38000, avgEngagement: 7.2, postCount: 8 },
-            jul: { avgViews: 36000, avgEngagement: 7.0, postCount: 7 }, aug: { avgViews: 39000, avgEngagement: 7.4, postCount: 10 },
-            sep: { avgViews: 43000, avgEngagement: 8.0, postCount: 12 }, oct: { avgViews: 50000, avgEngagement: 8.8, postCount: 15 },
-            nov: { avgViews: 55000, avgEngagement: 9.2, postCount: 16 }, dec: { avgViews: 52000, avgEngagement: 9.0, postCount: 14 },
-        },
-        bestMonths: ['nov', 'oct', 'dec'], worstMonths: ['jul', 'jun', 'may'],
-    },
-    'cr-002': {
-        creatorId: 'cr-002',
-        monthly: {
-            jan: { avgViews: 170000, avgEngagement: 14.2, postCount: 4 }, feb: { avgViews: 165000, avgEngagement: 13.8, postCount: 4 },
-            mar: { avgViews: 180000, avgEngagement: 15.0, postCount: 5 }, apr: { avgViews: 190000, avgEngagement: 15.5, postCount: 5 },
-            may: { avgViews: 175000, avgEngagement: 14.5, postCount: 4 }, jun: { avgViews: 160000, avgEngagement: 13.5, postCount: 3 },
-            jul: { avgViews: 155000, avgEngagement: 13.0, postCount: 3 }, aug: { avgViews: 168000, avgEngagement: 14.0, postCount: 4 },
-            sep: { avgViews: 185000, avgEngagement: 15.2, postCount: 5 }, oct: { avgViews: 200000, avgEngagement: 16.0, postCount: 6 },
-            nov: { avgViews: 210000, avgEngagement: 16.5, postCount: 6 }, dec: { avgViews: 195000, avgEngagement: 15.8, postCount: 5 },
-        },
-        bestMonths: ['nov', 'oct', 'dec'], worstMonths: ['jul', 'jun', 'feb'],
-    },
-    'cr-003': {
-        creatorId: 'cr-003',
-        monthly: {
-            jan: { avgViews: 32000, avgEngagement: 9.5, postCount: 14 }, feb: { avgViews: 30000, avgEngagement: 9.2, postCount: 12 },
-            mar: { avgViews: 28000, avgEngagement: 8.8, postCount: 11 }, apr: { avgViews: 26000, avgEngagement: 8.5, postCount: 10 },
-            may: { avgViews: 24000, avgEngagement: 8.0, postCount: 8 }, jun: { avgViews: 22000, avgEngagement: 7.5, postCount: 7 },
-            jul: { avgViews: 20000, avgEngagement: 7.0, postCount: 6 }, aug: { avgViews: 25000, avgEngagement: 8.2, postCount: 10 },
-            sep: { avgViews: 28000, avgEngagement: 8.8, postCount: 12 }, oct: { avgViews: 30000, avgEngagement: 9.2, postCount: 13 },
-            nov: { avgViews: 27000, avgEngagement: 8.6, postCount: 11 }, dec: { avgViews: 26000, avgEngagement: 8.4, postCount: 10 },
-        },
-        bestMonths: ['jan', 'oct', 'feb'], worstMonths: ['jul', 'jun', 'may'],
-    },
-    'cr-004': {
-        creatorId: 'cr-004',
-        monthly: {
-            jan: { avgViews: 88000, avgEngagement: 11.5, postCount: 6 }, feb: { avgViews: 85000, avgEngagement: 11.0, postCount: 5 },
-            mar: { avgViews: 92000, avgEngagement: 12.0, postCount: 7 }, apr: { avgViews: 95000, avgEngagement: 12.5, postCount: 7 },
-            may: { avgViews: 90000, avgEngagement: 11.8, postCount: 6 }, jun: { avgViews: 82000, avgEngagement: 10.8, postCount: 5 },
-            jul: { avgViews: 80000, avgEngagement: 10.5, postCount: 4 }, aug: { avgViews: 86000, avgEngagement: 11.2, postCount: 6 },
-            sep: { avgViews: 98000, avgEngagement: 12.8, postCount: 7 }, oct: { avgViews: 110000, avgEngagement: 13.5, postCount: 8 },
-            nov: { avgViews: 115000, avgEngagement: 14.0, postCount: 9 }, dec: { avgViews: 120000, avgEngagement: 14.5, postCount: 10 },
-        },
-        bestMonths: ['dec', 'nov', 'oct'], worstMonths: ['jul', 'jun', 'feb'],
-    },
-    'cr-005': {
-        creatorId: 'cr-005',
-        monthly: {
-            jan: { avgViews: 35000, avgEngagement: 7.0, postCount: 6 }, feb: { avgViews: 32000, avgEngagement: 6.8, postCount: 5 },
-            mar: { avgViews: 38000, avgEngagement: 7.5, postCount: 8 }, apr: { avgViews: 42000, avgEngagement: 8.0, postCount: 9 },
-            may: { avgViews: 48000, avgEngagement: 8.8, postCount: 10 }, jun: { avgViews: 50000, avgEngagement: 9.2, postCount: 11 },
-            jul: { avgViews: 45000, avgEngagement: 8.5, postCount: 9 }, aug: { avgViews: 40000, avgEngagement: 7.8, postCount: 7 },
-            sep: { avgViews: 36000, avgEngagement: 7.2, postCount: 6 }, oct: { avgViews: 44000, avgEngagement: 8.2, postCount: 10 },
-            nov: { avgViews: 38000, avgEngagement: 7.5, postCount: 7 }, dec: { avgViews: 46000, avgEngagement: 8.5, postCount: 10 },
-        },
-        bestMonths: ['jun', 'may', 'dec'], worstMonths: ['feb', 'jan', 'sep'],
-    },
-    'cr-006': {
-        creatorId: 'cr-006',
-        monthly: {
-            jan: { avgViews: 115000, avgEngagement: 13.0, postCount: 10 }, feb: { avgViews: 110000, avgEngagement: 12.5, postCount: 9 },
-            mar: { avgViews: 120000, avgEngagement: 13.5, postCount: 11 }, apr: { avgViews: 125000, avgEngagement: 14.0, postCount: 12 },
-            may: { avgViews: 118000, avgEngagement: 13.2, postCount: 10 }, jun: { avgViews: 105000, avgEngagement: 12.0, postCount: 8 },
-            jul: { avgViews: 100000, avgEngagement: 11.5, postCount: 7 }, aug: { avgViews: 112000, avgEngagement: 12.8, postCount: 9 },
-            sep: { avgViews: 130000, avgEngagement: 14.2, postCount: 12 }, oct: { avgViews: 140000, avgEngagement: 15.0, postCount: 14 },
-            nov: { avgViews: 150000, avgEngagement: 15.5, postCount: 15 }, dec: { avgViews: 145000, avgEngagement: 15.2, postCount: 13 },
-        },
-        bestMonths: ['nov', 'dec', 'oct'], worstMonths: ['jul', 'jun', 'aug'],
-    },
-}
-
-// ==================================================================================
-// 9. STORY vs REEL vs POST PERFORMANCE SPLIT
-// ==================================================================================
-const initialContentFormatSplit = {
-    'cr-001': { creatorId: 'cr-001', formats: [
-        { contentFormat: 'Reel', avgViews: 72000, avgEngagement: 9.8, count: 48, avgReach: 85000 },
-        { contentFormat: 'Story', avgViews: 28000, avgEngagement: 4.2, count: 120, avgReach: 35000 },
-        { contentFormat: 'Static', avgViews: 18000, avgEngagement: 5.5, count: 22, avgReach: 24000 },
-        { contentFormat: 'Carousel', avgViews: 32000, avgEngagement: 6.8, count: 15, avgReach: 40000 },
-    ] },
-    'cr-002': { creatorId: 'cr-002', formats: [
-        { contentFormat: 'Video', avgViews: 220000, avgEngagement: 16.5, count: 35, avgReach: 310000 },
-        { contentFormat: 'Reel', avgViews: 145000, avgEngagement: 12.0, count: 18, avgReach: 180000 },
-        { contentFormat: 'Story', avgViews: 60000, avgEngagement: 5.8, count: 80, avgReach: 75000 },
-        { contentFormat: 'Carousel', avgViews: 42000, avgEngagement: 8.2, count: 8, avgReach: 55000 },
-    ] },
-    'cr-003': { creatorId: 'cr-003', formats: [
-        { contentFormat: 'Reel', avgViews: 34000, avgEngagement: 10.2, count: 55, avgReach: 42000 },
-        { contentFormat: 'Story', avgViews: 15000, avgEngagement: 3.8, count: 95, avgReach: 20000 },
-        { contentFormat: 'Static', avgViews: 12000, avgEngagement: 5.0, count: 30, avgReach: 16000 },
-        { contentFormat: 'Carousel', avgViews: 22000, avgEngagement: 7.5, count: 12, avgReach: 28000 },
-        { contentFormat: 'Video', avgViews: 25000, avgEngagement: 8.0, count: 5, avgReach: 30000 },
-    ] },
-    'cr-004': { creatorId: 'cr-004', formats: [
-        { contentFormat: 'Video', avgViews: 130000, avgEngagement: 14.0, count: 42, avgReach: 165000 },
-        { contentFormat: 'Reel', avgViews: 95000, avgEngagement: 11.5, count: 20, avgReach: 115000 },
-        { contentFormat: 'Story', avgViews: 45000, avgEngagement: 5.0, count: 60, avgReach: 55000 },
-        { contentFormat: 'Static', avgViews: 28000, avgEngagement: 6.5, count: 10, avgReach: 35000 },
-    ] },
-    'cr-005': { creatorId: 'cr-005', formats: [
-        { contentFormat: 'Reel', avgViews: 48000, avgEngagement: 8.5, count: 35, avgReach: 58000 },
-        { contentFormat: 'Story', avgViews: 22000, avgEngagement: 3.5, count: 75, avgReach: 28000 },
-        { contentFormat: 'Carousel', avgViews: 35000, avgEngagement: 7.0, count: 18, avgReach: 42000 },
-        { contentFormat: 'Static', avgViews: 15000, avgEngagement: 4.8, count: 14, avgReach: 20000 },
-    ] },
-    'cr-006': { creatorId: 'cr-006', formats: [
-        { contentFormat: 'Reel', avgViews: 165000, avgEngagement: 15.8, count: 68, avgReach: 200000 },
-        { contentFormat: 'Story', avgViews: 55000, avgEngagement: 6.0, count: 100, avgReach: 70000 },
-        { contentFormat: 'Static', avgViews: 30000, avgEngagement: 7.2, count: 10, avgReach: 38000 },
-        { contentFormat: 'Carousel', avgViews: 42000, avgEngagement: 8.5, count: 8, avgReach: 52000 },
-        { contentFormat: 'Video', avgViews: 180000, avgEngagement: 16.0, count: 5, avgReach: 220000 },
-    ] },
-}
-
-// ==================================================================================
-// 10. CREATOR CONSISTENCY STREAK
-// ==================================================================================
-const initialConsistencyStreak = {
-    'cr-001': { creatorId: 'cr-001', currentStreak: 14, longestStreak: 22, lastPostDate: '2026-02-22', averagePostsPerWeek: 3.2, consistencyScore: 78 },
-    'cr-002': { creatorId: 'cr-002', currentStreak: 18, longestStreak: 30, lastPostDate: '2026-02-21', averagePostsPerWeek: 1.5, consistencyScore: 82 },
-    'cr-003': { creatorId: 'cr-003', currentStreak: 6, longestStreak: 15, lastPostDate: '2026-02-18', averagePostsPerWeek: 2.8, consistencyScore: 52 },
-    'cr-004': { creatorId: 'cr-004', currentStreak: 20, longestStreak: 28, lastPostDate: '2026-02-23', averagePostsPerWeek: 2.0, consistencyScore: 85 },
-    'cr-005': { creatorId: 'cr-005', currentStreak: 0, longestStreak: 12, lastPostDate: '2026-01-05', averagePostsPerWeek: 1.8, consistencyScore: 22 },
-    'cr-006': { creatorId: 'cr-006', currentStreak: 24, longestStreak: 35, lastPostDate: '2026-02-24', averagePostsPerWeek: 3.5, consistencyScore: 92 },
-}
 
 
 // ==================================================================================
@@ -1000,7 +534,22 @@ export function getNicheOverlap(creatorIds) {
     return calculateNicheOverlap(creatorIds)
 }
 
-export function getCreatorAnalytics(creatorId) {
+export async function getCreatorAnalytics(creatorId) {
+    // Try fetching real analytics snapshots from API
+    const apiData = await apiWithFallback(
+        () => api.get(`/influencer/creators/${creatorId}/analytics`),
+        null
+    )
+    if (apiData && Array.isArray(apiData) && apiData.length > 0) {
+        // Transform API snapshots into time-series format
+        const sorted = [...apiData].sort((a, b) => new Date(a.snapshotDate) - new Date(b.snapshotDate))
+        return {
+            followerGrowth: sorted.map(s => ({ date: s.snapshotDate?.split('T')[0], value: s.followers || 0 })),
+            engagementRate: sorted.map(s => ({ date: s.snapshotDate?.split('T')[0], value: s.engagementRate || 0 })),
+            avgViews: sorted.map(s => ({ date: s.snapshotDate?.split('T')[0], value: s.avgViews || 0 })),
+        }
+    }
+    // Fallback: generate placeholder time series
     const genTimeSeries = (days, minVal, maxVal) => {
         const data = []
         const now = Date.now()
@@ -1019,7 +568,24 @@ export function getCreatorAnalytics(creatorId) {
     }
 }
 
-export function getPostPerformance(creatorId) {
+export async function getPostPerformance(creatorId) {
+    // Try fetching real content posts from API
+    const apiPosts = await apiWithFallback(
+        () => api.get(`/influencer/creators/${creatorId}/posts?limit=15`),
+        null
+    )
+    if (apiPosts && Array.isArray(apiPosts) && apiPosts.length > 0) {
+        return apiPosts.map(p => ({
+            date: (p.publishedAt || p.createdAt)?.split('T')[0],
+            views: p.views || 0,
+            likes: p.likes || 0,
+            comments: p.comments || 0,
+            shares: p.shares || 0,
+            title: p.title || p.caption || '',
+            type: p.contentType || 'Post',
+        }))
+    }
+    // Fallback: generate placeholder posts
     const posts = []
     const now = Date.now()
     for (let i = 12; i >= 0; i--) {
@@ -1035,7 +601,27 @@ export function getPostPerformance(creatorId) {
     return posts
 }
 
-export function getAudienceDemographics(creatorId) {
+export async function getAudienceDemographics(creatorId) {
+    // Try fetching demographics from API (platform-synced data)
+    const apiDemo = await apiWithFallback(
+        () => api.get(`/influencer/creators/${creatorId}`),
+        null
+    )
+    if (apiDemo && apiDemo.socialAccounts && apiDemo.socialAccounts.length > 0) {
+        // Extract demographics from the creator's social accounts metadata
+        const meta = apiDemo.socialAccounts[0]?.metadata || {}
+        if (meta.demographics) {
+            const d = meta.demographics
+            return {
+                age: d.ageBrackets || d.age || {},
+                gender: d.genderSplit || d.gender || {},
+                location: d.topLocations
+                    ? Object.fromEntries(d.topLocations.map(l => [l.city, l.pct]))
+                    : d.location || {},
+            }
+        }
+    }
+    // Fall back to localStorage demographics store
     const demo = getDemographics(creatorId)
     if (!demo) return { age: { '18-24': 30, '25-34': 35, '35-44': 20, '45+': 15 }, gender: { Male: 45, Female: 50, Other: 5 }, location: { Mumbai: 22, Delhi: 16, Bangalore: 12, Pune: 10, Others: 40 } }
     const age = demo.ageBrackets || {}
@@ -1046,7 +632,21 @@ export function getAudienceDemographics(creatorId) {
     return { age, gender, location }
 }
 
-export function getSentimentAnalysis(creatorId) {
+export async function getSentimentAnalysis(creatorId) {
+    // Try fetching post data from API to compute sentiment
+    const apiPosts = await apiWithFallback(
+        () => api.get(`/influencer/creators/${creatorId}/posts?limit=20`),
+        null
+    )
+    if (apiPosts && Array.isArray(apiPosts) && apiPosts.length > 0) {
+        // Derive sentiment from API post engagement metrics
+        const total = apiPosts.length
+        const positive = Math.round(apiPosts.filter(p => (p.likes || 0) > (p.views || 1) * 0.05).length / total * 100)
+        const negative = Math.round(apiPosts.filter(p => (p.likes || 0) < (p.views || 1) * 0.01).length / total * 100)
+        const neutral = 100 - positive - negative
+        return { positive, neutral: Math.max(0, neutral), negative, keywords: ['engaging', 'quality', 'authentic'] }
+    }
+    // Fall back to localStorage sentiment store
     const sent = getContentSentiment(creatorId)
     if (!sent) return { positive: 62, neutral: 28, negative: 10, keywords: ['authentic', 'helpful', 'creative', 'inspiring', 'fun'] }
     const posts = sent.posts || []

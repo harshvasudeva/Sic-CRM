@@ -1,87 +1,16 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import {
   Youtube, Users, Eye, Clock, DollarSign, TrendingUp, Search,
-  Play, BarChart3, MousePointerClick, ArrowUpDown
+  Play, BarChart3, MousePointerClick, ArrowUpDown, RefreshCw, Plus, Loader2
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { getCreators, lookupPlatformProfile, importFromPlatform, syncCreator, getCreatorAnalytics } from '../../stores/influencerStore'
 
 const card = { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12 }
 const accent = '#6366f1'
 const muted = '#94a3b8'
 const ytRed = '#ff0000'
-
-const sampleCreators = [
-  {
-    id: 'yt-001', name: 'Tech Rohan Official', handle: '@TechRohanOfficial',
-    subscribers: 1800000, avgViews: 320000, watchTime: '8:42', cpm: 4.50, ctr: 6.2,
-    niche: 'Tech Reviews', city: 'Bangalore', verified: true,
-    revenueEstimate: 14400,
-    videos: [
-      { title: 'iPhone 17 Pro Max Review', views: 890000, likes: 45000, date: '2026-02-15' },
-      { title: 'Best Budget Phones 2026', views: 620000, likes: 32000, date: '2026-02-08' },
-      { title: 'Galaxy S26 Ultra vs iPhone 17', views: 1200000, likes: 68000, date: '2026-01-28' },
-      { title: 'Top 10 Gadgets Under 5000', views: 450000, likes: 28000, date: '2026-01-20' },
-      { title: 'OnePlus 14 Unboxing', views: 380000, likes: 22000, date: '2026-01-12' },
-      { title: 'Best Wireless Earbuds 2026', views: 290000, likes: 18000, date: '2026-01-05' },
-      { title: 'MacBook Pro M5 Review', views: 520000, likes: 35000, date: '2025-12-28' },
-      { title: 'Camera Comparison: Pixel vs Samsung', views: 410000, likes: 24000, date: '2025-12-18' },
-      { title: 'Best Laptops for Students', views: 340000, likes: 20000, date: '2025-12-10' },
-      { title: 'Smart Home Setup Guide', views: 270000, likes: 16000, date: '2025-12-01' }
-    ],
-    growth: [
-      { month: 'Sep', subs: 1420000 }, { month: 'Oct', subs: 1510000 },
-      { month: 'Nov', subs: 1590000 }, { month: 'Dec', subs: 1660000 },
-      { month: 'Jan', subs: 1740000 }, { month: 'Feb', subs: 1800000 }
-    ]
-  },
-  {
-    id: 'yt-002', name: 'Kavita Vlogs', handle: '@KavitaVlogs',
-    subscribers: 950000, avgViews: 180000, watchTime: '12:15', cpm: 3.20, ctr: 5.8,
-    niche: 'Travel & Lifestyle', city: 'Mumbai', verified: true,
-    revenueEstimate: 5760,
-    videos: [
-      { title: 'Bali on a Budget', views: 420000, likes: 35000, date: '2026-02-12' },
-      { title: 'Goa Travel Guide 2026', views: 380000, likes: 28000, date: '2026-02-01' },
-      { title: 'Japan Cherry Blossom Season', views: 520000, likes: 42000, date: '2026-01-22' },
-      { title: 'Best Cafes in Mumbai', views: 210000, likes: 18000, date: '2026-01-15' },
-      { title: 'Thailand Street Food Tour', views: 340000, likes: 29000, date: '2026-01-08' },
-      { title: 'Ladakh Road Trip Vlog', views: 290000, likes: 24000, date: '2025-12-28' },
-      { title: 'Kerala Houseboat Experience', views: 180000, likes: 15000, date: '2025-12-20' },
-      { title: 'Rajasthan Heritage Tour', views: 250000, likes: 20000, date: '2025-12-12' },
-      { title: 'Vietnam on $30/day', views: 310000, likes: 26000, date: '2025-12-05' },
-      { title: 'Best Hidden Beaches in India', views: 160000, likes: 13000, date: '2025-11-28' }
-    ],
-    growth: [
-      { month: 'Sep', subs: 680000 }, { month: 'Oct', subs: 740000 },
-      { month: 'Nov', subs: 790000 }, { month: 'Dec', subs: 840000 },
-      { month: 'Jan', subs: 900000 }, { month: 'Feb', subs: 950000 }
-    ]
-  },
-  {
-    id: 'yt-003', name: 'Chef Arjun', handle: '@ChefArjun',
-    subscribers: 620000, avgViews: 95000, watchTime: '10:30', cpm: 2.80, ctr: 4.5,
-    niche: 'Cooking & Food', city: 'Chennai', verified: false,
-    revenueEstimate: 2660,
-    videos: [
-      { title: 'Perfect Biryani Recipe', views: 280000, likes: 22000, date: '2026-02-10' },
-      { title: '10 South Indian Breakfast Ideas', views: 190000, likes: 15000, date: '2026-02-02' },
-      { title: 'Street Food at Home', views: 150000, likes: 12000, date: '2026-01-25' },
-      { title: 'Dosa Mastery Guide', views: 210000, likes: 18000, date: '2026-01-18' },
-      { title: 'Quick Dinner Recipes', views: 120000, likes: 9500, date: '2026-01-10' },
-      { title: 'Restaurant Style Paneer', views: 95000, likes: 7800, date: '2026-01-02' },
-      { title: 'Authentic Filter Coffee', views: 180000, likes: 14000, date: '2025-12-25' },
-      { title: 'Christmas Special Cake', views: 130000, likes: 10000, date: '2025-12-18' },
-      { title: 'Healthy Meal Prep Ideas', views: 85000, likes: 6500, date: '2025-12-10' },
-      { title: 'Budget Cooking Challenge', views: 110000, likes: 8800, date: '2025-12-01' }
-    ],
-    growth: [
-      { month: 'Sep', subs: 410000 }, { month: 'Oct', subs: 450000 },
-      { month: 'Nov', subs: 490000 }, { month: 'Dec', subs: 530000 },
-      { month: 'Jan', subs: 580000 }, { month: 'Feb', subs: 620000 }
-    ]
-  }
-]
 
 const fmt = (n) => {
   if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`
@@ -102,17 +31,106 @@ const customTooltip = ({ active, payload, label }) => {
 }
 
 export default function YouTubeCreators() {
+  const [creators, setCreators] = useState([])
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedId, setExpandedId] = useState(null)
-  const [sortBy, setSortBy] = useState('subscribers')
+  const [sortBy, setSortBy] = useState('followers')
+  const [syncingIds, setSyncingIds] = useState(new Set())
+  const [analyticsCache, setAnalyticsCache] = useState({})
 
-  const filtered = sampleCreators
+  // Lookup state
+  const [lookupHandle, setLookupHandle] = useState('')
+  const [lookupResult, setLookupResult] = useState(null)
+  const [lookupLoading, setLookupLoading] = useState(false)
+  const [lookupError, setLookupError] = useState('')
+  const [importStatus, setImportStatus] = useState({})
+
+  const loadCreators = useCallback(async () => {
+    setLoading(true)
+    try {
+      const data = await getCreators({ platform: 'YouTube' })
+      setCreators(data)
+    } catch (err) {
+      console.error('Failed to load YouTube creators:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { loadCreators() }, [loadCreators])
+
+  const filtered = creators
     .filter(c =>
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.handle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.niche.toLowerCase().includes(searchQuery.toLowerCase())
+      c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.handle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.niche?.toLowerCase().includes(searchQuery.toLowerCase())
     )
-    .sort((a, b) => b[sortBy] - a[sortBy])
+    .sort((a, b) => (b[sortBy] || 0) - (a[sortBy] || 0))
+
+  // Look up a YouTube channel via API
+  const handleLookup = async () => {
+    if (!lookupHandle.trim()) return
+    setLookupLoading(true)
+    setLookupError('')
+    setLookupResult(null)
+    try {
+      const handle = lookupHandle.replace(/^@/, '')
+      const result = await lookupPlatformProfile('youtube', handle)
+      setLookupResult(result)
+    } catch (err) {
+      setLookupError(err.message || 'Channel not found or API not configured')
+    } finally {
+      setLookupLoading(false)
+    }
+  }
+
+  // Import from lookup
+  const handleImportFromLookup = async () => {
+    if (!lookupResult) return
+    setImportStatus(prev => ({ ...prev, lookup: 'importing' }))
+    try {
+      await importFromPlatform({
+        platform: 'youtube',
+        handle: lookupResult.handle || lookupHandle,
+        name: lookupResult.name || lookupResult.channelTitle,
+        ...lookupResult
+      })
+      setImportStatus(prev => ({ ...prev, lookup: 'imported' }))
+      setLookupResult(null)
+      setLookupHandle('')
+      loadCreators()
+    } catch (err) {
+      setImportStatus(prev => ({ ...prev, lookup: 'error' }))
+    }
+  }
+
+  // Sync a creator's data from YouTube API
+  const handleSync = async (id) => {
+    setSyncingIds(prev => new Set(prev).add(id))
+    try {
+      await syncCreator(id)
+      loadCreators()
+    } catch (err) {
+      console.error('Sync failed:', err)
+    } finally {
+      setSyncingIds(prev => { const n = new Set(prev); n.delete(id); return n })
+    }
+  }
+
+  // Load analytics when expanding a creator
+  const handleExpand = async (id) => {
+    if (expandedId === id) { setExpandedId(null); return }
+    setExpandedId(id)
+    if (!analyticsCache[id]) {
+      try {
+        const data = await getCreatorAnalytics(id)
+        setAnalyticsCache(prev => ({ ...prev, [id]: data }))
+      } catch (err) {
+        console.error('Failed to load analytics:', err)
+      }
+    }
+  }
 
   return (
     <div style={{ padding: 24, color: '#fff', maxWidth: 1200, margin: '0 auto' }}>
@@ -122,8 +140,69 @@ export default function YouTubeCreators() {
           <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>YouTube Creators</h1>
         </div>
         <p style={{ color: muted, fontSize: 14, marginBottom: 24 }}>
-          Browse YouTube channels, analyze performance, and estimate revenue
+          Browse YouTube channels — data fetched from YouTube Data API v3
         </p>
+      </motion.div>
+
+      {/* Channel Lookup */}
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.05 }}
+        style={{ ...card, padding: 16, marginBottom: 20 }}
+      >
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Search size={14} color={ytRed} /> Look Up YouTube Channel
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input
+            value={lookupHandle}
+            onChange={e => setLookupHandle(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleLookup()}
+            placeholder="Enter YouTube handle (e.g. @MrBeast) or channel ID"
+            style={{
+              flex: 1, padding: '8px 12px', borderRadius: 6,
+              border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)',
+              color: '#fff', fontSize: 13, outline: 'none'
+            }}
+          />
+          <button
+            onClick={handleLookup}
+            disabled={lookupLoading}
+            style={{
+              padding: '8px 16px', borderRadius: 6, border: 'none',
+              background: ytRed, color: '#fff', cursor: 'pointer',
+              fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4
+            }}
+          >
+            {lookupLoading ? <><Loader2 size={12} className="spin" /> Looking up...</> : <><Search size={12} /> Lookup</>}
+          </button>
+        </div>
+        {lookupError && <div style={{ color: '#ef4444', fontSize: 12, marginTop: 6 }}>{lookupError}</div>}
+        {lookupResult && (
+          <div style={{ marginTop: 12, padding: 12, background: 'rgba(255,255,255,0.04)', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              {lookupResult.profilePicUrl && (
+                <img src={lookupResult.profilePicUrl} alt="" style={{ width: 40, height: 40, borderRadius: 8 }} />
+              )}
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>{lookupResult.name || lookupResult.channelTitle}</div>
+                <div style={{ color: muted, fontSize: 12 }}>
+                  {fmt(lookupResult.followers || lookupResult.subscriberCount || 0)} subscribers | {fmt(lookupResult.videoCount || 0)} videos
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={handleImportFromLookup}
+              disabled={importStatus.lookup === 'imported'}
+              style={{
+                padding: '6px 14px', borderRadius: 6, border: 'none',
+                background: importStatus.lookup === 'imported' ? '#10b981' : accent,
+                color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 600
+              }}
+            >
+              {importStatus.lookup === 'importing' ? 'Importing...' : importStatus.lookup === 'imported' ? 'Imported!' : <><Plus size={12} /> Import to CRM</>}
+            </button>
+          </div>
+        )}
       </motion.div>
 
       {/* Search & Sort */}
@@ -145,22 +224,29 @@ export default function YouTubeCreators() {
           padding: '10px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)',
           background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, outline: 'none', cursor: 'pointer'
         }}>
-          <option value="subscribers">Subscribers</option>
+          <option value="followers">Subscribers</option>
           <option value="avgViews">Avg Views</option>
-          <option value="cpm">CPM</option>
-          <option value="ctr">CTR</option>
-          <option value="revenueEstimate">Revenue</option>
+          <option value="engagementRate">Engagement Rate</option>
         </select>
+        <button
+          onClick={loadCreators}
+          style={{
+            padding: '10px 14px', borderRadius: 8,
+            border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)',
+            color: '#fff', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
+          }}
+        >
+          <RefreshCw size={14} /> Refresh
+        </button>
       </motion.div>
 
       {/* Summary */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
         {[
-          { label: 'Channels', value: sampleCreators.length, icon: Youtube, color: ytRed },
-          { label: 'Avg Subs', value: fmt(Math.round(sampleCreators.reduce((s, c) => s + c.subscribers, 0) / sampleCreators.length)), icon: Users, color: '#8b5cf6' },
-          { label: 'Avg Views', value: fmt(Math.round(sampleCreators.reduce((s, c) => s + c.avgViews, 0) / sampleCreators.length)), icon: Eye, color: '#06b6d4' },
-          { label: 'Avg CPM', value: `$${(sampleCreators.reduce((s, c) => s + c.cpm, 0) / sampleCreators.length).toFixed(2)}`, icon: DollarSign, color: '#10b981' },
-          { label: 'Avg CTR', value: `${(sampleCreators.reduce((s, c) => s + c.ctr, 0) / sampleCreators.length).toFixed(1)}%`, icon: MousePointerClick, color: '#f59e0b' }
+          { label: 'Channels', value: creators.length, icon: Youtube, color: ytRed },
+          { label: 'Avg Subs', value: creators.length ? fmt(Math.round(creators.reduce((s, c) => s + (c.followers || 0), 0) / creators.length)) : '0', icon: Users, color: '#8b5cf6' },
+          { label: 'Avg Views', value: creators.length ? fmt(Math.round(creators.reduce((s, c) => s + (c.avgViews || 0), 0) / creators.length)) : '0', icon: Eye, color: '#06b6d4' },
+          { label: 'Avg Engagement', value: creators.length ? `${(creators.reduce((s, c) => s + (c.engagementRate || 0), 0) / creators.length).toFixed(1)}%` : '0%', icon: TrendingUp, color: '#10b981' },
         ].map((stat, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.05 }}
             style={{ ...card, padding: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -175,6 +261,25 @@ export default function YouTubeCreators() {
         ))}
       </div>
 
+      {/* Loading State */}
+      {loading && (
+        <div style={{ textAlign: 'center', padding: 40, color: muted }}>
+          <Loader2 size={24} className="spin" style={{ marginBottom: 8 }} />
+          <div>Loading YouTube creators...</div>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && filtered.length === 0 && (
+        <div style={{ ...card, padding: 40, textAlign: 'center' }}>
+          <Youtube size={40} color={muted} style={{ marginBottom: 12 }} />
+          <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>No YouTube Creators</div>
+          <div style={{ color: muted, fontSize: 13 }}>
+            Use the lookup above to search for YouTube channels and import them into your CRM.
+          </div>
+        </div>
+      )}
+
       {/* Creator Cards */}
       {filtered.map((creator, ci) => (
         <motion.div
@@ -188,29 +293,36 @@ export default function YouTubeCreators() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div style={{ display: 'flex', gap: 14 }}>
               <div style={{
-                width: 56, height: 56, borderRadius: 12, background: `linear-gradient(135deg, ${ytRed}, #ff6666)`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 20
+                width: 56, height: 56, borderRadius: 12,
+                background: creator.profilePicUrl
+                  ? `url(${creator.profilePicUrl}) center/cover`
+                  : `linear-gradient(135deg, ${ytRed}, #ff6666)`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: 800, fontSize: 20, overflow: 'hidden'
               }}>
-                {creator.name.charAt(0)}
+                {!creator.profilePicUrl && creator.name?.charAt(0)}
               </div>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
                   <span style={{ fontWeight: 700, fontSize: 16 }}>{creator.name}</span>
-                  {creator.verified && (
+                  {creator.verificationStatus === 'verified' && (
                     <span style={{ background: '#ef444422', color: ytRed, fontSize: 10, padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>Verified</span>
                   )}
+                  {creator.lastSyncedAt && (
+                    <span style={{ fontSize: 10, color: muted }}>
+                      Synced {new Date(creator.lastSyncedAt).toLocaleDateString()}
+                    </span>
+                  )}
                 </div>
-                <div style={{ color: muted, fontSize: 13 }}>{creator.handle} | {creator.niche} | {creator.city}</div>
+                <div style={{ color: muted, fontSize: 13 }}>{creator.handle} | {creator.niche || 'N/A'} | {creator.city || 'N/A'}</div>
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: 20 }}>
               {[
-                { label: 'Subscribers', value: fmt(creator.subscribers) },
-                { label: 'Avg Views', value: fmt(creator.avgViews) },
-                { label: 'Watch Time', value: creator.watchTime },
-                { label: 'CPM', value: `$${creator.cpm}` },
-                { label: 'CTR', value: `${creator.ctr}%` }
+                { label: 'Subscribers', value: fmt(creator.followers || 0) },
+                { label: 'Avg Views', value: fmt(creator.avgViews || 0) },
+                { label: 'Engagement', value: `${(creator.engagementRate || 0).toFixed(1)}%` },
               ].map((m, mi) => (
                 <div key={mi} style={{ textAlign: 'center', minWidth: 65 }}>
                   <div style={{ color: muted, fontSize: 10, textTransform: 'uppercase', marginBottom: 2 }}>{m.label}</div>
@@ -220,73 +332,94 @@ export default function YouTubeCreators() {
             </div>
           </div>
 
-          {/* Revenue Estimate */}
+          {/* Actions */}
           <div style={{
-            marginTop: 14, padding: '10px 14px', borderRadius: 8,
-            background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+            marginTop: 14, display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <DollarSign size={16} color="#10b981" />
-              <span style={{ fontSize: 13, color: '#10b981', fontWeight: 600 }}>
-                Estimated Monthly Revenue: ${creator.revenueEstimate.toLocaleString()}
-              </span>
-            </div>
             <button
-              onClick={() => setExpandedId(expandedId === creator.id ? null : creator.id)}
+              onClick={() => handleSync(creator.id)}
+              disabled={syncingIds.has(creator.id)}
               style={{
-                padding: '4px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)',
-                background: 'transparent', color: '#fff', cursor: 'pointer', fontSize: 12
+                padding: '6px 14px', borderRadius: 6,
+                border: '1px solid rgba(255,255,255,0.15)', background: 'transparent',
+                color: '#fff', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4
               }}
             >
-              {expandedId === creator.id ? 'Collapse' : 'View Videos & Growth'}
+              {syncingIds.has(creator.id) ? <><Loader2 size={12} className="spin" /> Syncing...</> : <><RefreshCw size={12} /> Sync Data</>}
+            </button>
+            <button
+              onClick={() => handleExpand(creator.id)}
+              style={{
+                padding: '6px 14px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)',
+                background: 'transparent', color: '#fff', cursor: 'pointer', fontSize: 12,
+                display: 'flex', alignItems: 'center', gap: 4
+              }}
+            >
+              <BarChart3 size={12} /> {expandedId === creator.id ? 'Collapse' : 'Analytics & Details'}
             </button>
           </div>
 
           {/* Expanded Section */}
           {expandedId === creator.id && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ marginTop: 16 }}>
-              {/* Video Performance Table */}
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>Video Performance (Last 10)</div>
-              <div style={{ overflowX: 'auto', marginBottom: 20 }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                      {['#', 'Title', 'Views', 'Likes', 'Eng Rate', 'Date'].map(h => (
-                        <th key={h} style={{ padding: '8px 10px', textAlign: 'left', fontSize: 11, color: muted, fontWeight: 600 }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {creator.videos.map((vid, vi) => (
-                      <tr key={vi} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                        <td style={{ padding: '8px 10px', fontSize: 12, color: muted }}>{vi + 1}</td>
-                        <td style={{ padding: '8px 10px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <Play size={12} color={ytRed} /> {vid.title}
-                        </td>
-                        <td style={{ padding: '8px 10px', fontSize: 12, fontWeight: 600 }}>{fmt(vid.views)}</td>
-                        <td style={{ padding: '8px 10px', fontSize: 12 }}>{fmt(vid.likes)}</td>
-                        <td style={{ padding: '8px 10px', fontSize: 12, color: '#10b981' }}>
-                          {(vid.likes / vid.views * 100).toFixed(1)}%
-                        </td>
-                        <td style={{ padding: '8px 10px', fontSize: 12, color: muted }}>{vid.date}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              {/* Creator Details */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
+                <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: 10 }}>
+                  <div style={{ fontSize: 10, color: muted, marginBottom: 4 }}>Status</div>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{creator.status}</div>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: 10 }}>
+                  <div style={{ fontSize: 10, color: muted, marginBottom: 4 }}>Tier</div>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{creator.creatorTier || 'N/A'}</div>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: 10 }}>
+                  <div style={{ fontSize: 10, color: muted, marginBottom: 4 }}>Creator Score</div>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{creator.creatorScore || 'N/A'}</div>
+                </div>
               </div>
 
-              {/* Subscriber Growth Chart */}
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>Subscriber Growth</div>
-              <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={creator.growth}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                  <XAxis dataKey="month" tick={{ fill: muted, fontSize: 11 }} />
-                  <YAxis tick={{ fill: muted, fontSize: 11 }} tickFormatter={fmt} />
-                  <Tooltip content={customTooltip} />
-                  <Line type="monotone" dataKey="subs" stroke={ytRed} strokeWidth={2} dot={{ r: 3, fill: ytRed }} name="Subscribers" />
-                </LineChart>
-              </ResponsiveContainer>
+              {creator.bio && (
+                <div style={{ marginBottom: 16, padding: 10, background: 'rgba(255,255,255,0.04)', borderRadius: 8 }}>
+                  <div style={{ fontSize: 10, color: muted, marginBottom: 4 }}>Channel Description</div>
+                  <div style={{ fontSize: 12, lineHeight: 1.5 }}>{creator.bio}</div>
+                </div>
+              )}
+
+              {/* Analytics Snapshots */}
+              {analyticsCache[creator.id]?.length > 0 && (
+                <>
+                  <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>Follower Growth</div>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <LineChart data={analyticsCache[creator.id].map(s => ({
+                      date: new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                      followers: s.followers
+                    }))}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                      <XAxis dataKey="date" tick={{ fill: muted, fontSize: 11 }} />
+                      <YAxis tick={{ fill: muted, fontSize: 11 }} tickFormatter={fmt} />
+                      <Tooltip content={customTooltip} />
+                      <Line type="monotone" dataKey="followers" stroke={ytRed} strokeWidth={2} dot={{ r: 3, fill: ytRed }} name="Subscribers" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </>
+              )}
+
+              {/* Connected Accounts */}
+              {creator.socialAccounts?.length > 0 && (
+                <div style={{ marginTop: 16 }}>
+                  <div style={{ fontSize: 11, color: muted, marginBottom: 6 }}>Connected Accounts</div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {creator.socialAccounts.map((sa, si) => (
+                      <span key={si} style={{
+                        background: 'rgba(99,102,241,0.15)', padding: '3px 8px', borderRadius: 4,
+                        fontSize: 11, color: '#a5b4fc'
+                      }}>
+                        {sa.platform}: @{sa.handle}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
         </motion.div>

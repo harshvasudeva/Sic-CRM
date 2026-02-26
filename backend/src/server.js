@@ -154,6 +154,10 @@ app.use('/api/cross-module', crossModuleRoutes);
 const domainWorkflowRoutes = require('./routes/domainWorkflows');
 app.use('/api/domain', domainWorkflowRoutes);
 
+// Influencer Module (Creators, Social Accounts, Platform APIs, Campaigns)
+const influencerRoutes = require('./routes/influencer');
+app.use('/api/influencer', influencerRoutes);
+
 // Infrastructure: APM middleware
 const { apmMiddleware } = require('./services/infrastructure');
 app.use(apmMiddleware);

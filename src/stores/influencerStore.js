@@ -1,4 +1,5 @@
-// Influencer Marketing Store with localStorage persistence
+// Influencer Marketing Store — API-backed with localStorage fallback
+import api from '../utils/api.js'
 
 const STORAGE_KEYS = {
     creators: 'sic-influencer-creators',
@@ -8,7 +9,8 @@ const STORAGE_KEYS = {
     contentSchedule: 'sic-influencer-content-schedule',
     invoices: 'sic-influencer-invoices',
     salesLeads: 'sic-influencer-sales-leads',
-    labels: 'sic-influencer-labels'
+    labels: 'sic-influencer-labels',
+    platformConfigs: 'sic-influencer-platform-configs',
 }
 
 // ==================== HELPERS ====================
@@ -29,7 +31,17 @@ function genId(prefix) {
 
 const today = () => new Date().toISOString().split('T')[0]
 
-// ==================== LABELS ====================
+// Try API first, fall back to localStorage on network error
+async function apiWithFallback(apiCall, fallbackFn) {
+    try {
+        return await apiCall()
+    } catch (err) {
+        console.warn('[InfluencerStore] API unavailable, using localStorage fallback:', err.message)
+        return fallbackFn()
+    }
+}
+
+// ==================== LABELS (localStorage only) ====================
 const initialLabels = [
     { id: 'lbl-1', name: 'Top Creator', color: '#10b981' },
     { id: 'lbl-2', name: 'Reliable', color: '#6366f1' },
@@ -41,254 +53,52 @@ const initialLabels = [
     { id: 'lbl-8', name: 'Repeat Collab', color: '#22c55e' },
 ]
 
-// ==================== CREATORS ====================
-const initialCreators = [
-    {
-        id: 'cr-001',
-        name: 'Priya Sharma',
-        platform: 'Instagram',
-        handle: '@priyasharma_lifestyle',
-        followers: 520000,
-        avgViews: 45000,
-        reelViews: [42000, 48000, 51000, 39000, 44000, 47000, 50000, 43000, 46000, 41000],
-        niche: 'Lifestyle',
-        city: 'Mumbai',
-        contactWhatsApp: '+91-98765-43210',
-        contactEmail: 'priya@creators.in',
-        lastQuotedRate: 80000,
-        lowestClosedRate: 55000,
-        suggestedCPV: null,
-        brandsWorkedWith: ['Nykaa', 'Mamaearth', 'Sugar Cosmetics'],
-        negotiationNotes: 'Prefers 50% advance. Flexible on deliverables for long-term brands.',
-        status: 'Closed',
-        labels: ['lbl-1', 'lbl-8'],
-        dealHistory: [
-            { id: 'deal-001', brand: 'Nykaa', amount: 60000, date: '2025-11-15', deliverables: '2 Reels + 3 Stories', status: 'Completed' },
-            { id: 'deal-002', brand: 'Mamaearth', amount: 55000, date: '2025-12-20', deliverables: '1 Reel + 1 Static', status: 'Completed' },
-        ],
-        createdAt: '2025-10-01',
-        updatedAt: '2026-01-10'
-    },
-    {
-        id: 'cr-002',
-        name: 'Rohan Verma',
-        platform: 'YouTube',
-        handle: '@TechRohan',
-        followers: 1200000,
-        avgViews: 180000,
-        reelViews: [175000, 190000, 165000, 185000, 200000, 170000, 195000, 180000, 160000, 188000],
-        niche: 'Tech',
-        city: 'Bangalore',
-        contactWhatsApp: '+91-91234-56789',
-        contactEmail: 'rohan@techcreators.com',
-        lastQuotedRate: 250000,
-        lowestClosedRate: 200000,
-        suggestedCPV: null,
-        brandsWorkedWith: ['Samsung', 'OnePlus', 'Boat'],
-        negotiationNotes: 'Wants creative freedom. No script reading. Prefers product integration style.',
-        status: 'Talking',
-        labels: ['lbl-1', 'lbl-5'],
-        dealHistory: [
-            { id: 'deal-003', brand: 'Samsung', amount: 220000, date: '2025-09-10', deliverables: '1 Dedicated Video', status: 'Completed' },
-        ],
-        createdAt: '2025-08-15',
-        updatedAt: '2026-01-14'
-    },
-    {
-        id: 'cr-003',
-        name: 'Ananya Reddy',
-        platform: 'Instagram',
-        handle: '@ananya_fitness',
-        followers: 310000,
-        avgViews: 28000,
-        reelViews: [25000, 30000, 27000, 32000, 26000, 29000, 24000, 31000, 28000, 27000],
-        niche: 'Fitness',
-        city: 'Hyderabad',
-        contactWhatsApp: '+91-87654-32109',
-        contactEmail: 'ananya@fitmail.in',
-        lastQuotedRate: 45000,
-        lowestClosedRate: 30000,
-        suggestedCPV: null,
-        brandsWorkedWith: ['MuscleBlaze', 'Healthkart'],
-        negotiationNotes: 'Open to barter. Responds slow on email, prefer WhatsApp.',
-        status: 'Cold',
-        labels: ['lbl-6'],
-        dealHistory: [],
-        createdAt: '2025-11-05',
-        updatedAt: '2026-01-08'
-    },
-    {
-        id: 'cr-004',
-        name: 'Karthik Iyer',
-        platform: 'YouTube',
-        handle: '@FoodieKarthik',
-        followers: 780000,
-        avgViews: 95000,
-        reelViews: [88000, 102000, 91000, 97000, 85000, 100000, 93000, 96000, 90000, 98000],
-        niche: 'Food',
-        city: 'Chennai',
-        contactWhatsApp: '+91-76543-21098',
-        contactEmail: 'karthik@foodvlog.in',
-        lastQuotedRate: 150000,
-        lowestClosedRate: 120000,
-        suggestedCPV: null,
-        brandsWorkedWith: ['Swiggy', 'Zomato', 'ITC'],
-        negotiationNotes: 'Always negotiates hard. Give first offer at 1.3x to land at target.',
-        status: 'Talking',
-        labels: ['lbl-2'],
-        dealHistory: [
-            { id: 'deal-004', brand: 'Swiggy', amount: 130000, date: '2025-10-20', deliverables: '2 YouTube Videos', status: 'Completed' },
-        ],
-        createdAt: '2025-07-20',
-        updatedAt: '2026-01-12'
-    },
-    {
-        id: 'cr-005',
-        name: 'Sneha Joshi',
-        platform: 'Instagram',
-        handle: '@sneha_travels',
-        followers: 420000,
-        avgViews: 38000,
-        reelViews: [35000, 40000, 37000, 42000, 36000, 39000, 34000, 41000, 38000, 37000],
-        niche: 'Travel',
-        city: 'Delhi',
-        contactWhatsApp: '+91-65432-10987',
-        contactEmail: 'sneha@wanderlust.co',
-        lastQuotedRate: 70000,
-        lowestClosedRate: 50000,
-        suggestedCPV: null,
-        brandsWorkedWith: ['MakeMyTrip', 'Airbnb'],
-        negotiationNotes: 'Ghosted last campaign midway. Be cautious. Get written commitment.',
-        status: 'Ghosted',
-        labels: ['lbl-3', 'lbl-7'],
-        dealHistory: [
-            { id: 'deal-005', brand: 'MakeMyTrip', amount: 55000, date: '2025-08-15', deliverables: '3 Reels + Blog', status: 'Partial' },
-        ],
-        createdAt: '2025-06-10',
-        updatedAt: '2026-01-05'
-    },
-    {
-        id: 'cr-006',
-        name: 'Aditya Kapoor',
-        platform: 'Instagram',
-        handle: '@aditya_comedy',
-        followers: 890000,
-        avgViews: 120000,
-        reelViews: [110000, 130000, 115000, 125000, 118000, 122000, 108000, 128000, 120000, 114000],
-        niche: 'Comedy',
-        city: 'Pune',
-        contactWhatsApp: '+91-54321-09876',
-        contactEmail: 'aditya@laughmail.com',
-        lastQuotedRate: 180000,
-        lowestClosedRate: 140000,
-        suggestedCPV: null,
-        brandsWorkedWith: ['Cred', 'Dunzo', 'Zepto'],
-        negotiationNotes: 'Only does funny integration. No hard sells. Best for awareness campaigns.',
-        status: 'Closed',
-        labels: ['lbl-1', 'lbl-2', 'lbl-8'],
-        dealHistory: [
-            { id: 'deal-006', brand: 'Cred', amount: 150000, date: '2025-12-01', deliverables: '1 Reel + 2 Stories', status: 'Completed' },
-            { id: 'deal-007', brand: 'Dunzo', amount: 140000, date: '2025-11-15', deliverables: '1 Reel', status: 'Completed' },
-        ],
-        createdAt: '2025-05-20',
-        updatedAt: '2026-01-15'
-    },
-]
+// ==================== CREATORS (API-backed) ====================
 
-// ==================== CAMPAIGNS ====================
-const initialCampaigns = [
-    {
-        id: 'camp-001',
-        name: 'Nykaa Summer Glow',
-        brand: 'Nykaa',
-        status: 'Active',
-        brief: 'Promote summer skincare range. Focus on SPF products and hydration routines.',
-        platform: 'Instagram',
-        budget: 500000,
-        spent: 315000,
-        startDate: '2026-01-01',
-        endDate: '2026-02-28',
-        objective: 'Brand Awareness',
-        creators: [
-            {
-                creatorId: 'cr-001',
-                deliverables: [
-                    { type: 'Reel', quantity: 2, status: 'Delivered', dueDate: '2026-01-20' },
-                    { type: 'Story', quantity: 3, status: 'Delivered', dueDate: '2026-01-25' },
-                ],
-                totalFee: 80000,
-                paymentStatus: 'Paid',
-                contentInsights: { views: 92000, likes: 8500, comments: 320, shares: 450 }
-            },
-            {
-                creatorId: 'cr-003',
-                deliverables: [
-                    { type: 'Reel', quantity: 1, status: 'In Progress', dueDate: '2026-02-10' },
-                    { type: 'Static', quantity: 2, status: 'Pending', dueDate: '2026-02-15' },
-                ],
-                totalFee: 35000,
-                paymentStatus: 'Partial',
-                contentInsights: null
-            },
-        ],
-        createdAt: '2025-12-20',
-        updatedAt: '2026-01-15'
-    },
-    {
-        id: 'camp-002',
-        name: 'OnePlus 14 Launch',
-        brand: 'OnePlus',
-        status: 'Planning',
-        brief: 'Build hype around OnePlus 14 launch. Unboxing, first impressions, camera tests.',
-        platform: 'YouTube',
-        budget: 800000,
-        spent: 0,
-        startDate: '2026-02-15',
-        endDate: '2026-03-31',
-        objective: 'Product Launch',
-        creators: [
-            {
-                creatorId: 'cr-002',
-                deliverables: [
-                    { type: 'Dedicated Video', quantity: 1, status: 'Pending', dueDate: '2026-03-01' },
-                    { type: 'Shorts', quantity: 2, status: 'Pending', dueDate: '2026-03-10' },
-                ],
-                totalFee: 250000,
-                paymentStatus: 'Unpaid',
-                contentInsights: null
-            },
-        ],
-        createdAt: '2026-01-10',
-        updatedAt: '2026-01-14'
-    },
-    {
-        id: 'camp-003',
-        name: 'Cred Rewards Push',
-        brand: 'Cred',
-        status: 'Completed',
-        brief: 'Funny content around bill payments and rewards. Comedy angle.',
-        platform: 'Instagram',
-        budget: 350000,
-        spent: 290000,
-        startDate: '2025-11-01',
-        endDate: '2025-12-15',
-        objective: 'App Downloads',
-        creators: [
-            {
-                creatorId: 'cr-006',
-                deliverables: [
-                    { type: 'Reel', quantity: 1, status: 'Delivered', dueDate: '2025-11-20' },
-                    { type: 'Story', quantity: 2, status: 'Delivered', dueDate: '2025-11-25' },
-                ],
-                totalFee: 150000,
-                paymentStatus: 'Paid',
-                contentInsights: { views: 250000, likes: 22000, comments: 890, shares: 1200 }
-            },
-        ],
-        createdAt: '2025-10-15',
-        updatedAt: '2025-12-20'
-    },
-]
+// Normalize API creator to match frontend shape
+function normalizeCreator(c) {
+    const avgViews = c.avgViews || calculateSmartAvgViews(c.reelViews || [])
+    return {
+        id: c.id,
+        name: c.name,
+        platform: c.socialAccounts?.[0]?.platform || c.platform || 'Instagram',
+        handle: c.socialAccounts?.[0]?.handle || c.handle || '',
+        followers: c.socialAccounts?.[0]?.followers || c.followers || 0,
+        avgViews,
+        reelViews: c.reelViews || [],
+        niche: c.niche || '',
+        city: c.city || '',
+        contactWhatsApp: c.contactWhatsApp || '',
+        contactEmail: c.contactEmail || '',
+        lastQuotedRate: c.lastQuotedRate || 0,
+        lowestClosedRate: c.lowestClosedRate || 0,
+        suggestedCPV: calculateSuggestedCPV(avgViews),
+        brandsWorkedWith: c.brandsWorkedWith || [],
+        negotiationNotes: c.negotiationNotes || '',
+        status: c.status || 'Cold',
+        labels: c.labels || [],
+        dealHistory: (c.dealHistory || []).map(d => ({
+            id: d.id,
+            brand: d.brand,
+            amount: Number(d.amount),
+            date: d.date,
+            deliverables: d.deliverables,
+            status: d.status,
+        })),
+        verificationStatus: c.verificationStatus || 'unverified',
+        creatorScore: c.creatorScore || 0,
+        creatorTier: c.creatorTier || 'nano',
+        socialAccounts: c.socialAccounts || [],
+        profilePicUrl: c.socialAccounts?.[0]?.profilePicUrl || c.profilePicUrl || '',
+        bio: c.socialAccounts?.[0]?.bio || c.bio || '',
+        engagementRate: c.socialAccounts?.[0]?.engagementRate || c.engagementRate || 0,
+        lastSyncedAt: c.socialAccounts?.[0]?.lastSyncedAt || null,
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+    }
+}
+
+// ==================== CAMPAIGNS (API-backed) ====================
 
 // ==================== OUTREACH ====================
 const initialOutreach = [
@@ -510,79 +320,138 @@ export function calculateSuggestedCPV(avgViews, cpvRate = 0.5) {
     return Math.round(avgViews * cpvRate)
 }
 
-// ==================== CREATORS CRUD ====================
-export function getCreators(filters = {}) {
-    let creators = getStore(STORAGE_KEYS.creators, initialCreators)
-    creators = creators.map(c => ({
-        ...c,
-        avgViews: calculateSmartAvgViews(c.reelViews),
-        suggestedCPV: calculateSuggestedCPV(calculateSmartAvgViews(c.reelViews))
-    }))
-    if (filters.platform) creators = creators.filter(c => c.platform === filters.platform)
-    if (filters.niche) creators = creators.filter(c => c.niche === filters.niche)
-    if (filters.status) creators = creators.filter(c => c.status === filters.status)
-    if (filters.city) creators = creators.filter(c => c.city === filters.city)
-    if (filters.label) creators = creators.filter(c => c.labels && c.labels.includes(filters.label))
-    if (filters.search) {
-        const s = filters.search.toLowerCase()
-        creators = creators.filter(c =>
-            c.name.toLowerCase().includes(s) ||
-            c.handle.toLowerCase().includes(s) ||
-            c.niche.toLowerCase().includes(s) ||
-            c.city.toLowerCase().includes(s)
-        )
-    }
-    return creators
+// ==================== CREATORS CRUD (async, API-backed) ====================
+export async function getCreators(filters = {}) {
+    return apiWithFallback(
+        async () => {
+            const params = new URLSearchParams()
+            if (filters.platform) params.set('platform', filters.platform)
+            if (filters.niche) params.set('niche', filters.niche)
+            if (filters.status) params.set('status', filters.status)
+            if (filters.city) params.set('city', filters.city)
+            if (filters.search) params.set('search', filters.search)
+            const qs = params.toString()
+            const res = await api.get(`/influencer/creators${qs ? '?' + qs : ''}`)
+            const creators = (res.data || res).map(normalizeCreator)
+            // Cache in localStorage for offline access
+            setStore(STORAGE_KEYS.creators, creators)
+            return creators
+        },
+        () => {
+            let creators = getStore(STORAGE_KEYS.creators, [])
+            creators = creators.map(c => ({
+                ...c,
+                avgViews: calculateSmartAvgViews(c.reelViews || []),
+                suggestedCPV: calculateSuggestedCPV(calculateSmartAvgViews(c.reelViews || []))
+            }))
+            if (filters.platform) creators = creators.filter(c => c.platform === filters.platform)
+            if (filters.niche) creators = creators.filter(c => c.niche === filters.niche)
+            if (filters.status) creators = creators.filter(c => c.status === filters.status)
+            if (filters.city) creators = creators.filter(c => c.city === filters.city)
+            if (filters.label) creators = creators.filter(c => c.labels?.includes(filters.label))
+            if (filters.search) {
+                const s = filters.search.toLowerCase()
+                creators = creators.filter(c =>
+                    c.name?.toLowerCase().includes(s) ||
+                    c.handle?.toLowerCase().includes(s) ||
+                    c.niche?.toLowerCase().includes(s) ||
+                    c.city?.toLowerCase().includes(s)
+                )
+            }
+            return creators
+        }
+    )
 }
 
-export function getCreator(id) {
-    const creators = getCreators()
-    return creators.find(c => c.id === id) || null
+export async function getCreator(id) {
+    return apiWithFallback(
+        async () => {
+            const res = await api.get(`/influencer/creators/${id}`)
+            return normalizeCreator(res.data || res)
+        },
+        () => {
+            const creators = getStore(STORAGE_KEYS.creators, [])
+            const c = creators.find(c => c.id == id)
+            return c ? { ...c, avgViews: calculateSmartAvgViews(c.reelViews || []), suggestedCPV: calculateSuggestedCPV(calculateSmartAvgViews(c.reelViews || [])) } : null
+        }
+    )
 }
 
-export function createCreator(data) {
-    const creators = getStore(STORAGE_KEYS.creators, initialCreators)
-    const newCreator = {
-        ...data,
-        id: genId('cr'),
-        reelViews: data.reelViews || [],
-        brandsWorkedWith: data.brandsWorkedWith || [],
-        negotiationNotes: data.negotiationNotes || '',
-        labels: data.labels || [],
-        dealHistory: [],
-        status: data.status || 'Cold',
-        createdAt: today(),
-        updatedAt: today()
-    }
-    creators.push(newCreator)
-    setStore(STORAGE_KEYS.creators, creators)
-    return newCreator
+export async function createCreator(data) {
+    return apiWithFallback(
+        async () => {
+            const res = await api.post('/influencer/creators', data)
+            return normalizeCreator(res.data || res)
+        },
+        () => {
+            const creators = getStore(STORAGE_KEYS.creators, [])
+            const newCreator = {
+                ...data,
+                id: genId('cr'),
+                reelViews: data.reelViews || [],
+                brandsWorkedWith: data.brandsWorkedWith || [],
+                negotiationNotes: data.negotiationNotes || '',
+                labels: data.labels || [],
+                dealHistory: [],
+                status: data.status || 'Cold',
+                createdAt: today(),
+                updatedAt: today()
+            }
+            creators.push(newCreator)
+            setStore(STORAGE_KEYS.creators, creators)
+            return newCreator
+        }
+    )
 }
 
-export function updateCreator(id, data) {
-    const creators = getStore(STORAGE_KEYS.creators, initialCreators)
-    const index = creators.findIndex(c => c.id === id)
-    if (index === -1) return null
-    creators[index] = { ...creators[index], ...data, updatedAt: today() }
-    setStore(STORAGE_KEYS.creators, creators)
-    return creators[index]
+export async function updateCreator(id, data) {
+    return apiWithFallback(
+        async () => {
+            const res = await api.put(`/influencer/creators/${id}`, data)
+            return normalizeCreator(res.data || res)
+        },
+        () => {
+            const creators = getStore(STORAGE_KEYS.creators, [])
+            const index = creators.findIndex(c => c.id == id)
+            if (index === -1) return null
+            creators[index] = { ...creators[index], ...data, updatedAt: today() }
+            setStore(STORAGE_KEYS.creators, creators)
+            return creators[index]
+        }
+    )
 }
 
-export function deleteCreator(id) {
-    const creators = getStore(STORAGE_KEYS.creators, initialCreators).filter(c => c.id !== id)
-    setStore(STORAGE_KEYS.creators, creators)
-    return true
+export async function deleteCreator(id) {
+    return apiWithFallback(
+        async () => {
+            await api.delete(`/influencer/creators/${id}`)
+            return true
+        },
+        () => {
+            const creators = getStore(STORAGE_KEYS.creators, []).filter(c => c.id != id)
+            setStore(STORAGE_KEYS.creators, creators)
+            return true
+        }
+    )
 }
 
-export function addDealToCreator(creatorId, deal) {
-    const creators = getStore(STORAGE_KEYS.creators, initialCreators)
-    const index = creators.findIndex(c => c.id === creatorId)
-    if (index === -1) return null
-    const newDeal = { ...deal, id: genId('deal') }
-    creators[index].dealHistory = [...(creators[index].dealHistory || []), newDeal]
-    creators[index].updatedAt = today()
-    setStore(STORAGE_KEYS.creators, creators)
-    return newDeal
+export async function addDealToCreator(creatorId, deal) {
+    return apiWithFallback(
+        async () => {
+            const res = await api.post(`/influencer/creators/${creatorId}/deals`, deal)
+            return res.data || res
+        },
+        () => {
+            const creators = getStore(STORAGE_KEYS.creators, [])
+            const index = creators.findIndex(c => c.id == creatorId)
+            if (index === -1) return null
+            const newDeal = { ...deal, id: genId('deal') }
+            creators[index].dealHistory = [...(creators[index].dealHistory || []), newDeal]
+            creators[index].updatedAt = today()
+            setStore(STORAGE_KEYS.creators, creators)
+            return newDeal
+        }
+    )
 }
 
 // ==================== LABELS CRUD ====================
@@ -604,70 +473,134 @@ export function deleteLabel(id) {
     return true
 }
 
-// ==================== CAMPAIGNS CRUD ====================
-export function getCampaigns(filters = {}) {
-    let campaigns = getStore(STORAGE_KEYS.campaigns, initialCampaigns)
-    if (filters.status) campaigns = campaigns.filter(c => c.status === filters.status)
-    if (filters.brand) campaigns = campaigns.filter(c => c.brand.toLowerCase().includes(filters.brand.toLowerCase()))
-    if (filters.platform) campaigns = campaigns.filter(c => c.platform === filters.platform)
-    return campaigns
+// ==================== CAMPAIGNS CRUD (async, API-backed) ====================
+export async function getCampaigns(filters = {}) {
+    return apiWithFallback(
+        async () => {
+            const params = new URLSearchParams()
+            if (filters.status) params.set('status', filters.status)
+            if (filters.brand) params.set('brand', filters.brand)
+            if (filters.platform) params.set('platform', filters.platform)
+            const qs = params.toString()
+            const res = await api.get(`/influencer/campaigns${qs ? '?' + qs : ''}`)
+            const campaigns = res.data || res
+            setStore(STORAGE_KEYS.campaigns, campaigns)
+            return campaigns
+        },
+        () => {
+            let campaigns = getStore(STORAGE_KEYS.campaigns, [])
+            if (filters.status) campaigns = campaigns.filter(c => c.status === filters.status)
+            if (filters.brand) campaigns = campaigns.filter(c => c.brand?.toLowerCase().includes(filters.brand.toLowerCase()))
+            if (filters.platform) campaigns = campaigns.filter(c => c.platform === filters.platform)
+            return campaigns
+        }
+    )
 }
 
-export function getCampaign(id) {
-    return getCampaigns().find(c => c.id === id) || null
+export async function getCampaign(id) {
+    return apiWithFallback(
+        async () => {
+            const res = await api.get(`/influencer/campaigns/${id}`)
+            return res.data || res
+        },
+        () => {
+            const campaigns = getStore(STORAGE_KEYS.campaigns, [])
+            return campaigns.find(c => c.id == id) || null
+        }
+    )
 }
 
-export function createCampaign(data) {
-    const campaigns = getStore(STORAGE_KEYS.campaigns, initialCampaigns)
-    const newCampaign = {
-        ...data,
-        id: genId('camp'),
-        creators: data.creators || [],
-        spent: 0,
-        status: data.status || 'Planning',
-        createdAt: today(),
-        updatedAt: today()
-    }
-    campaigns.push(newCampaign)
-    setStore(STORAGE_KEYS.campaigns, campaigns)
-    return newCampaign
+export async function createCampaign(data) {
+    return apiWithFallback(
+        async () => {
+            const res = await api.post('/influencer/campaigns', data)
+            return res.data || res
+        },
+        () => {
+            const campaigns = getStore(STORAGE_KEYS.campaigns, [])
+            const newCampaign = {
+                ...data,
+                id: genId('camp'),
+                creators: data.creators || [],
+                spent: 0,
+                status: data.status || 'Planning',
+                createdAt: today(),
+                updatedAt: today()
+            }
+            campaigns.push(newCampaign)
+            setStore(STORAGE_KEYS.campaigns, campaigns)
+            return newCampaign
+        }
+    )
 }
 
-export function updateCampaign(id, data) {
-    const campaigns = getStore(STORAGE_KEYS.campaigns, initialCampaigns)
-    const index = campaigns.findIndex(c => c.id === id)
-    if (index === -1) return null
-    campaigns[index] = { ...campaigns[index], ...data, updatedAt: today() }
-    setStore(STORAGE_KEYS.campaigns, campaigns)
-    return campaigns[index]
+export async function updateCampaign(id, data) {
+    return apiWithFallback(
+        async () => {
+            const res = await api.put(`/influencer/campaigns/${id}`, data)
+            return res.data || res
+        },
+        () => {
+            const campaigns = getStore(STORAGE_KEYS.campaigns, [])
+            const index = campaigns.findIndex(c => c.id == id)
+            if (index === -1) return null
+            campaigns[index] = { ...campaigns[index], ...data, updatedAt: today() }
+            setStore(STORAGE_KEYS.campaigns, campaigns)
+            return campaigns[index]
+        }
+    )
 }
 
-export function deleteCampaign(id) {
-    const campaigns = getStore(STORAGE_KEYS.campaigns, initialCampaigns).filter(c => c.id !== id)
-    setStore(STORAGE_KEYS.campaigns, campaigns)
-    return true
+export async function deleteCampaign(id) {
+    return apiWithFallback(
+        async () => {
+            await api.delete(`/influencer/campaigns/${id}`)
+            return true
+        },
+        () => {
+            const campaigns = getStore(STORAGE_KEYS.campaigns, []).filter(c => c.id != id)
+            setStore(STORAGE_KEYS.campaigns, campaigns)
+            return true
+        }
+    )
 }
 
-export function addCreatorToCampaign(campaignId, creatorData) {
-    const campaigns = getStore(STORAGE_KEYS.campaigns, initialCampaigns)
-    const index = campaigns.findIndex(c => c.id === campaignId)
-    if (index === -1) return null
-    campaigns[index].creators.push(creatorData)
-    campaigns[index].updatedAt = today()
-    setStore(STORAGE_KEYS.campaigns, campaigns)
-    return campaigns[index]
+export async function addCreatorToCampaign(campaignId, creatorData) {
+    return apiWithFallback(
+        async () => {
+            const res = await api.post(`/influencer/campaigns/${campaignId}/creators`, creatorData)
+            return res.data || res
+        },
+        () => {
+            const campaigns = getStore(STORAGE_KEYS.campaigns, [])
+            const index = campaigns.findIndex(c => c.id == campaignId)
+            if (index === -1) return null
+            campaigns[index].creators.push(creatorData)
+            campaigns[index].updatedAt = today()
+            setStore(STORAGE_KEYS.campaigns, campaigns)
+            return campaigns[index]
+        }
+    )
 }
 
-export function updateCampaignCreator(campaignId, creatorId, data) {
-    const campaigns = getStore(STORAGE_KEYS.campaigns, initialCampaigns)
-    const cIndex = campaigns.findIndex(c => c.id === campaignId)
-    if (cIndex === -1) return null
-    const crIndex = campaigns[cIndex].creators.findIndex(cr => cr.creatorId === creatorId)
-    if (crIndex === -1) return null
-    campaigns[cIndex].creators[crIndex] = { ...campaigns[cIndex].creators[crIndex], ...data }
-    campaigns[cIndex].updatedAt = today()
-    setStore(STORAGE_KEYS.campaigns, campaigns)
-    return campaigns[cIndex]
+export async function updateCampaignCreator(campaignId, creatorId, data) {
+    return apiWithFallback(
+        async () => {
+            const res = await api.put(`/influencer/campaigns/${campaignId}/creators/${creatorId}`, data)
+            return res.data || res
+        },
+        () => {
+            const campaigns = getStore(STORAGE_KEYS.campaigns, [])
+            const cIndex = campaigns.findIndex(c => c.id == campaignId)
+            if (cIndex === -1) return null
+            const crIndex = campaigns[cIndex].creators.findIndex(cr => cr.creatorId == creatorId)
+            if (crIndex === -1) return null
+            campaigns[cIndex].creators[crIndex] = { ...campaigns[cIndex].creators[crIndex], ...data }
+            campaigns[cIndex].updatedAt = today()
+            setStore(STORAGE_KEYS.campaigns, campaigns)
+            return campaigns[cIndex]
+        }
+    )
 }
 
 // ==================== OUTREACH CRUD ====================
@@ -986,18 +919,13 @@ export function calculateCreatorScore(creator) {
     }
 }
 
-export function verifyCreator(creatorId, status = 'verified') {
-    const creators = getStore(STORAGE_KEYS.creators, initialCreators)
-    const index = creators.findIndex(c => c.id === creatorId)
-    if (index === -1) return null
-    creators[index].verificationStatus = status
-    creators[index].updatedAt = today()
-    setStore(STORAGE_KEYS.creators, creators)
-    return creators[index]
+export async function verifyCreator(creatorId, status = 'verified') {
+    return updateCreator(creatorId, { verificationStatus: status })
 }
 
-export function getCreatorsWithScores(filters = {}) {
-    return getCreators(filters).map(c => ({
+export async function getCreatorsWithScores(filters = {}) {
+    const creators = await getCreators(filters)
+    return creators.map(c => ({
         ...c,
         creatorTier: getCreatorTier(c.followers),
         creatorScore: calculateCreatorScore(c),
@@ -1085,15 +1013,16 @@ export function applyBriefTemplate(templateId, brandName = '', platformOverride 
 }
 
 // ==================== CAMPAIGN COMPARISON ====================
-export function compareCampaigns(campaignIds) {
-    const all = getCampaigns()
+export async function compareCampaigns(campaignIds) {
+    const all = await getCampaigns()
     return campaignIds.map(id => {
         const c = all.find(camp => camp.id === id)
         if (!c) return null
-        const totalViews = c.creators.reduce((s, cr) => s + (cr.contentInsights?.views || 0), 0)
-        const totalLikes = c.creators.reduce((s, cr) => s + (cr.contentInsights?.likes || 0), 0)
-        const totalComments = c.creators.reduce((s, cr) => s + (cr.contentInsights?.comments || 0), 0)
-        const totalShares = c.creators.reduce((s, cr) => s + (cr.contentInsights?.shares || 0), 0)
+        const creators = c.creators || []
+        const totalViews = creators.reduce((s, cr) => s + (cr.contentInsights?.views || 0), 0)
+        const totalLikes = creators.reduce((s, cr) => s + (cr.contentInsights?.likes || 0), 0)
+        const totalComments = creators.reduce((s, cr) => s + (cr.contentInsights?.comments || 0), 0)
+        const totalShares = creators.reduce((s, cr) => s + (cr.contentInsights?.shares || 0), 0)
         const totalEngagement = totalLikes + totalComments + totalShares
         const cpe = totalEngagement > 0 ? Math.round(c.spent / totalEngagement) : 0
         const roi = c.spent > 0 ? ((totalEngagement * 2 - c.spent) / c.spent * 100).toFixed(1) : 0
@@ -1107,44 +1036,169 @@ export function compareCampaigns(campaignIds) {
     }).filter(Boolean)
 }
 
-export function getCampaignROI(campaignId) {
-    const result = compareCampaigns([campaignId])
+export async function getCampaignROI(campaignId) {
+    const result = await compareCampaigns([campaignId])
     return result.length ? { roi: result[0].roi, cpe: result[0].cpe } : { roi: 0, cpe: 0 }
 }
 
-// ==================== STATS ====================
-export function getInfluencerStats() {
-    const creators = getCreators()
-    const campaigns = getCampaigns()
-    const invoices = getInvoices()
-    const salesLeads = getSalesLeads()
-    const outreach = getOutreachList()
+// ==================== STATS (async, API-backed) ====================
+export async function getInfluencerStats() {
+    return apiWithFallback(
+        async () => {
+            const res = await api.get('/influencer/stats')
+            return res.data || res
+        },
+        async () => {
+            const creators = await getCreators()
+            const campaigns = await getCampaigns()
+            const invoices = getInvoices()
+            const salesLeads = getSalesLeads()
+            const outreach = getOutreachList()
 
-    const totalCreators = creators.length
-    const activeCampaigns = campaigns.filter(c => c.status === 'Active').length
-    const totalCampaignBudget = campaigns.reduce((s, c) => s + c.budget, 0)
-    const totalSpent = campaigns.reduce((s, c) => s + c.spent, 0)
-    const totalInvoiceValue = invoices.reduce((s, i) => s + i.amount, 0)
-    const pendingPayments = invoices.filter(i => i.status === 'Pending').reduce((s, i) => s + i.totalPayable, 0)
-    const pipelineValue = salesLeads.reduce((s, l) => s + (l.dealValue * l.probability / 100), 0)
-    const pendingOutreach = outreach.filter(o => o.status === 'Sent' || o.status === 'Draft').length
+            const totalCreators = creators.length
+            const activeCampaigns = campaigns.filter(c => c.status === 'Active').length
+            const totalCampaignBudget = campaigns.reduce((s, c) => s + (c.budget || 0), 0)
+            const totalSpent = campaigns.reduce((s, c) => s + (c.spent || 0), 0)
+            const totalInvoiceValue = invoices.reduce((s, i) => s + i.amount, 0)
+            const pendingPayments = invoices.filter(i => i.status === 'Pending').reduce((s, i) => s + i.totalPayable, 0)
+            const pipelineValue = salesLeads.reduce((s, l) => s + (l.dealValue * l.probability / 100), 0)
+            const pendingOutreach = outreach.filter(o => o.status === 'Sent' || o.status === 'Draft').length
 
-    const creatorsByStatus = {}
-    creators.forEach(c => { creatorsByStatus[c.status] = (creatorsByStatus[c.status] || 0) + 1 })
+            const creatorsByStatus = {}
+            creators.forEach(c => { creatorsByStatus[c.status] = (creatorsByStatus[c.status] || 0) + 1 })
 
-    const creatorsByPlatform = {}
-    creators.forEach(c => { creatorsByPlatform[c.platform] = (creatorsByPlatform[c.platform] || 0) + 1 })
+            const creatorsByPlatform = {}
+            creators.forEach(c => { creatorsByPlatform[c.platform] = (creatorsByPlatform[c.platform] || 0) + 1 })
 
-    return {
-        totalCreators,
-        activeCampaigns,
-        totalCampaignBudget,
-        totalSpent,
-        totalInvoiceValue,
-        pendingPayments,
-        pipelineValue,
-        pendingOutreach,
-        creatorsByStatus,
-        creatorsByPlatform,
-    }
+            return {
+                totalCreators,
+                activeCampaigns,
+                totalCampaignBudget,
+                totalSpent,
+                totalInvoiceValue,
+                pendingPayments,
+                pipelineValue,
+                pendingOutreach,
+                creatorsByStatus,
+                creatorsByPlatform,
+            }
+        }
+    )
+}
+
+// ==================== PLATFORM API INTEGRATION ====================
+
+// Get configured platforms
+export async function getPlatformConfigs() {
+    return apiWithFallback(
+        async () => {
+            const res = await api.get('/influencer/platforms')
+            const configs = res.data || res
+            setStore(STORAGE_KEYS.platformConfigs, configs)
+            return configs
+        },
+        () => getStore(STORAGE_KEYS.platformConfigs, [])
+    )
+}
+
+// Configure a platform's API credentials
+export async function configurePlatform(data) {
+    const res = await api.post('/influencer/platforms', data)
+    return res.data || res
+}
+
+// Remove a platform config
+export async function removePlatformConfig(platform) {
+    await api.delete(`/influencer/platforms/${platform}`)
+    return true
+}
+
+// Get OAuth URL for a platform
+export async function getOAuthUrl(platform, redirectUri) {
+    const params = new URLSearchParams()
+    if (redirectUri) params.set('redirectUri', redirectUri)
+    const qs = params.toString()
+    const res = await api.get(`/influencer/oauth/url/${platform}${qs ? '?' + qs : ''}`)
+    return res.data || res
+}
+
+// Handle OAuth callback
+export async function handleOAuthCallback(platform, code, state) {
+    const res = await api.get(`/influencer/oauth/callback/${platform}?code=${encodeURIComponent(code)}${state ? '&state=' + encodeURIComponent(state) : ''}`)
+    return res.data || res
+}
+
+// Add a social account to a creator
+export async function addSocialAccount(creatorId, data) {
+    const res = await api.post(`/influencer/creators/${creatorId}/social-accounts`, data)
+    return res.data || res
+}
+
+// Remove a social account
+export async function removeSocialAccount(accountId) {
+    await api.delete(`/influencer/social-accounts/${accountId}`)
+    return true
+}
+
+// Sync a single social account from its platform API
+export async function syncSocialAccount(accountId) {
+    const res = await api.post(`/influencer/social-accounts/${accountId}/sync`)
+    return res.data || res
+}
+
+// Sync all social accounts for a creator
+export async function syncCreator(creatorId) {
+    const res = await api.post(`/influencer/creators/${creatorId}/sync`)
+    return res.data || res
+}
+
+// Sync ALL creators across all platforms
+export async function syncAllCreators() {
+    const res = await api.post('/influencer/sync/all')
+    return res.data || res
+}
+
+// Lookup a public profile from a platform (no OAuth needed for YouTube/Twitter)
+export async function lookupPlatformProfile(platform, handle) {
+    const res = await api.get(`/influencer/lookup/${platform}/${encodeURIComponent(handle)}`)
+    return res.data || res
+}
+
+// Import a creator from platform lookup data directly into DB
+export async function importFromPlatform(data) {
+    const res = await api.post('/influencer/creators/import-from-platform', data)
+    return normalizeCreator(res.data || res)
+}
+
+// Get content posts for a social account
+export async function getSocialAccountPosts(accountId, params = {}) {
+    const qs = new URLSearchParams(params).toString()
+    const res = await api.get(`/influencer/social-accounts/${accountId}/posts${qs ? '?' + qs : ''}`)
+    return res.data || res
+}
+
+// Get all posts for a creator across all accounts
+export async function getCreatorPosts(creatorId, params = {}) {
+    const qs = new URLSearchParams(params).toString()
+    const res = await api.get(`/influencer/creators/${creatorId}/posts${qs ? '?' + qs : ''}`)
+    return res.data || res
+}
+
+// Get analytics snapshots for a creator
+export async function getCreatorAnalytics(creatorId, params = {}) {
+    const qs = new URLSearchParams(params).toString()
+    const res = await api.get(`/influencer/creators/${creatorId}/analytics${qs ? '?' + qs : ''}`)
+    return res.data || res
+}
+
+// Get deal history for a creator
+export async function getCreatorDeals(creatorId) {
+    const res = await api.get(`/influencer/creators/${creatorId}/deals`)
+    return res.data || res
+}
+
+// Update a deal
+export async function updateDeal(dealId, data) {
+    const res = await api.put(`/influencer/deals/${dealId}`, data)
+    return res.data || res
 }

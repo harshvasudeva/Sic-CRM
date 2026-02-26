@@ -1565,3 +1565,166 @@ model UserPreference {
   @@index([userId])
 }
 
+// ==================== INFLUENCER MODULE ====================
+
+model Creator {
+  id                String   @id @default(uuid())
+  name              String
+  niche             String?
+  city              String?
+  contactEmail      String?
+  contactWhatsApp   String?
+  negotiationNotes  String?  @db.Text
+  status            String   @default("Cold") // Cold, Talking, Closed, Ghosted
+  creatorScore      Float?
+  creatorTier       String?
+  verificationStatus String  @default("unverified") // unverified, pending, verified
+  labels            Json?    // array of label IDs
+  brandsWorkedWith  Json?    // string array
+  metadata          Json?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  socialAccounts    SocialAccount[]
+  dealHistory       CreatorDeal[]
+  campaignCreators  CampaignCreator[]
+  analytics         CreatorAnalyticsSnapshot[]
+}
+
+model SocialAccount {
+  id            String   @id @default(uuid())
+  creatorId     String
+  creator       Creator  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  platform      String   // instagram, youtube, tiktok, twitter
+  handle        String
+  platformUserId String? // native platform user ID for API calls
+  accessToken   String?  @db.Text // encrypted OAuth token
+  refreshToken  String?  @db.Text
+  tokenExpiry   DateTime?
+  followers     Int      @default(0)
+  avgViews      Int      @default(0)
+  engagementRate Float?
+  profilePicUrl String?
+  bio           String?  @db.Text
+  isVerified    Boolean  @default(false)
+  platformData  Json?    // platform-specific raw data (subscriber count, watch time, etc.)
+  lastSyncedAt  DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  contentPosts  ContentPost[]
+
+  @@unique([platform, handle])
+  @@index([creatorId])
+  @@index([platform])
+}
+
+model ContentPost {
+  id              String   @id @default(uuid())
+  socialAccountId String
+  socialAccount   SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+  platformPostId  String?  // native post ID from platform
+  type            String?  // reel, video, story, static, carousel, short, tweet
+  title           String?
+  caption         String?  @db.Text
+  url             String?
+  thumbnailUrl    String?
+  views           Int      @default(0)
+  likes           Int      @default(0)
+  comments        Int      @default(0)
+  shares          Int      @default(0)
+  saves           Int      @default(0)
+  engagementRate  Float?
+  publishedAt     DateTime?
+  platformData    Json?    // raw API response data
+  createdAt       DateTime @default(now())
+
+  @@index([socialAccountId])
+  @@index([publishedAt])
+}
+
+model CreatorAnalyticsSnapshot {
+  id          String   @id @default(uuid())
+  creatorId   String
+  creator     Creator  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  platform    String
+  date        DateTime @default(now())
+  followers   Int      @default(0)
+  avgViews    Int      @default(0)
+  engagementRate Float?
+  demographics Json?   // { ageBrackets, genderSplit, topLocations, topCountries }
+  audienceQuality Json? // { realFollowerPct, activeCommenterPct, botScore }
+  contentMix    Json?   // { reels, stories, videos, etc. }
+  platformData  Json?   // raw platform analytics data
+  createdAt     DateTime @default(now())
+
+  @@index([creatorId, platform])
+  @@index([date])
+}
+
+model CreatorDeal {
+  id            String   @id @default(uuid())
+  creatorId     String
+  creator       Creator  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  brand         String
+  amount        Decimal  @default(0) @db.Decimal(12, 2)
+  deliverables  String?
+  status        String   @default("Pending") // Pending, In Progress, Completed, Cancelled
+  date          DateTime @default(now())
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([creatorId])
+}
+
+model InfluencerCampaign {
+  id              String   @id @default(uuid())
+  name            String
+  brand           String?
+  platform        String?
+  budget          Decimal? @db.Decimal(12, 2)
+  startDate       DateTime?
+  endDate         DateTime?
+  status          String   @default("Draft") // Draft, Active, Paused, Completed
+  deliverables    Json?    // array of deliverable objects
+  contentInsights Json?
+  paymentStatus   String?  @default("Unpaid")
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  creators        CampaignCreator[]
+}
+
+model CampaignCreator {
+  id            String   @id @default(uuid())
+  campaignId    String
+  campaign      InfluencerCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  creatorId     String
+  creator       Creator  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  rate          Decimal? @db.Decimal(12, 2)
+  status        String   @default("Invited") // Invited, Confirmed, Content Submitted, Completed
+  deliverables  Json?
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([campaignId, creatorId])
+}
+
+model PlatformApiConfig {
+  id            String   @id @default(uuid())
+  platform      String   @unique // instagram, youtube, tiktok, twitter
+  clientId      String?
+  clientSecret  String?  @db.Text
+  apiKey        String?  @db.Text
+  redirectUri   String?
+  scopes        Json?    // array of permission scopes
+  isActive      Boolean  @default(false)
+  metadata      Json?    // additional platform-specific config
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
