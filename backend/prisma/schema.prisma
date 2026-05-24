@@ -1581,6 +1581,8 @@ model Creator {
   verificationStatus String  @default("unverified") // unverified, pending, verified
   labels            Json?    // array of label IDs
   brandsWorkedWith  Json?    // string array
+  tracked           Boolean  @default(true) // included in daily scheduled sync
+  rateCard          Json?    // { suggestedCPV, suggestedCPM, suggestedFlatRate, currency, lastComputed }
   metadata          Json?
   isActive          Boolean  @default(true)
   createdAt         DateTime @default(now())
@@ -1640,6 +1642,7 @@ model ContentPost {
   platformData    Json?    // raw API response data
   createdAt       DateTime @default(now())
 
+  @@unique([platformPostId, socialAccountId])
   @@index([socialAccountId])
   @@index([publishedAt])
 }
@@ -1659,6 +1662,7 @@ model CreatorAnalyticsSnapshot {
   platformData  Json?   // raw platform analytics data
   createdAt     DateTime @default(now())
 
+  @@unique([creatorId, platform, date])
   @@index([creatorId, platform])
   @@index([date])
 }

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-    Users, Search, Plus, Filter, Instagram, Youtube, MapPin, Eye,
+    Users, Search, Plus, Filter, MapPin, Eye,
     IndianRupee, Phone, Mail, Tag, Edit2, Trash2, X, ChevronDown,
     Star, MessageSquare, TrendingUp, Copy, ExternalLink
 } from 'lucide-react'
+import { Instagram, Youtube } from '../../components/PlatformIcons'
 import {
     getCreators, createCreator, updateCreator, deleteCreator, getLabels,
     createLabel, addDealToCreator, calculateSmartAvgViews, calculateSuggestedCPV,

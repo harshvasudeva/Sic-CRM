@@ -3,12 +3,12 @@ import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
     BarChart3, TrendingUp, Users, Eye, Heart, MessageSquare, Share2,
-    ChevronLeft, Calendar, PieChart
+    ChevronLeft, Calendar, PieChart, AlertTriangle, Loader2
 } from 'lucide-react'
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart as RPieChart, Pie, Cell,
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { getCreatorsWithScores } from '../../stores/influencerStore'
-import { getCreatorAnalytics, getPostPerformance, getAudienceDemographics, getSentimentAnalysis } from '../../stores/analyticsStore'
+import { getCreatorAnalytics, getPostPerformance, getAudienceDemographics, getSentimentAnalysis, getGrowthMetrics, getEngagementQuality, getRateCard, getAnomalyReport } from '../../stores/analyticsStore'
 import CreatorScoreCard from '../../components/influencer/CreatorScoreCard'
 
 const PIE_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4']
@@ -21,6 +21,11 @@ function CreatorAnalytics() {
     const [posts, setPosts] = useState([])
     const [demographics, setDemographics] = useState(null)
     const [sentiment, setSentiment] = useState(null)
+    const [growth, setGrowth] = useState(null)
+    const [engagementQuality, setEngagementQuality] = useState(null)
+    const [rateCard, setRateCard] = useState(null)
+    const [anomalies, setAnomalies] = useState(null)
+    const [loading, setLoading] = useState(false)
     const [dateRange, setDateRange] = useState(30)
 
     useEffect(() => {
@@ -29,14 +34,33 @@ function CreatorAnalytics() {
         if (all.length) selectCreator(all[0].id)
     }, [])
 
-    function selectCreator(id) {
+    async function selectCreator(id) {
         const creator = creators.find(c => c.id === id) || getCreatorsWithScores().find(c => c.id === id)
         setSelectedCreator(creator)
-        const a = getCreatorAnalytics(id)
-        setAnalytics(a)
-        setPosts(getPostPerformance(id))
-        setDemographics(getAudienceDemographics(id))
-        setSentiment(getSentimentAnalysis(id))
+        setLoading(true)
+        try {
+            const [a, p, d, s, g, eq, rc, an] = await Promise.all([
+                getCreatorAnalytics(id),
+                getPostPerformance(id),
+                getAudienceDemographics(id),
+                getSentimentAnalysis(id),
+                getGrowthMetrics(id, 90).catch(() => null),
+                getEngagementQuality(id).catch(() => null),
+                getRateCard(id).catch(() => null),
+                getAnomalyReport(id).catch(() => null),
+            ])
+            setAnalytics(a)
+            setPosts(p)
+            setDemographics(d)
+            setSentiment(s)
+            setGrowth(g)
+            setEngagementQuality(eq)
+            setRateCard(rc)
+            setAnomalies(an)
+        } catch (err) {
+            console.error('Failed to load analytics:', err)
+        }
+        setLoading(false)
     }
 
     const formatNum = (n) => {
@@ -88,11 +112,14 @@ function CreatorAnalytics() {
 
                 {/* Main Content */}
                 <div className="ca-main">
-                    {!selectedCreator || !analytics ? (
+                    {!selectedCreator ? (
                         <div className="ca-empty"><BarChart3 size={48} /><p>Select a creator to view analytics</p></div>
+                    ) : loading ? (
+                        <div className="ca-empty"><Loader2 size={48} className="ca-spinner" /><p>Loading analytics...</p></div>
+                    ) : !analytics ? (
+                        <div className="ca-empty"><BarChart3 size={48} /><p>No analytics data available. Sync this creator first.</p></div>
                     ) : (
                         <>
-                            {/* Top: Score Card + Stats */}
                             <div className="ca-top-grid">
                                 <CreatorScoreCard creator={selectedCreator} />
                                 <div className="ca-stats-grid">
@@ -109,6 +136,81 @@ function CreatorAnalytics() {
                                         </motion.div>
                                     ))}
                                 </div>
+                            </div>
+
+                            {/* Growth Summary + Rate Card + Anomalies */}
+                            <div className="ca-insights-grid">
+                                {growth?.summary && (
+                                    <motion.div className="ca-chart-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+                                        <h3><TrendingUp size={16} /> Growth Summary (90d)</h3>
+                                        <div className="ca-growth-stats">
+                                            <div className="ca-growth-stat">
+                                                <span className="ca-gs-label">Current Followers</span>
+                                                <span className="ca-gs-value">{formatNum(growth.summary.currentFollowers)}</span>
+                                            </div>
+                                            <div className="ca-growth-stat">
+                                                <span className="ca-gs-label">Growth</span>
+                                                <span className="ca-gs-value" style={{ color: growth.summary.growth >= 0 ? '#10b981' : '#ef4444' }}>
+                                                    {growth.summary.growth >= 0 ? '+' : ''}{formatNum(growth.summary.growth)}
+                                                </span>
+                                            </div>
+                                            <div className="ca-growth-stat">
+                                                <span className="ca-gs-label">Growth Rate</span>
+                                                <span className="ca-gs-value">{growth.summary.growthRate}%</span>
+                                            </div>
+                                            <div className="ca-growth-stat">
+                                                <span className="ca-gs-label">Velocity</span>
+                                                <span className="ca-gs-value">{formatNum(Math.round(growth.summary.growthVelocity))}/day</span>
+                                            </div>
+                                            <div className="ca-growth-stat">
+                                                <span className="ca-gs-label">Direction</span>
+                                                <span className={`ca-gs-dir ca-gs-${growth.summary.growthDirection}`}>{growth.summary.growthDirection}</span>
+                                            </div>
+                                            <div className="ca-growth-stat">
+                                                <span className="ca-gs-label">Projected (30d)</span>
+                                                <span className="ca-gs-value">{formatNum(growth.summary.projectedFollowers30d)}</span>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+
+                                {rateCard?.overall && (
+                                    <motion.div className="ca-chart-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+                                        <h3>💰 Rate Card Estimate</h3>
+                                        <div className="ca-rate-card">
+                                            <div className="ca-rc-row"><span>CPV</span><span>₹{rateCard.overall.suggestedCPV?.toLocaleString()}</span></div>
+                                            <div className="ca-rc-row"><span>CPM</span><span>₹{rateCard.overall.suggestedCPM?.toLocaleString()}</span></div>
+                                            <div className="ca-rc-row"><span>Flat Rate</span><span>₹{rateCard.overall.suggestedFlatRate?.toLocaleString()}</span></div>
+                                            <div className="ca-rc-row ca-rc-muted"><span>Followers</span><span>{formatNum(rateCard.overall.totalFollowers)}</span></div>
+                                            <div className="ca-rc-row ca-rc-muted"><span>Avg Views</span><span>{formatNum(rateCard.overall.avgViews)}</span></div>
+                                            <div className="ca-rc-row ca-rc-muted"><span>Engagement</span><span>{rateCard.overall.avgEngagementRate}%</span></div>
+                                        </div>
+                                        {rateCard.perPlatform && Object.keys(rateCard.perPlatform).length > 0 && (
+                                            <div className="ca-rc-platforms">
+                                                {Object.entries(rateCard.perPlatform).map(([platform, r]) => (
+                                                    <div key={platform} className="ca-rc-platform">
+                                                        <span className="ca-rc-plat-name">{platform}</span>
+                                                        <span className="ca-rc-plat-rate">₹{r.suggestedFlatRate?.toLocaleString()}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                )}
+
+                                {anomalies && anomalies.anomalies?.length > 0 && (
+                                    <motion.div className="ca-chart-card ca-anomalies-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+                                        <h3><AlertTriangle size={16} /> Anomalies ({anomalies.totalAnomalies})</h3>
+                                        <div className="ca-anomaly-list">
+                                            {anomalies.anomalies.slice(0, 5).map((a, i) => (
+                                                <div key={i} className={`ca-anomaly ca-anomaly-${a.severity}`}>
+                                                    <span className="ca-anomaly-badge">{a.severity}</span>
+                                                    <span className="ca-anomaly-detail">{a.detail}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                )}
                             </div>
 
                             {/* Date Range */}
@@ -282,7 +384,40 @@ function CreatorAnalytics() {
                 .ca-keywords { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
                 .ca-kw-label { font-size: 0.8rem; color: var(--text-muted); }
                 .ca-kw-chip { padding: 4px 10px; border-radius: 16px; font-size: 0.75rem; background: rgba(99,102,241,0.1); color: var(--accent-primary); }
-                @media (max-width: 1100px) { .ca-layout { grid-template-columns: 1fr; } .ca-sidebar { position: static; max-height: none; } }
+                .ca-spinner { animation: spin 1s linear infinite; }
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                .ca-insights-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+                .ca-growth-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+                .ca-growth-stat { display: flex; flex-direction: column; gap: 2px; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 8px; }
+                .ca-gs-label { font-size: 0.7rem; color: var(--text-muted); }
+                .ca-gs-value { font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+                .ca-gs-dir { font-size: 0.85rem; font-weight: 600; text-transform: capitalize; }
+                .ca-gs-accelerating { color: #10b981; }
+                .ca-gs-stable { color: #3b82f6; }
+                .ca-gs-decelerating { color: #f59e0b; }
+                .ca-gs-declining { color: #ef4444; }
+                .ca-gs-insufficient_data { color: var(--text-muted); }
+                .ca-rate-card { display: flex; flex-direction: column; gap: 8px; }
+                .ca-rc-row { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+                .ca-rc-row span:first-child { color: var(--text-muted); }
+                .ca-rc-row span:last-child { font-weight: 600; color: var(--text-primary); }
+                .ca-rc-muted span:last-child { font-weight: 400; color: var(--text-secondary); }
+                .ca-rc-platforms { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+                .ca-rc-platform { display: flex; justify-content: space-between; padding: 6px 8px; background: rgba(255,255,255,0.03); border-radius: 8px; }
+                .ca-rc-plat-name { font-size: 0.8rem; color: var(--text-secondary); text-transform: capitalize; }
+                .ca-rc-plat-rate { font-size: 0.8rem; font-weight: 600; color: var(--accent-primary); }
+                .ca-anomalies-card { border-color: rgba(239,68,68,0.2); }
+                .ca-anomaly-list { display: flex; flex-direction: column; gap: 8px; }
+                .ca-anomaly { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 8px; font-size: 0.8rem; }
+                .ca-anomaly-high { background: rgba(239,68,68,0.1); }
+                .ca-anomaly-medium { background: rgba(245,158,11,0.1); }
+                .ca-anomaly-low { background: rgba(59,130,246,0.1); }
+                .ca-anomaly-badge { padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
+                .ca-anomaly-high .ca-anomaly-badge { background: rgba(239,68,68,0.2); color: #ef4444; }
+                .ca-anomaly-medium .ca-anomaly-badge { background: rgba(245,158,11,0.2); color: #f59e0b; }
+                .ca-anomaly-low .ca-anomaly-badge { background: rgba(59,130,246,0.2); color: #3b82f6; }
+                .ca-anomaly-detail { color: var(--text-secondary); }
+                @media (max-width: 1100px) { .ca-layout { grid-template-columns: 1fr; } .ca-sidebar { position: static; max-height: none; } .ca-insights-grid { grid-template-columns: 1fr; } }
                 @media (max-width: 900px) {
                     .ca-top-grid { grid-template-columns: 1fr; }
                     .ca-charts-grid { grid-template-columns: 1fr; }

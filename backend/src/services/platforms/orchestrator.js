@@ -219,13 +219,30 @@ class PlatformOrchestrator {
       },
     })
 
-    // Snapshot analytics
-    await prisma.creatorAnalyticsSnapshot.create({
-      data: {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    await prisma.creatorAnalyticsSnapshot.upsert({
+      where: {
+        creatorId_platform_date: {
+          creatorId: account.creatorId,
+          platform: account.platform,
+          date: today,
+        },
+      },
+      create: {
         creatorId: account.creatorId,
         platform: account.platform,
+        date: today,
         followers: profile.followers || 0,
         avgViews: account.avgViews || 0,
+        engagementRate: updated.engagementRate,
+        platformData: profile.platformData || {},
+      },
+      update: {
+        followers: profile.followers || 0,
+        avgViews: account.avgViews || 0,
+        engagementRate: updated.engagementRate,
         platformData: profile.platformData || {},
       },
     })
@@ -278,40 +295,58 @@ class PlatformOrchestrator {
     // Upsert posts into DB
     let synced = 0
     for (const post of posts) {
-      await prisma.contentPost.upsert({
-        where: {
-          id: post.platformPostId
-            ? (await prisma.contentPost.findFirst({
-                where: { platformPostId: post.platformPostId, socialAccountId },
-                select: { id: true },
-              }))?.id || `new-${Date.now()}-${Math.random().toString(36).slice(2)}`
-            : `new-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        },
-        create: {
-          socialAccountId,
-          platformPostId: post.platformPostId,
-          type: post.type,
-          title: post.title,
-          caption: post.caption?.substring(0, 5000),
-          url: post.url,
-          thumbnailUrl: post.thumbnailUrl,
-          views: post.views || 0,
-          likes: post.likes || 0,
-          comments: post.comments || 0,
-          shares: post.shares || 0,
-          saves: post.saves || 0,
-          publishedAt: post.publishedAt ? new Date(post.publishedAt) : null,
-          platformData: post.raw || {},
-        },
-        update: {
-          views: post.views || 0,
-          likes: post.likes || 0,
-          comments: post.comments || 0,
-          shares: post.shares || 0,
-          saves: post.saves || 0,
-          platformData: post.raw || {},
-        },
-      })
+      if (post.platformPostId) {
+        await prisma.contentPost.upsert({
+          where: {
+            platformPostId_socialAccountId: {
+              platformPostId: post.platformPostId,
+              socialAccountId,
+            },
+          },
+          create: {
+            socialAccountId,
+            platformPostId: post.platformPostId,
+            type: post.type,
+            title: post.title,
+            caption: post.caption?.substring(0, 5000),
+            url: post.url,
+            thumbnailUrl: post.thumbnailUrl,
+            views: post.views || 0,
+            likes: post.likes || 0,
+            comments: post.comments || 0,
+            shares: post.shares || 0,
+            saves: post.saves || 0,
+            publishedAt: post.publishedAt ? new Date(post.publishedAt) : null,
+            platformData: post.raw || {},
+          },
+          update: {
+            views: post.views || 0,
+            likes: post.likes || 0,
+            comments: post.comments || 0,
+            shares: post.shares || 0,
+            saves: post.saves || 0,
+            platformData: post.raw || {},
+          },
+        })
+      } else {
+        await prisma.contentPost.create({
+          data: {
+            socialAccountId,
+            type: post.type,
+            title: post.title,
+            caption: post.caption?.substring(0, 5000),
+            url: post.url,
+            thumbnailUrl: post.thumbnailUrl,
+            views: post.views || 0,
+            likes: post.likes || 0,
+            comments: post.comments || 0,
+            shares: post.shares || 0,
+            saves: post.saves || 0,
+            publishedAt: post.publishedAt ? new Date(post.publishedAt) : null,
+            platformData: post.raw || {},
+          },
+        })
+      }
       synced++
     }
 

@@ -9,6 +9,7 @@ const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 const { authMiddleware } = require('../middleware/auth')
 const orchestrator = require('../services/platforms/orchestrator')
+const analyticsService = require('../services/influencerAnalytics')
 
 router.use(authMiddleware)
 
@@ -200,6 +201,55 @@ router.post('/creators', async (req, res) => {
       },
       include: { socialAccounts: true },
     })
+
+    for (const sa of creator.socialAccounts) {
+      if ((sa.platform === 'youtube' || sa.platform === 'twitter') && sa.handle && !sa.accessToken) {
+        orchestrator.fetchPublicProfile(sa.platform, sa.handle)
+          .then(async (profile) => {
+            if (profile) {
+              await prisma.socialAccount.update({
+                where: { id: sa.id },
+                data: {
+                  platformUserId: profile.platformUserId || sa.platformUserId,
+                  followers: profile.followers || sa.followers,
+                  bio: profile.bio,
+                  profilePicUrl: profile.profilePicUrl,
+                  isVerified: profile.isVerified || false,
+                  platformData: profile.platformData || {},
+                  lastSyncedAt: new Date(),
+                },
+              })
+
+              const today = new Date()
+              today.setHours(0, 0, 0, 0)
+              await prisma.creatorAnalyticsSnapshot.upsert({
+                where: {
+                  creatorId_platform_date: {
+                    creatorId: creator.id,
+                    platform: sa.platform,
+                    date: today,
+                  },
+                },
+                create: {
+                  creatorId: creator.id,
+                  platform: sa.platform,
+                  date: today,
+                  followers: profile.followers || 0,
+                  platformData: profile.platformData || {},
+                },
+                update: {
+                  followers: profile.followers || 0,
+                  platformData: profile.platformData || {},
+                },
+              })
+
+              await orchestrator._updateCreatorScore(creator.id)
+            }
+          })
+          .catch(() => {})
+      }
+    }
+
     res.status(201).json(creator)
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -209,10 +259,10 @@ router.post('/creators', async (req, res) => {
 /** PUT /creators/:id - Update creator */
 router.put('/creators/:id', async (req, res) => {
   try {
-    const { name, niche, city, contactEmail, contactWhatsApp, status, negotiationNotes, labels, brandsWorkedWith } = req.body
+    const { name, niche, city, contactEmail, contactWhatsApp, status, negotiationNotes, labels, brandsWorkedWith, tracked } = req.body
     const creator = await prisma.creator.update({
       where: { id: req.params.id },
-      data: { name, niche, city, contactEmail, contactWhatsApp, status, negotiationNotes, labels, brandsWorkedWith },
+      data: { name, niche, city, contactEmail, contactWhatsApp, status, negotiationNotes, labels, brandsWorkedWith, tracked },
       include: { socialAccounts: true },
     })
     res.json(creator)
@@ -423,6 +473,102 @@ router.get('/creators/:id/analytics', async (req, res) => {
   }
 })
 
+/** GET /creators/:id/growth - Growth metrics (follower trends, velocity, projections) */
+router.get('/creators/:id/growth', async (req, res) => {
+  try {
+    const { days = 90 } = req.query
+    const result = await analyticsService.computeGrowthMetrics(req.params.id, Number(days))
+    res.json(result)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+/** GET /creators/:id/engagement-quality - Engagement quality metrics */
+router.get('/creators/:id/engagement-quality', async (req, res) => {
+  try {
+    const result = await analyticsService.computeEngagementQuality(req.params.id)
+    res.json(result)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+/** GET /creators/:id/rate-card - Suggested pricing based on stats */
+router.get('/creators/:id/rate-card', async (req, res) => {
+  try {
+    const result = await analyticsService.computeRateCard(req.params.id)
+    res.json(result)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+/** GET /creators/:id/anomalies - Fraud and anomaly detection */
+router.get('/creators/:id/anomalies', async (req, res) => {
+  try {
+    const result = await analyticsService.detectAnomalies(req.params.id)
+    res.json(result)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+/** GET /creators/:id/performance-summary - Aggregated dashboard data */
+router.get('/creators/:id/performance-summary', async (req, res) => {
+  try {
+    const result = await analyticsService.getPerformanceSummary(req.params.id)
+    res.json(result)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+/** GET /creators/compare - Compare multiple creators side by side */
+router.get('/creators/compare', async (req, res) => {
+  try {
+    const { ids } = req.query
+    if (!ids) return res.status(400).json({ error: 'ids query parameter required (comma-separated)' })
+    const creatorIds = ids.split(',').map(id => id.trim()).filter(Boolean)
+    const result = await analyticsService.compareCreators(creatorIds)
+    res.json(result)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// =====================================================
+// TRACKING TOGGLE
+// =====================================================
+
+/** POST /creators/:id/track - Enable daily sync for a creator */
+router.post('/creators/:id/track', async (req, res) => {
+  try {
+    const creator = await prisma.creator.update({
+      where: { id: req.params.id },
+      data: { tracked: true },
+      select: { id: true, name: true, tracked: true },
+    })
+    res.json(creator)
+  } catch (err) {
+    res.status(400).json({ error: err.message })
+  }
+})
+
+/** DELETE /creators/:id/track - Disable daily sync for a creator */
+router.delete('/creators/:id/track', async (req, res) => {
+  try {
+    const creator = await prisma.creator.update({
+      where: { id: req.params.id },
+      data: { tracked: false },
+      select: { id: true, name: true, tracked: true },
+    })
+    res.json(creator)
+  } catch (err) {
+    res.status(400).json({ error: err.message })
+  }
+})
+
 // =====================================================
 // DEALS
 // =====================================================
@@ -606,23 +752,9 @@ router.post('/campaigns/:id/creators', async (req, res) => {
 /** POST /sync/all - Sync all creators with active social accounts */
 router.post('/sync/all', async (req, res) => {
   try {
-    const creators = await prisma.creator.findMany({
-      where: { isActive: true, socialAccounts: { some: {} } },
-      select: { id: true, name: true },
-    })
-
-    const results = []
-    for (const creator of creators) {
-      try {
-        const result = await orchestrator.syncCreator(creator.id)
-        results.push({ creatorId: creator.id, name: creator.name, status: 'success', accounts: result })
-      } catch (err) {
-        results.push({ creatorId: creator.id, name: creator.name, status: 'error', error: err.message })
-      }
-    }
-
-    const successCount = results.filter(r => r.status === 'success').length
-    res.json({ message: `Synced ${successCount}/${results.length} creators`, results })
+    const { dailyProfileSync } = require('../scheduler/syncQueue')
+    const result = await dailyProfileSync()
+    res.json({ message: 'Sync initiated', ...result })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

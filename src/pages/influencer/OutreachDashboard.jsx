@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     Send, Plus, X, Mail, MessageSquare, Clock, CheckCircle, AlertCircle,
-    Copy, RefreshCw, Eye, ChevronDown, Trash2, Edit2, User, Linkedin
+    Copy, RefreshCw, Eye, ChevronDown, Trash2, Edit2, User
 } from 'lucide-react'
+import { Linkedin } from '../../components/PlatformIcons'
 import {
     getOutreachList, createOutreach, updateOutreach, deleteOutreach,
     getCreators, generateColdMessages

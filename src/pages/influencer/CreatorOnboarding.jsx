@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  UserPlus, Instagram, Youtube, Music2, Globe, MapPin, Mail,
+  UserPlus, Music2, Globe, MapPin, Mail,
   Phone, Link2, CheckCircle, Clock, Send, Eye, BarChart3, FileText
 } from 'lucide-react'
+import { Instagram, Youtube, platformIcons } from '../../components/PlatformIcons'
 
 const card = { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12 }
 const accent = '#6366f1'
@@ -13,7 +14,6 @@ const STORAGE_KEY = 'sic-creator-applications'
 
 const platformOptions = ['Instagram', 'YouTube', 'TikTok', 'Twitter/X', 'LinkedIn']
 const nicheOptions = ['Lifestyle', 'Tech', 'Fitness', 'Food', 'Travel', 'Comedy', 'Fashion', 'Gaming', 'Education', 'Finance']
-const platformIcons = { Instagram, YouTube: Youtube, TikTok: Music2, 'Twitter/X': Globe, LinkedIn: Globe }
 
 const emptyForm = {
   name: '', platform: 'Instagram', handle: '', niche: '', city: '',

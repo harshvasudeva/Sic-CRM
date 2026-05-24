@@ -73,6 +73,8 @@ function normalizeCreator(c) {
         lastQuotedRate: c.lastQuotedRate || 0,
         lowestClosedRate: c.lowestClosedRate || 0,
         suggestedCPV: calculateSuggestedCPV(avgViews),
+        rateCard: c.rateCard || null,
+        tracked: c.tracked !== false,
         brandsWorkedWith: c.brandsWorkedWith || [],
         negotiationNotes: c.negotiationNotes || '',
         status: c.status || 'Cold',
@@ -1201,4 +1203,49 @@ export async function getCreatorDeals(creatorId) {
 export async function updateDeal(dealId, data) {
     const res = await api.put(`/influencer/deals/${dealId}`, data)
     return res.data || res
+}
+
+export async function toggleCreatorTracking(creatorId, tracked) {
+    try {
+        if (tracked) {
+            await api.post(`/influencer/creators/${creatorId}/track`, {})
+        } else {
+            await api.delete(`/influencer/creators/${creatorId}/track`)
+        }
+        const creators = getStore(STORAGE_KEYS.creators, [])
+        const idx = creators.findIndex(c => c.id === creatorId)
+        if (idx !== -1) {
+            creators[idx].tracked = tracked
+            setStore(STORAGE_KEYS.creators, creators)
+        }
+        return { id: creatorId, tracked }
+    } catch (err) {
+        console.error('Toggle tracking error:', err.message)
+        return null
+    }
+}
+
+export async function getCreatorGrowth(creatorId, days = 90) {
+    const res = await api.get(`/influencer/creators/${creatorId}/growth?days=${days}`)
+    return res
+}
+
+export async function getCreatorEngagementQuality(creatorId) {
+    const res = await api.get(`/influencer/creators/${creatorId}/engagement-quality`)
+    return res
+}
+
+export async function getCreatorRateCard(creatorId) {
+    const res = await api.get(`/influencer/creators/${creatorId}/rate-card`)
+    return res
+}
+
+export async function getCreatorAnomalies(creatorId) {
+    const res = await api.get(`/influencer/creators/${creatorId}/anomalies`)
+    return res
+}
+
+export async function getCreatorPerformanceSummary(creatorId) {
+    const res = await api.get(`/influencer/creators/${creatorId}/performance-summary`)
+    return res
 }

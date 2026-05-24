@@ -189,8 +189,9 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
     await initScylla();
-    // Prisma connects lazily, but we can test it
-    // await prisma.$connect(); 
+
+    const { startScheduler } = require('./scheduler/scheduler');
+    startScheduler();
 
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);

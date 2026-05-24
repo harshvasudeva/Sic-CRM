@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Users, Plus, X, Star, Trophy, Download, BarChart3 } from 'lucide-react'
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell } from 'recharts'
 import { getCreatorsWithScores, getCreatorTierLabel, getCreatorTierColor } from '../../stores/influencerStore'
+import { compareCreators as compareCreatorsAPI } from '../../stores/analyticsStore'
 import { getCurrency } from '../../stores/settingsStore'
 
 const card = { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: 20 }
@@ -16,10 +17,19 @@ export default function MultiCreatorComparison() {
     const [allCreators, setAllCreators] = useState([])
     const [selectedIds, setSelectedIds] = useState([])
     const [addingId, setAddingId] = useState('')
+    const [apiComparison, setApiComparison] = useState(null)
 
     const sym = getCurrency().symbol
 
     useEffect(() => { setAllCreators(getCreatorsWithScores()) }, [])
+
+    useEffect(() => {
+        if (selectedIds.length >= 2) {
+            compareCreatorsAPI(selectedIds).then(setApiComparison).catch(() => setApiComparison(null))
+        } else {
+            setApiComparison(null)
+        }
+    }, [selectedIds])
 
     const selectedCreators = allCreators.filter(c => selectedIds.includes(c.id))
     const availableCreators = allCreators.filter(c => !selectedIds.includes(c.id))
@@ -239,6 +249,41 @@ export default function MultiCreatorComparison() {
                             ))}
                         </div>
                     </motion.div>
+
+                    {/* API-Based Comparison Rankings */}
+                    {apiComparison?.creators && (
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ ...card, marginTop: 16 }}>
+                            <h3 style={{ fontSize: 15, fontWeight: 600, margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 8 }}><Star size={16} color="#6366f1" /> API Rankings (Real Data)</h3>
+                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <thead>
+                                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                        <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12, color: '#94a3b8', fontWeight: 500 }}>Creator</th>
+                                        <th style={{ textAlign: 'center', padding: '10px 12px', fontSize: 12, color: '#94a3b8', fontWeight: 500 }}>Followers</th>
+                                        <th style={{ textAlign: 'center', padding: '10px 12px', fontSize: 12, color: '#94a3b8', fontWeight: 500 }}>Avg Views</th>
+                                        <th style={{ textAlign: 'center', padding: '10px 12px', fontSize: 12, color: '#94a3b8', fontWeight: 500 }}>Engagement</th>
+                                        <th style={{ textAlign: 'center', padding: '10px 12px', fontSize: 12, color: '#94a3b8', fontWeight: 500 }}>Growth (30d)</th>
+                                        <th style={{ textAlign: 'center', padding: '10px 12px', fontSize: 12, color: '#94a3b8', fontWeight: 500 }}>Rate Card</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {apiComparison.creators.map((c, i) => (
+                                        <tr key={c.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                            <td style={{ padding: '10px 12px', fontSize: 13, fontWeight: 600, color: COLORS[i % COLORS.length] }}>{c.name}</td>
+                                            <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'center' }}>#{c.rankings?.followers || '-'} ({formatNum(c.totalFollowers)})</td>
+                                            <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'center' }}>#{c.rankings?.views || '-'} ({formatNum(c.avgViews)})</td>
+                                            <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'center' }}>#{c.rankings?.engagement || '-'} ({c.avgEngagementRate}%)</td>
+                                            <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'center', color: c.growth30d >= 0 ? '#10b981' : '#ef4444' }}>
+                                                {c.growth30d >= 0 ? '+' : ''}{formatNum(c.growth30d)}
+                                            </td>
+                                            <td style={{ padding: '10px 12px', fontSize: 13, textAlign: 'center' }}>
+                                                {c.rateCard?.overall?.suggestedFlatRate ? `₹${formatNum(c.rateCard.overall.suggestedFlatRate)}` : '-'}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </motion.div>
+                    )}
                 </>
             )}
 

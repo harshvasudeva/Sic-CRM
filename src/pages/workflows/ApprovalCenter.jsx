@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { CheckCircle, XCircle, Clock, AlertTriangle, ChevronRight } from 'lucide-react'
-import { getApprovalRequests, approveRequest, rejectRequest } from '../../stores/workflowEngine'
+import { getApprovalRequests, approveRequest, rejectRequest } from '../../stores/unifiedStore'
 import ApprovalWidget from '../../components/ApprovalWidget'
 
 export default function ApprovalCenter() {

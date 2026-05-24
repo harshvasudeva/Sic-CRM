@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Play, Pause, Plus, Activity, CheckCircle, XCircle, Clock, Settings, Zap } from 'lucide-react'
-import { getWorkflowDefinitions, getExecutions, toggleWorkflow } from '../../stores/workflowEngine'
+import { getWorkflowDefinitions, getWorkflowExecutions, toggleWorkflow } from '../../stores/workflowEngine'
 
 export default function WorkflowDashboard() {
   const [definitions, setDefinitions] = useState(getWorkflowDefinitions())

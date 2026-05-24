@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Brain, TrendingUp, AlertTriangle, Search, Zap, BarChart3, Target, Shield } from 'lucide-react'
-import { runDeduplication, runAnomalyDetection, runPredictiveProcurement, getAIStats } from '../../stores/aiEngineStore'
+import { scanForDuplicates, scanForAnomalies, generateProcurementForecast, getAISummaries } from '../../stores/aiEngineStore'
 
 export default function AIInsights() {
-  const [stats] = useState(getAIStats())
+  const [stats] = useState(getAISummaries())
   const [loading, setLoading] = useState(null)
   const [results, setResults] = useState(null)
 
@@ -20,9 +20,9 @@ export default function AIInsights() {
   }
 
   const modules = [
-    { id: 'dedup', title: 'Deduplication', desc: 'Find and merge duplicate records', icon: Search, color: '#8b5cf6', action: () => runAction('dedup', () => runDeduplication('partner')) },
-    { id: 'anomaly', title: 'Anomaly Detection', desc: 'Detect unusual patterns in transactions', icon: AlertTriangle, color: '#ef4444', action: () => runAction('anomaly', () => runAnomalyDetection('transaction_amount')) },
-    { id: 'procurement', title: 'Smart Procurement', desc: 'Predict stock needs and reorder points', icon: Target, color: '#10b981', action: () => runAction('procurement', () => runPredictiveProcurement()) },
+    { id: 'dedup', title: 'Deduplication', desc: 'Find and merge duplicate records', icon: Search, color: '#8b5cf6', action: () => runAction('dedup', () => scanForDuplicates('partner')) },
+    { id: 'anomaly', title: 'Anomaly Detection', desc: 'Detect unusual patterns in transactions', icon: AlertTriangle, color: '#ef4444', action: () => runAction('anomaly', () => scanForAnomalies()) },
+    { id: 'procurement', title: 'Smart Procurement', desc: 'Predict stock needs and reorder points', icon: Target, color: '#10b981', action: () => runAction('procurement', () => generateProcurementForecast()) },
     { id: 'pricing', title: 'Dynamic Pricing', desc: 'AI-suggested pricing based on demand', icon: TrendingUp, color: '#f59e0b' },
     { id: 'dunning', title: 'Auto Dunning', desc: 'Automated payment reminder sequences', icon: Zap, color: '#3b82f6' },
     { id: 'reconcile', title: 'Bank Reconciliation', desc: 'AI-matched bank transactions', icon: BarChart3, color: '#06b6d4' },

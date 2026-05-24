@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     Calendar, Plus, X, Clock, CheckCircle, Edit2, Trash2,
-    Instagram, Youtube, FileText, Eye, AlertCircle, ShieldCheck, AlertTriangle
+    FileText, Eye, AlertCircle, ShieldCheck, AlertTriangle
 } from 'lucide-react'
+import { Instagram, Youtube } from '../../components/PlatformIcons'
 import {
     getContentSchedule, createContentScheduleItem, updateContentScheduleItem,
     deleteContentScheduleItem, getCampaigns, getCreators

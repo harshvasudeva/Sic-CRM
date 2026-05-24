@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import {
-  Youtube, Users, Eye, Clock, DollarSign, TrendingUp, Search,
+  Users, Eye, Clock, DollarSign, TrendingUp, Search,
   Play, BarChart3, MousePointerClick, ArrowUpDown, RefreshCw, Plus, Loader2
 } from 'lucide-react'
+import { Youtube } from '../../components/PlatformIcons'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { getCreators, lookupPlatformProfile, importFromPlatform, syncCreator, getCreatorAnalytics } from '../../stores/influencerStore'
 

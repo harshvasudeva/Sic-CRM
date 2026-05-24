@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Plus, Trash2, Save, ChevronDown, Zap } from 'lucide-react'
-import { createWorkflowDefinition, EVENT_TYPES } from '../../stores/workflowEngine'
+import { registerWorkflow, EVENT_TYPES } from '../../stores/workflowEngine'
 
 export default function WorkflowBuilder() {
   const [name, setName] = useState('')

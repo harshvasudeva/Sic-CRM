@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Search, Send, Database, Sparkles } from 'lucide-react'
-import { executeNLQuery } from '../../stores/aiEngineStore'
+import { processNLQuery } from '../../stores/aiEngineStore'
 
 export default function NLQueryPage() {
   const [query, setQuery] = useState('')
@@ -11,7 +11,7 @@ export default function NLQueryPage() {
     e.preventDefault()
     if (!query.trim()) return
     setLoading(true)
-    const result = executeNLQuery(query)
+    const result = processNLQuery(query)
     setHistory([{ query, result, timestamp: new Date() }, ...history])
     setQuery('')
     setLoading(false)
